@@ -235,39 +235,159 @@ function AIAnalysis({ data, setData }: { data: Data; setData: (d: Data) => void 
   );
 }
 
+function Slider({ label, value, set, min, max, unit = "", hint }: { label: string; value: number; set: (n: number) => void; min: number; max: number; unit?: string; hint?: string }) {
+  return (
+    <label className="block">
+      <div className="flex justify-between text-sm"><span className="font-medium">{label}</span><span className="font-bold text-primary">{value}{unit}</span></div>
+      <input type="range" min={min} max={max} value={value} onChange={(e) => set(+e.target.value)} className="mt-1 w-full accent-primary" />
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    </label>
+  );
+}
+
+function Toggle({ on, set, label, effect }: { on: boolean; set: (b: boolean) => void; label: string; effect: string }) {
+  return (
+    <button onClick={() => set(!on)} className={`flex w-full items-center justify-between gap-3 rounded-lg border p-3 text-left text-sm ${on ? "border-primary bg-primary/10" : "bg-card"}`}>
+      <span className="flex items-center gap-2"><span className={`grid h-5 w-5 place-items-center rounded border text-xs ${on ? "bg-primary text-primary-foreground" : ""}`}>{on ? "✓" : ""}</span>{label}</span>
+      <span className="whitespace-nowrap text-xs font-semibold text-success">{effect}</span>
+    </button>
+  );
+}
+
 function Survive({ data, goCredit }: { data: Data; goCredit: () => void }) {
   const a = analyze(data);
+  // Step 1 — Unlock hidden cash
+  const [deadPct, setDeadPct] = useState(30);
+  const [discount, setDiscount] = useState(20);
+  const [receivable, setReceivable] = useState(4800);
+  const [collectPct, setCollectPct] = useState(50);
+  const expenses = [
+    { n: "Advertising / boosting posts", v: 450 },
+    { n: "New equipment / decoration", v: 600 },
+    { n: "Extra staff overtime", v: 300 },
+    { n: "Non-essential travel", v: 150 },
+  ];
+  const [frozen, setFrozen] = useState<string[]>(["Advertising / boosting posts", "New equipment / decoration"]);
+  const stockCash = Math.round(data.stock * (deadPct / 100) * (1 - discount / 100));
+  const debtCash = Math.round(receivable * (collectPct / 100));
+  const saved = expenses.filter((e) => frozen.includes(e.n)).reduce((s, e) => s + e.v, 0);
+  const unlocked = stockCash + debtCash + saved;
+  const weeks = data.cashOut ? (unlocked / (data.cashOut / 4.3)).toFixed(1) : "—";
+
+  // Step 2 — Hybrid cash gap
+  const [b2b, setB2b] = useState(30);
+  const [b2bDays, setB2bDays] = useState(30);
+  const [dio, setDio] = useState(25);
+  const [dpo, setDpo] = useState(10);
+  const [deposit, setDeposit] = useState(false);
+  const [fastStock, setFastStock] = useState(false);
+  const [supplier, setSupplier] = useState(false);
+  const dso = (b2b / 100) * b2bDays;
+  const baseGap = Math.max(0, Math.round(dio + dso - dpo));
+  const newDso = (b2b / 100) * (deposit ? b2bDays * 0.4 : b2bDays);
+  const newDio = fastStock ? Math.max(5, dio - 10) : dio;
+  const newDpo = supplier ? dpo + 15 : dpo;
+  const newGap = Math.max(0, Math.round(newDio + newDso - newDpo));
+  const daily = data.cashOut / 30;
+  const trapped = Math.round(baseGap * daily), newTrapped = Math.round(newGap * daily);
+  const gapTone = (g: number) => (g === 0 ? "text-success" : g <= 10 ? "text-warning" : "text-destructive");
+
+  // Step 3 — roadmap
   const reserve = Math.round(data.cashOut * 3);
   const save = Math.max(0, Math.round(a.profit * 0.3));
-  const months = save ? Math.ceil(Math.max(0, reserve - data.cash) / save) : "—";
-  const plan = [
-    { w: "Week 1–2", t: "Protect cash", s: [`Keep at least ${fmt(Math.round(data.cashOut / 4))} (1 week of costs) untouched.`, "Stop non-essential spending.", "Collect all overdue customer payments."] },
-    { w: "Month 1", t: "Free up working capital", s: [`Sell slow stock — target converting ${fmt(Math.round(data.stock * 0.2))} to cash.`, "Ask suppliers for consignment or 30-day terms.", "Take customer deposits for large orders."] },
-    { w: "Month 2–3", t: "Grow from profit", s: [`Save ${fmt(save)}/month into a reserve.`, "Reinvest only in items that sell within 2 weeks.", "Join a community savings group or cooperative."] },
-    { w: `Month 4+`, t: "Become credit-ready", s: ["Keep 6 months of clean bank statements.", "Register your business formally.", "Start the Credit Checklist."] },
-  ];
+  const startCash = data.cash + unlocked;
+  const months = save ? Math.ceil(Math.max(0, reserve - startCash) / save) : "—";
+  const progress = Math.min(100, Math.round((startCash / reserve) * 100));
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Survive & grow without credit</h1>
-        <p className="text-muted-foreground">A plan built from your data in Feature 1.</p>
+        <h1 className="text-3xl font-bold">No-credit survival toolkit</h1>
+        <p className="text-muted-foreground">Find cash already inside your business, then stop it from getting stuck again. Uses your numbers from Feature 1.</p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Target 3-month reserve" value={fmt(reserve)} />
-        <Stat label="Save per month" value={fmt(save)} tone="up" />
-        <Stat label="Months to reach target" value={String(months)} />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {plan.map((p, i) => (
-          <Card key={p.w}>
-            <div className="flex items-center gap-3">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-bold text-accent-foreground">{i + 1}</span>
-              <div><p className="text-xs font-semibold text-muted-foreground">{p.w}</p><h3 className="font-semibold">{p.t}</h3></div>
-            </div>
-            <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">{p.s.map((x) => <li key={x}>✓ {x}</li>)}</ul>
+
+      {/* STEP 1 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-bold text-accent-foreground">1</span><div><h2 className="text-xl font-bold">Unlock hidden cash</h2><p className="text-sm text-muted-foreground">Quick cash this week — no loan needed.</p></div></div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="space-y-3">
+            <h3 className="font-semibold">📦 Sell slow stock</h3>
+            <p className="text-xs text-muted-foreground">Your stock: {fmt(data.stock)}</p>
+            <Slider label="Slow-moving share" value={deadPct} set={setDeadPct} min={0} max={80} unit="%" />
+            <Slider label="Discount to clear" value={discount} set={setDiscount} min={0} max={50} unit="%" />
+            <p className="rounded-lg bg-secondary p-2 text-sm font-bold text-success">+ {fmt(stockCash)}</p>
           </Card>
-        ))}
-      </div>
+          <Card className="space-y-3">
+            <h3 className="font-semibold">🧾 Collect B2B debts</h3>
+            <Slider label="Unpaid by business customers" value={receivable} set={setReceivable} min={0} max={15000} unit=" K" />
+            <Slider label="Collect this week" value={collectPct} set={setCollectPct} min={0} max={100} unit="%" />
+            <p className="rounded-lg bg-secondary p-2 text-sm font-bold text-success">+ {fmt(debtCash)}</p>
+          </Card>
+          <Card className="space-y-2">
+            <h3 className="font-semibold">✂ Pause extra spending</h3>
+            {expenses.map((e) => (
+              <label key={e.n} className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex items-center gap-2"><input type="checkbox" className="accent-primary" checked={frozen.includes(e.n)} onChange={() => setFrozen(frozen.includes(e.n) ? frozen.filter((x) => x !== e.n) : [...frozen, e.n])} />{e.n}</span>
+                <span className="text-muted-foreground">{e.v}</span>
+              </label>
+            ))}
+            <p className="rounded-lg bg-secondary p-2 text-sm font-bold text-success">+ {fmt(saved)} / month</p>
+          </Card>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary p-5 text-primary-foreground">
+          <div><p className="text-sm opacity-90">💰 Total cash unlocked</p><p className="font-display text-3xl font-bold">+ {fmt(unlocked)}</p></div>
+          <p className="text-sm">≈ <b className="text-lg">{weeks}</b> extra weeks of running costs covered</p>
+        </div>
+      </section>
+
+      {/* STEP 2 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-bold text-accent-foreground">2</span><div><h2 className="text-xl font-bold">Cash gap simulator</h2><p className="text-sm text-muted-foreground">How many days your money is stuck between paying suppliers and getting paid.</p></div></div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm font-medium"><span>B2C (pay now) {100 - b2b}%</span><span>B2B (pay later) {b2b}%</span></div>
+              <input type="range" min={0} max={100} value={b2b} onChange={(e) => setB2b(+e.target.value)} className="mt-1 w-full accent-primary" />
+              <p className="text-xs text-muted-foreground">Shop customers pay immediately; business customers often pay later.</p>
+            </div>
+            {b2b > 0 && <Slider label="B2B customers pay after" value={b2bDays} set={setB2bDays} min={0} max={60} unit=" days" />}
+            <Slider label="Days stock sits before selling" value={dio} set={setDio} min={5} max={60} unit=" days" />
+            <Slider label="Days supplier gives you to pay" value={dpo} set={setDpo} min={0} max={45} unit=" days" />
+            <p className="rounded-lg bg-muted p-2 text-xs text-muted-foreground">Gap = stock days ({dio}) + avg. wait for payment ({dso.toFixed(0)}) − supplier days ({dpo})</p>
+          </Card>
+          <Card className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">Now</p><p className={`font-display text-4xl font-bold ${gapTone(baseGap)}`}>{baseGap}<span className="text-base"> days</span></p><p className="text-xs text-muted-foreground">{fmt(trapped)} stuck</p></div>
+              <div className="rounded-lg border p-3"><p className="text-xs text-muted-foreground">After actions</p><p className={`font-display text-4xl font-bold ${gapTone(newGap)}`}>{newGap}<span className="text-base"> days</span></p><p className="text-xs text-muted-foreground">{fmt(newTrapped)} stuck</p></div>
+            </div>
+            <p className="text-sm font-semibold">Actions to close the gap</p>
+            {b2b > 0 && <Toggle on={deposit} set={setDeposit} label="Ask B2B customers for a 60% deposit" effect={`−${Math.round((b2b / 100) * b2bDays * 0.6)} days`} />}
+            <Toggle on={fastStock} set={setFastStock} label="Restock only fast-selling items" effect={`−${dio - Math.max(5, dio - 10)} days`} />
+            <Toggle on={supplier} set={setSupplier} label="Ask supplier for 15 more days to pay" effect="−15 days" />
+            <div className={`rounded-lg p-3 text-sm font-medium ${newGap === 0 ? "bg-secondary text-success" : "bg-muted"}`}>
+              {newGap === 0 ? "🎉 Zero gap! Customer money now pays your suppliers — no loan needed." : `You still need ${fmt(newTrapped)} of your own cash to cover ${newGap} days. Try more actions.`}
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* STEP 3 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-accent font-bold text-accent-foreground">3</span><div><h2 className="text-xl font-bold">Build your safety reserve</h2><p className="text-sm text-muted-foreground">Goal: 3 months of costs saved, then get credit-ready.</p></div></div>
+        <Card className="space-y-3">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div><p className="text-xs text-muted-foreground">Target reserve</p><p className="font-display text-xl font-bold">{fmt(reserve)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Save per month (30% of profit)</p><p className="font-display text-xl font-bold text-success">{fmt(save)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Months to reach target</p><p className="font-display text-xl font-bold">{String(months)}</p></div>
+          </div>
+          <div className="h-3 rounded-full bg-muted"><div className="h-3 rounded-full bg-success" style={{ width: `${progress}%` }} /></div>
+          <p className="text-xs text-muted-foreground">Starting from cash on hand + unlocked cash: {fmt(startCash)} ({progress}%)</p>
+          <div className="grid gap-2 text-sm sm:grid-cols-4">
+            {["Week 1–2: Unlock hidden cash", "Month 1: Close the cash gap", "Month 2–3: Save into reserve", "Month 4+: Start credit checklist"].map((s) => <div key={s} className="rounded-lg bg-muted p-2">{s}</div>)}
+          </div>
+        </Card>
+      </section>
+
       <button onClick={goCredit} className="rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground">Go to Credit Checklist →</button>
     </div>
   );
