@@ -267,7 +267,7 @@ function Survive({ data, goCredit }: { data: Data; goCredit: () => void }) {
     { n: "Extra staff overtime", v: 300 },
     { n: "Non-essential travel", v: 150 },
   ];
-  const [frozen, setFrozen] = useState<string[]>([expenses[0].n, expenses[1].n]);
+  const [frozen, setFrozen] = useState<string[]>(["Advertising / boosting posts", "New equipment / decoration"]);
   const stockCash = Math.round(data.stock * (deadPct / 100) * (1 - discount / 100));
   const debtCash = Math.round(receivable * (collectPct / 100));
   const saved = expenses.filter((e) => frozen.includes(e.n)).reduce((s, e) => s + e.v, 0);
