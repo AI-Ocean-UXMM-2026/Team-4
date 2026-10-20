@@ -106,7 +106,7 @@ def test_concurrent_same_file_import_is_serialized(client, workbook_bytes):
     assert len(snapshot(client)["tables"]["Expenses"]) == 2
 
 
-def test_template_is_personalized_and_reset_restores(client, workbook_bytes):
+def test_template_is_personalized_and_public_reset_removed(client, workbook_bytes):
     template = client.get("/api/v1/data/template?business_id=tea-shop")
     assert template.status_code == 200
     from app.integrations.excel.workbook_parser import parse_workbook
@@ -114,8 +114,8 @@ def test_template_is_personalized_and_reset_restores(client, workbook_bytes):
     changed = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["E2"], "value", 80000))
     upload(client, changed)
     result = client.post("/api/v1/demo/reset?business_id=tea-shop")
-    assert result.status_code == 200, result.text
-    assert snapshot(client)["tables"]["Expenses"][0]["amount_mmk"] == "50000.00"
+    assert result.status_code == 404
+    assert snapshot(client)["tables"]["Expenses"][0]["amount_mmk"] == "80000.00"
 
 
 def test_auth_and_upload_limits(client):

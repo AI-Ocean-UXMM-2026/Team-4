@@ -11,10 +11,10 @@ load_dotenv()
 @dataclass(frozen=True)
 class Settings:
     database_url: str = "sqlite:///./bizflow.db"
-    auth_mode: str = "supabase"
-    session_secret: str = ""
-    demo_password: str = ""
     supabase_url: str = ""
+    supabase_publishable_key: str = ""
+    password_min_length: int = 8
+    password_required_characters: str = ""
     frontend_url: str = "http://localhost:3000"
     cors_origins: tuple[str, ...] = ("http://localhost:3000",)
     max_upload_bytes: int = 5 * 1024 * 1024
@@ -23,7 +23,10 @@ class Settings:
     microsoft_client_secret: str = ""
     microsoft_redirect_uri: str = "http://localhost:8000/api/v1/auth/microsoft/callback"
     token_encryption_key: str = ""
-    allow_demo_reset: bool = False
+
+    @property
+    def auth_configured(self) -> bool:
+        return bool(self.supabase_url and self.supabase_publishable_key)
 
     @property
     def graph_enabled(self) -> bool:
@@ -35,10 +38,10 @@ class Settings:
 def get_settings() -> Settings:
     settings = Settings(
         database_url=os.getenv("DATABASE_URL", "sqlite:///./bizflow.db"),
-        auth_mode=os.getenv("AUTH_MODE", "supabase"),
-        session_secret=os.getenv("SESSION_SECRET", ""),
-        demo_password=os.getenv("DEMO_PASSWORD", ""),
         supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
+        supabase_publishable_key=os.getenv("SUPABASE_PUBLISHABLE_KEY", ""),
+        password_min_length=int(os.getenv("AUTH_PASSWORD_MIN_LENGTH", "8")),
+        password_required_characters=os.getenv("AUTH_PASSWORD_REQUIRED_CHARACTERS", ""),
         frontend_url=os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/"),
         cors_origins=tuple(x.strip() for x in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if x.strip()),
         max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024))),
@@ -47,14 +50,19 @@ def get_settings() -> Settings:
         microsoft_client_secret=os.getenv("MICROSOFT_CLIENT_SECRET", ""),
         microsoft_redirect_uri=os.getenv("MICROSOFT_REDIRECT_URI", "http://localhost:8000/api/v1/auth/microsoft/callback"),
         token_encryption_key=os.getenv("TOKEN_ENCRYPTION_KEY", ""),
-        allow_demo_reset=os.getenv("ALLOW_DEMO_RESET", "false").lower() == "true",
     )
-    if settings.auth_mode not in ("demo", "supabase"):
-        raise RuntimeError("AUTH_MODE must be demo or supabase")
-    if settings.auth_mode == "demo" and (len(settings.session_secret) < 32 or len(settings.demo_password) < 12):
-        raise RuntimeError("Demo mode requires SESSION_SECRET (32+ chars) and DEMO_PASSWORD (12+ chars)")
-    if settings.auth_mode == "supabase" and not settings.supabase_url.startswith("https://"):
-        raise RuntimeError("SUPABASE_URL must be configured for Supabase authentication")
+    if settings.supabase_url and not settings.supabase_url.startswith("https://"):
+        raise RuntimeError("SUPABASE_URL must use HTTPS")
+    if not 6 <= settings.password_min_length <= 128:
+        raise RuntimeError("AUTH_PASSWORD_MIN_LENGTH must match the provider policy (6–128)")
+    if set(filter(None, settings.password_required_characters.split(","))) - {"lower", "upper", "number", "symbol"}:
+        raise RuntimeError("Invalid password policy character class")
+    from urllib.parse import urlparse
+    frontend = urlparse(settings.frontend_url)
+    if frontend.scheme not in ("https", "http") or not frontend.netloc or frontend.path or frontend.query or frontend.fragment:
+        raise RuntimeError("FRONTEND_URL must be a trusted origin without a path/query/fragment")
+    if frontend.scheme == "http" and frontend.hostname not in ("localhost", "127.0.0.1"):
+        raise RuntimeError("Public FRONTEND_URL must use HTTPS")
     if settings.graph_enabled:
         from cryptography.fernet import Fernet
         Fernet(settings.token_encryption_key.encode())

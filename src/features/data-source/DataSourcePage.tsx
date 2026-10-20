@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loading, usePlatform } from "@/app/providers";
 import { api, businessPath } from "@/lib/apiClient";
@@ -7,9 +6,7 @@ import { ExcelUpload } from "./ExcelUpload";
 import { OneDriveConnect } from "./OneDriveConnect";
 import { SyncStatus } from "./SyncStatus";
 export function DataSourcePage() {
-  const { business, config, imported } = usePlatform();
-  const [resetError, setResetError] = useState("");
-  const [resetting, setResetting] = useState(false);
+  const { business } = usePlatform();
   const query = useQuery({
     queryKey: ["sync-status", business.id],
     queryFn: () => api<Status>(businessPath("sync-status", business.id)),
@@ -32,40 +29,6 @@ export function DataSourcePage() {
         <OneDriveConnect status={query.data} />
       </div>
       <SyncStatus status={query.data} />
-      {config.allow_demo_reset && (
-        <section className="rounded-xl border p-5">
-          <h2 className="font-semibold">Reset synthetic demo</h2>
-          <p className="my-2 text-sm text-muted-foreground">
-            Restore {business.name} to its sample workbook. This replaces imported demo records for
-            this business.
-          </p>
-          <button
-            className="bf-button-secondary"
-            disabled={resetting}
-            onClick={async () => {
-              setResetting(true);
-              setResetError("");
-              try {
-                await api(`/api/v1/demo/reset?business_id=${encodeURIComponent(business.id)}`, {
-                  method: "POST",
-                });
-                await imported();
-              } catch (failure) {
-                setResetError(failure instanceof Error ? failure.message : "Reset failed");
-              } finally {
-                setResetting(false);
-              }
-            }}
-          >
-            {resetting ? "Restoring…" : "Restore sample data"}
-          </button>
-          {resetError && (
-            <p role="alert" className="mt-3 text-destructive">
-              {resetError}
-            </p>
-          )}
-        </section>
-      )}
     </div>
   );
 }

@@ -26,6 +26,8 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    full_name: Mapped[str | None] = mapped_column(String(120))
+    email: Mapped[str | None] = mapped_column(String(254))
 
 
 class Business(Base):
@@ -33,6 +35,19 @@ class Business(Base):
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     name: Mapped[str] = mapped_column(String(500))
     version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    owner_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), unique=True)
+    industry: Mapped[str | None] = mapped_column(String(120))
+    city: Mapped[str | None] = mapped_column(String(120))
+    phone: Mapped[str | None] = mapped_column(String(40))
+    address: Mapped[str | None] = mapped_column(String(500))
+    currency: Mapped[str] = mapped_column(String(3), default="MMK", server_default="MMK")
+
+
+class AuthRequestLimit(Base):
+    __tablename__ = "auth_request_limits"
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    count: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class Membership(Base):

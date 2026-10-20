@@ -13,7 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataSourceRouteImport } from './routes/data-source'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as WorkingCapitalRouteImport } from './routes/working-capital'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,9 +42,44 @@ const DataSourceRoute = DataSourceRouteImport.update({
   path: '/data-source',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkingCapitalRoute = WorkingCapitalRouteImport.update({
   id: '/working-capital',
   path: '/working-capital',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -46,14 +88,28 @@ export interface FileRoutesByFullPath {
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/working-capital': typeof WorkingCapitalRoute
+  '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/working-capital': typeof WorkingCapitalRoute
+  '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +117,58 @@ export interface FileRoutesById {
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/onboarding': typeof OnboardingRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/sign-in': typeof SignInRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/working-capital': typeof WorkingCapitalRoute
+  '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
+  fullPaths:
+    | '/'
+    | '/ai'
+    | '/credit'
+    | '/data-source'
+    | '/forgot-password'
+    | '/onboarding'
+    | '/register'
+    | '/reset-password'
+    | '/sign-in'
+    | '/verify-email'
+    | '/working-capital'
+    | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
-  id: '__root__' | '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
+  to:
+    | '/'
+    | '/ai'
+    | '/credit'
+    | '/data-source'
+    | '/forgot-password'
+    | '/onboarding'
+    | '/register'
+    | '/reset-password'
+    | '/sign-in'
+    | '/verify-email'
+    | '/working-capital'
+    | '/auth/callback'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai'
+    | '/credit'
+    | '/data-source'
+    | '/forgot-password'
+    | '/onboarding'
+    | '/register'
+    | '/reset-password'
+    | '/sign-in'
+    | '/verify-email'
+    | '/working-capital'
+    | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,7 +176,14 @@ export interface RootRouteChildren {
   AiRoute: typeof AiRoute
   CreditRoute: typeof CreditRoute
   DataSourceRoute: typeof DataSourceRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  OnboardingRoute: typeof OnboardingRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignInRoute: typeof SignInRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   WorkingCapitalRoute: typeof WorkingCapitalRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -109,11 +216,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataSourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/working-capital': {
       id: '/working-capital'
       path: '/working-capital'
       fullPath: '/working-capital'
       preLoaderRoute: typeof WorkingCapitalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -124,7 +280,14 @@ const rootRouteChildren: RootRouteChildren = {
   AiRoute: AiRoute,
   CreditRoute: CreditRoute,
   DataSourceRoute: DataSourceRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  OnboardingRoute: OnboardingRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignInRoute: SignInRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   WorkingCapitalRoute: WorkingCapitalRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,7 +4,7 @@ from dotenv import dotenv_values
 
 root = Path(__file__).resolve().parents[1]
 environment = dotenv_values(root / ".env")
-private_names = ["SESSION_SECRET", "DEMO_PASSWORD", "MICROSOFT_CLIENT_SECRET", "TOKEN_ENCRYPTION_KEY", "DATABASE_URL"]
+private_names = ["SUPABASE_SERVICE_ROLE_KEY", "MICROSOFT_CLIENT_SECRET", "TOKEN_ENCRYPTION_KEY", "DATABASE_URL"]
 secrets = [environment[name].encode() for name in private_names if environment.get(name) and len(environment[name]) >= 12]
 files = list((root / ".output/public").rglob("*.js"))
 if not files:

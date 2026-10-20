@@ -13,7 +13,8 @@ lines = ["-- BizFlow platform v1. Generated from SQLAlchemy metadata; apply once
 for table in Base.metadata.sorted_tables:
     lines.append(str(CreateTable(table).compile(dialect=postgresql.dialect())).strip() + ";")
     lines.extend(str(CreateIndex(index).compile(dialect=postgresql.dialect())) + ";" for index in sorted(table.indexes, key=lambda i: i.name))
-target = root / "database/migrations/001_platform.sql"
+# Never overwrite an applied baseline after additive migrations have been introduced.
+target = root / ".artifacts/current-schema.sql"
 target.parent.mkdir(parents=True, exist_ok=True)
 target.write_text("\n".join(line.rstrip() for line in "\n\n".join(lines).splitlines()) + "\n", encoding="utf-8")
-print("Wrote initial PostgreSQL DDL.")
+print("Wrote current schema reference to .artifacts/current-schema.sql; applied migrations unchanged.")

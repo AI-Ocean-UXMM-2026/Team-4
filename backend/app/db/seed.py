@@ -62,8 +62,8 @@ if __name__ == "__main__":
     parser.add_argument("--user-id", help="Existing Supabase Auth user UUID to provision")
     args = parser.parse_args()
     settings = get_settings()
-    if settings.auth_mode != "demo" and not args.user_id:
-        parser.error("Supabase mode requires --user-id from Supabase Auth")
+    if not args.user_id:
+        parser.error("Explicit --user-id from an approved Supabase test account is required; new accounts are never automatically seeded")
     engine = make_engine(settings.database_url)
     if engine.dialect.name == "sqlite":
         Base.metadata.create_all(engine)

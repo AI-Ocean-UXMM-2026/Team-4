@@ -1,46 +1,57 @@
-# BizFlow platform
+# BIZFLOW
 
-Excel ingestion and application integration for the existing Lovable SME cashflow prototype. Work is on `p5-platform`; published history is preserved.
+Business cashflow application with Supabase email/password authentication, verified account registration, owned workspaces and Excel ingestion. The existing Lovable frontend remains in `src/`; FastAPI is in `backend/`.
 
-Implemented: FastAPI backend, demo/Supabase JWT authentication, business memberships, PostgreSQL schema and Supabase RLS migration, typed shared tables, bounded XLSX parsing/validation, atomic stable-ID upserts, revision audits, upload/status/template APIs and UI, three synthetic SME workbooks, optional delegated OneDrive linking and explicit Sync Now, five real frontend routes, demo reset, regression tests and deployment configuration.
+The shared demo-password login and public demo reset have been removed. New accounts must verify their email and complete business setup before accessing records. After verification, completing onboarding creates one empty workspace belonging to the provider-verified user. Existing data is preserved and is never automatically assigned to new accounts.
 
-P1–P4 backend feature modules were not supplied. The existing frontend views are retained behind a shared snapshot adapter; working-capital scenarios and credit checklist remain prototypes. AI is honestly labeled as a local heuristic preview, generated only on request and marked stale after a newer import. No LLM is required for the app or import workflow.
+## Configure and run
 
-**Release status:** the local manual-upload demo is implemented and tested. Public hosting, live Supabase/RLS verification and school Microsoft consent testing require external account configuration. No public deployment or feature-branch merge has been performed. See [release runbook](deployment/RUNBOOK.md) and [Microsoft feasibility gate](deployment/MICROSOFT_FEASIBILITY.md).
-
-## Run locally (PowerShell)
-
-Prerequisites: Python 3.12+ and Node 24 (the Vite 8 app requires a modern Node runtime).
+Use Python 3.12+ and Node 24. PowerShell:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
 npm.cmd ci
-.\.venv\Scripts\python.exe tools/setup_demo.py
-$env:PYTHONPATH = 'backend'
-.\.venv\Scripts\python.exe -m app.db.seed
-.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe tools/setup_environment.py
 ```
 
-In another terminal:
+Configure these placeholders in private `.env`:
+
+- `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`: backend project connection. Use the project's publishable/anon key, never a service-role key.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`: the same public values for the official browser SDK.
+- `FRONTEND_URL`: trusted app origin, e.g. `http://localhost:3000`. Configure its exact callback URLs in Supabase Auth.
+- `AUTH_PASSWORD_MIN_LENGTH` and `AUTH_PASSWORD_REQUIRED_CHARACTERS`: mirror the password policy configured in Supabase so forms display the same requirements. Supabase remains authoritative, including any breached-password checks.
+- `DATABASE_URL`: local SQLite can store application data during development while authentication uses real Supabase. Production uses Supabase Postgres with `postgresql+psycopg://...?...sslmode=require`.
+
+Enable Supabase email/password sign-up, **require email confirmation** (`mailer_autoconfirm=false`), configure email delivery and apply the migrations. The backend checks confirmation settings and fails closed if confirmation is disabled. See [authentication setup](deployment/AUTHENTICATION.md) for exact callback/email-template settings and testing.
 
 ```powershell
-npm.cmd run dev -- --host 127.0.0.1 --port 3000
+# SQLite: additive local upgrade, preserves existing rows.
+.\.venv\Scripts\python.exe tools/migrate.py
+# Supabase PostgreSQL: apply all platform and RLS migrations in order instead.
+# .\.venv\Scripts\python.exe tools/migrate.py --supabase
+.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-Open `http://localhost:3000`. Sign in using `DEMO_PASSWORD` from your private `.env`; setup generates it and a session signing secret. No school account, Supabase project or AI key is needed for this SQLite fallback. The API is at `http://localhost:8000/docs`. Vite proxies `/api` to the backend. No secrets belong in `VITE_*`; the only allowed browser configuration is API origin, Supabase URL and Supabase publishable key.
+In a second terminal, run `npm.cmd run dev -- --host 127.0.0.1 --port 3000`, then open `http://localhost:3000/sign-in`. Vite proxies `/api` to FastAPI. API docs are at `http://localhost:8000/docs`. Without provider configuration, public account screens remain viewable, but registration/sign-in and all protected API access remain unavailable. There is no fake-auth fallback.
 
-On macOS/Linux use `.venv/bin/python`, `npm` and `PYTHONPATH=backend .venv/bin/python -m app.db.seed`. The two processes and same-origin API proxy are otherwise identical.
+On macOS/Linux use `.venv/bin/python` and `npm` instead of their Windows forms. Restart the frontend when changing `VITE_*` settings; those values are build-time configuration in production.
 
-## Demo workflow
+## Account lifecycle
 
-1. Select Mingalar Tea Shop, Shwe Grocery or Aye Chan Workshop in the header. Each uses a separate business ID/source.
-2. Open Data Source and upload the matching workbook from `database/seed/`. Repeating it adds no duplicates.
-3. In the tea-shop workbook change `Expenses!E2` (E001.amount_mmk) from 50,000 to 80,000. Save and upload. Expect **updated=1**, no new expense, cash out increases by 30,000 MMK once. The tea-shop monthly outflow changes from 125 K to 155 K.
-4. Duplicate a sale ID or enter an overpayment. Import is rejected, an audit explains the Excel row/field, and previous data remains intact.
-5. Restore sample data from Data Source when demo reset is enabled. This explicitly replaces only the selected synthetic business fixture.
+Registration has two steps: account details, then business details. Sole proprietors may use a shop/trading name; no legal registration number is required. Currency is currently MMK, consistent with the workbook contract.
 
-Template: [blank workbook](shared/workbook-template/bizflow-template.xlsx); the UI download personalizes its Settings row. Required sheet fields and financial assumptions: [SHARED_CONTRACTS.md](SHARED_CONTRACTS.md).
+The validated full name and business draft are saved in Supabase user metadata until verification. Passwords go only to Supabase over TLS; they never enter the application database or browser storage. Metadata is revalidated after server identity verification and never proves ownership. After opening the email link, users confirm business setup. A database transaction creates their profile, business and owner membership; retries return the same workspace. Interrupted registration resumes after sign-in.
+
+The official Supabase SDK manages persisted sessions, refresh and sign-out. Browser session state alone grants no API access: FastAPI verifies the JWT signature/issuer/audience/expiry, checks the user with Supabase, and requires confirmed email plus business membership/setup. Old custom/demo JWTs and passwords are rejected. Password reset uses provider-issued one-use links; invalid/expired links show a request-new-link action.
+
+## Data workflow
+
+New workspaces show an empty state. Download a personalized workbook from Data Source, enter rows, save and upload. Repeated current file hashes are no-ops; changing a row with its existing ID updates that fact once, with a revision audit. Bad rows reject the complete import. Missing rows are retained with review warnings. All normalized projections remain business-scoped.
+
+[SHARED_CONTRACTS.md](SHARED_CONTRACTS.md) describes sheet fields, exact decimal values, API responses and feature integration. Three synthetic workbooks in `database/seed/` remain available for explicit administrator-controlled tests; registration never seeds or grants access to them. The four existing financial/scenario/checklist views are preserved; this authentication change does not implement missing feature-owner backend modules.
+
+Optional delegated OneDrive linking and explicit Sync Now require approved Microsoft app configuration. Manual uploads do not need Microsoft. [Microsoft feasibility setup](deployment/MICROSOFT_FEASIBILITY.md).
 
 ## Checks
 
@@ -49,25 +60,13 @@ Template: [blank workbook](shared/workbook-template/bizflow-template.xlsx); the 
 node_modules\.bin\tsc.cmd --noEmit
 npm.cmd test
 npm.cmd run build
-# Run against the local synthetic demo processes:
 .\.venv\Scripts\python.exe tools/prepare_browser_test.py
 ```
 
-Browser smoke uses installed Chrome (`playwright` is a dev dependency); use `npx playwright install chrome` if Chrome is unavailable. It exercises sign-in, five routes with direct refresh, repeat upload, one-row expense update, business selection and reset. It writes QA screenshots only to ignored `.artifacts/`. Tests run without Microsoft/LLM/network dependencies. Backend tests cover malformed files, row coordinates, formulas, missing sheets, foreign IDs, mixed payment errors, overpayments, retained records, transaction rollback, concurrent requests, auth and Graph failures/eTag behavior. PostgreSQL/RLS must additionally be checked in the actual Supabase project before release.
+Auth tests use signed test JWTs and mocked Supabase HTTP/SDK responses; they do not simulate email delivery in the application. The browser smoke exercises public screens and protected redirects without creating a fake account. Live signup/SMTP, two-user Supabase RLS/storage and provider recovery must also be tested with configured test accounts; [AUTHENTICATION.md](deployment/AUTHENTICATION.md) lists the procedure and opt-in RLS test variables.
 
-## Repository map
+Deployment files, same-origin gateway, migration instructions and release checks: [deployment runbook](deployment/RUNBOOK.md). No public deployment has been performed.
 
-- `backend/app/core`, `db`, `integrations/excel`: P5 platform implementation.
-- `src/app`, `src/lib`, `src/components/layout`, `src/features/data-source`: composition and import UI; the existing app root remains `src`.
-- `src/components/PrototypeModules.tsx`: extracted original Lovable views with imported display inputs. Feature owners replace the matching imports in `src/app/routes.tsx`.
-- `database/migrations`: initial PostgreSQL schema and Supabase-only RLS; `database/seed`: three synthetic workbooks.
-- `shared/contracts`: machine-readable workbook schema; `shared/workbook-template`: Excel template.
-- `deployment`: Dockerfiles, same-origin nginx gateway, Compose, browser smoke and runbooks.
+## Lovable
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/e503e6ca-6e62-4d9c-8615-c58f92b2bb13).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+The project is connected to [the existing Lovable editor](https://lovable.dev/projects/e503e6ca-6e62-4d9c-8615-c58f92b2bb13). Keep published Git history intact. Main-branch pushes sync back to the editor. Configure the public Supabase build values and API hosting there before enabling real sign-in.

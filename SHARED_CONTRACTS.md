@@ -37,11 +37,15 @@ Every input row has one `business_id`, identical to Settings and the authorized 
 
 ## API contract
 
-Business-scoped endpoints require `Authorization: Bearer <BizFlow demo or Supabase JWT>` and query parameter `business_id`. Membership is checked server-side on every request. The OAuth callback instead consumes a browser-bound, one-use expiring server state carrying the authorized business/user.
+Business-scoped endpoints require `Authorization: Bearer <Supabase JWT>` and query parameter `business_id`. Server-verified identity, confirmed email, completed profile/business setup and membership are checked on every request. The OAuth callback instead consumes a browser-bound, one-use expiring server state carrying the authorized business/user. Browser state and IDs never establish authorization.
 
 | Method | Path | Result |
 | --- | --- | --- |
-| POST | /api/v1/auth/demo-login | Demo-only password exchange; 8-hour session |
+| POST | /api/v1/auth/register | Validated account/business details forwarded to Supabase; no local membership until verified |
+| POST | /api/v1/auth/resend-verification | Provider resend (`type=signup`); neutral accepted result, explicit 429/503 failures |
+| POST | /api/v1/auth/forgot-password | Generic provider email recovery with fixed trusted callback |
+| GET | /api/v1/auth/me | Server-verified profile, onboarding state and validated business draft |
+| POST | /api/v1/auth/onboarding | Atomic idempotent empty-workspace creation for verified identity |
 | GET | /api/v1/config | Public feature/auth capabilities, no secrets |
 | GET | /api/v1/businesses | Current user's business memberships |
 | POST | /api/v1/data/upload | Multipart `file`; atomic import result |
@@ -53,13 +57,14 @@ Business-scoped endpoints require `Authorization: Bearer <BizFlow demo or Supaba
 | GET | /api/v1/data/files | Authorized OneDrive folders and .xlsx files (`folder_id` optional) |
 | POST / DELETE | /api/v1/data/link | Link `{drive_id,item_id}` / erase saved authorization and unlink |
 | POST | /api/v1/data/sync-now | Cloud eTag check and shared importer |
-| POST | /api/v1/demo/reset | Explicit reset of selected synthetic fixture only, when enabled |
 
 Import result: `{import_batch_id,status,source_version,row_counts:{inserted,updated,unchanged},errors,warnings,created_at}`. Status is `success`, `up_to_date` or `failed`. Validation errors return HTTP 400 with the failed import result in `error.details[0]`. Each issue has `{sheet,row,field,reason}`; row 0 refers to workbook-level or retained-history issues. eTag no-op responses may omit batch ID/timestamp. Monetary/quantity snapshot values are exact decimal **strings**, dates ISO strings, timestamps UTC with offsets.
 
 In sync-status history, `source_version` reflects the current business snapshot; it is not a historical version number for each old batch. Historical facts are identified by batch ID and row revision metadata.
 
 Errors: `{error:{code,message,details}}`. HTTP 400 invalid input; 401 session/reconnect; 403 business access; 404 missing resource; 409 source/import/save conflict; 429 throttle (Retry-After); 503 integration unavailable. Failed validation and known Graph failures are audited; unexpected database failures roll back without a partial success audit.
+
+Auth email success bodies include `status` (`verification_required` for an accepted pending signup, otherwise neutral `check_email`), `message` and the known application `cooldown_seconds`. No response proves email delivery. Email throttles return 429 and pass through `Retry-After` only when the provider supplies it or the application has a measured deadline. Unknown retry timing has no header/countdown. Setup and availability errors return 503. `/api/v1/config` adds `auth_status: {ready, code, message}`, `auth_url` and the SHA-256 `auth_key_fingerprint` (public key only); browser/build mismatch also blocks auth submissions. Configuration preflight is independent of email delivery acceptance.
 
 ## Integration points for P1–P4
 

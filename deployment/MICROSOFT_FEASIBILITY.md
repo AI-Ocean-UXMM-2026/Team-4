@@ -1,6 +1,6 @@
 # School Microsoft feasibility gate
 
-Status: **not verified against a school tenant**. No Microsoft account, app registration, tenant consent or test DriveItem IDs were provided. Graph is disabled until all four server-side settings and the encryption key are configured. Manual upload is the release fallback. No background/delta polling is implemented.
+Status: **not verified against a school tenant**. No Microsoft account, app registration, tenant consent or test DriveItem IDs were provided. Graph is disabled until all four server-side settings and the encryption key are configured. Manual upload is the fallback for a verified Supabase user with completed business setup; the former shared demo login has been removed. No background/delta polling is implemented.
 
 1. Sign into [Microsoft 365](https://www.microsoft365.com/) with the intended school account. Verify OneDrive exists and an .xlsx can be edited and saved in Excel Online. Record the approved test user (no passwords in this document).
 2. In [Microsoft Entra](https://entra.microsoft.com/), verify students may register an app, or ask the tenant administrator to register a single-tenant Web app. Record tenant ID, client ID and approved redirect URI. Outlook access alone does not establish Graph permissions. [Microsoft tenant app-registration guidance](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/delegate-app-roles).

@@ -91,8 +91,26 @@ export type WorkbookTables = {
 };
 export type Snapshot = { business_id: string; source_version: number; tables: WorkbookTables };
 export type PlatformConfig = {
-  auth_mode: "demo" | "supabase";
+  auth_provider: "supabase";
+  auth_configured: boolean;
+  auth_status: { ready: boolean; code: string | null; message: string | null };
+  auth_url: string;
+  auth_key_fingerprint: string;
+  password_policy: { min_length: number; required_characters: string[] };
   graph_enabled: boolean;
-  allow_demo_reset: boolean;
   modules: Record<string, boolean>;
+};
+export type BusinessDetails = {
+  name: string;
+  industry: string;
+  city: string;
+  phone: string;
+  address: string;
+  currency: "MMK";
+};
+export type AccountStatus = {
+  user: { id: string; email: string; full_name: string };
+  onboarding_complete: boolean;
+  pending_business: BusinessDetails | null;
+  owned_business_id: string | null;
 };
