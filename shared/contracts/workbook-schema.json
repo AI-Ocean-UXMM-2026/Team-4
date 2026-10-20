@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "sheets": {
+    "Settings": {
+      "id": "business_id",
+      "fields": {
+        "business_id": "id",
+        "business_name": "text",
+        "currency": "enum:MMK",
+        "opening_date": "date",
+        "opening_cash_mmk": "money"
+      }
+    },
+    "Products": {
+      "id": "product_id",
+      "fields": {
+        "product_id": "id",
+        "business_id": "id",
+        "name": "text",
+        "opening_stock": "quantity",
+        "unit_cost_mmk": "money"
+      }
+    },
+    "Sales": {
+      "id": "sale_id",
+      "fields": {
+        "sale_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "product_id": "id",
+        "quantity": "positive_quantity",
+        "unit_price_mmk": "money",
+        "payment_type": "enum:cash,credit",
+        "cash_received_mmk": "money"
+      }
+    },
+    "CustomerReceipts": {
+      "id": "receipt_id",
+      "fields": {
+        "receipt_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "sale_id": "id",
+        "amount_mmk": "positive_money"
+      }
+    },
+    "Purchases": {
+      "id": "purchase_id",
+      "fields": {
+        "purchase_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "product_id": "id",
+        "quantity": "positive_quantity",
+        "unit_cost_mmk": "money",
+        "payment_type": "enum:cash,credit",
+        "cash_paid_mmk": "money"
+      }
+    },
+    "SupplierPayments": {
+      "id": "payment_id",
+      "fields": {
+        "payment_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "purchase_id": "id",
+        "amount_mmk": "positive_money"
+      }
+    },
+    "Expenses": {
+      "id": "expense_id",
+      "fields": {
+        "expense_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "category": "enum:rent,wages,utilities,transport,marketing,other",
+        "amount_mmk": "money",
+        "description": "text"
+      }
+    },
+    "Loans": {
+      "id": "loan_id",
+      "fields": {
+        "loan_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "lender": "text",
+        "loan_type": "enum:reducing_balance,flat,interest_only",
+        "principal_mmk": "positive_money"
+      }
+    },
+    "LoanPayments": {
+      "id": "payment_id",
+      "fields": {
+        "payment_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "loan_id": "id",
+        "principal_mmk": "money",
+        "interest_mmk": "money"
+      }
+    },
+    "CashAdjustments": {
+      "optional": true,
+      "id": "adjustment_id",
+      "fields": {
+        "adjustment_id": "id",
+        "business_id": "id",
+        "date": "date",
+        "direction": "enum:in,out",
+        "amount_mmk": "positive_money",
+        "reason": "text"
+      }
+    }
+  }
+}

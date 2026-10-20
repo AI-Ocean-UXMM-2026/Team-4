@@ -1,0 +1,7 @@
+# Workbook assets
+
+`bizflow-template.xlsx` is the blank v1 input workbook; GET `/api/v1/data/template?business_id=...` personalizes Settings for the signed-in business. Add rows under unchanged headers and enter the same business_id on each row. Review [SHARED_CONTRACTS.md](../../SHARED_CONTRACTS.md) before changing fields.
+
+Three synthetic populated workbooks are in `database/seed`: tea-shop (no credit), grocery (credit retail), workshop (credit service/parts). The October 2026 demo intentionally uses `Expenses.E001.amount_mmk = 50000` in each fixture. Change it to `80000` while retaining E001 to demonstrate one controlled update. Generated fixtures have no input formulas.
+
+The initial assets were authored with the bundled `@oai/artifact-tool` runtime using `tools/workbook/build.mjs`, rendered on all 44 sheets, and independently parsed/validated by the backend. For regeneration, resolve `@oai/artifact-tool` using your installed spreadsheet runtime, then run `node tools/workbook/build.mjs`. The application itself does not require artifact-tool. Runtime template personalization uses openpyxl on the server. The ordinary input files remain standard Excel workbooks.

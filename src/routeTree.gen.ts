@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiRouteImport } from './routes/ai'
+import { Route as CreditRouteImport } from './routes/credit'
+import { Route as DataSourceRouteImport } from './routes/data-source'
+import { Route as WorkingCapitalRouteImport } from './routes/working-capital'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreditRoute = CreditRouteImport.update({
+  id: '/credit',
+  path: '/credit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataSourceRoute = DataSourceRouteImport.update({
+  id: '/data-source',
+  path: '/data-source',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkingCapitalRoute = WorkingCapitalRouteImport.update({
+  id: '/working-capital',
+  path: '/working-capital',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/credit': typeof CreditRoute
+  '/data-source': typeof DataSourceRoute
+  '/working-capital': typeof WorkingCapitalRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/credit': typeof CreditRoute
+  '/data-source': typeof DataSourceRoute
+  '/working-capital': typeof WorkingCapitalRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai': typeof AiRoute
+  '/credit': typeof CreditRoute
+  '/data-source': typeof DataSourceRoute
+  '/working-capital': typeof WorkingCapitalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
+  id: '__root__' | '/' | '/ai' | '/credit' | '/data-source' | '/working-capital'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiRoute: typeof AiRoute
+  CreditRoute: typeof CreditRoute
+  DataSourceRoute: typeof DataSourceRoute
+  WorkingCapitalRoute: typeof WorkingCapitalRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/credit': {
+      id: '/credit'
+      path: '/credit'
+      fullPath: '/credit'
+      preLoaderRoute: typeof CreditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data-source': {
+      id: '/data-source'
+      path: '/data-source'
+      fullPath: '/data-source'
+      preLoaderRoute: typeof DataSourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/working-capital': {
+      id: '/working-capital'
+      path: '/working-capital'
+      fullPath: '/working-capital'
+      preLoaderRoute: typeof WorkingCapitalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiRoute: AiRoute,
+  CreditRoute: CreditRoute,
+  DataSourceRoute: DataSourceRoute,
+  WorkingCapitalRoute: WorkingCapitalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

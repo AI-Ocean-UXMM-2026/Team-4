@@ -1,0 +1,118 @@
+"""Audit records plus typed SQL projections for module owners (no Excel JSON parsing)."""
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy import (JSON, Column, Date, DateTime, ForeignKey, Integer, MetaData,
+                        Numeric, String, Table, Text, UniqueConstraint)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from ..integrations.excel.schemas import SCHEMA
+
+
+def uid():
+    return str(uuid.uuid4())
+
+
+def now():
+    return datetime.now(timezone.utc)
+
+
+class Base(DeclarativeBase):
+    metadata = MetaData(naming_convention={"ix": "ix_%(column_0_label)s", "uq": "uq_%(table_name)s_%(column_0_name)s",
+                                          "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+                                          "pk": "pk_%(table_name)s"})
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+
+
+class Business(Base):
+    __tablename__ = "businesses"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    name: Mapped[str] = mapped_column(String(500))
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+
+
+class Membership(Base):
+    __tablename__ = "business_memberships"
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), primary_key=True)
+
+
+class WorkbookSource(Base):
+    __tablename__ = "workbook_sources"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), unique=True)
+    kind: Mapped[str] = mapped_column(String(20), default="manual")
+    drive_id: Mapped[str | None] = mapped_column(String(250))
+    item_id: Mapped[str | None] = mapped_column(String(250))
+    linked_user_id: Mapped[str | None] = mapped_column(String(80))
+    token_ciphertext: Mapped[str | None] = mapped_column(Text)
+    last_etag: Mapped[str | None] = mapped_column(String(500))
+    last_hash: Mapped[str | None] = mapped_column(String(64))
+    last_import_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ImportBatch(Base):
+    __tablename__ = "import_batches"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    source_id: Mapped[str] = mapped_column(ForeignKey("workbook_sources.id"), index=True)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), index=True)
+    actor_id: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(30))
+    content_hash: Mapped[str | None] = mapped_column(String(64))
+    row_counts: Mapped[dict] = mapped_column(JSON, default=dict)
+    errors: Mapped[list] = mapped_column(JSON, default=list)
+    warnings: Mapped[list] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class ImportedRow(Base):
+    __tablename__ = "imported_rows"
+    __table_args__ = (UniqueConstraint("business_id", "source_id", "sheet_name", "row_id"),)
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("workbook_sources.id"))
+    sheet_name: Mapped[str] = mapped_column(String(50))
+    row_id: Mapped[str] = mapped_column(String(80))
+    payload: Mapped[dict] = mapped_column(JSON)
+    batch_id: Mapped[str] = mapped_column(ForeignKey("import_batches.id"))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    active_status: Mapped[str] = mapped_column(String(20), default="active")
+
+
+class RowRevision(Base):
+    __tablename__ = "row_revisions"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    imported_row_id: Mapped[str] = mapped_column(ForeignKey("imported_rows.id"))
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"))
+    payload: Mapped[dict] = mapped_column(JSON)
+    batch_id: Mapped[str] = mapped_column(ForeignKey("import_batches.id"))
+    revision: Mapped[int] = mapped_column(Integer)
+
+
+class OAuthState(Base):
+    __tablename__ = "oauth_states"
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"))
+    user_id: Mapped[str] = mapped_column(String(80))
+    verifier_ciphertext: Mapped[str] = mapped_column(Text)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+TABLE_NAMES = {"Settings": "business_settings", "Products": "products", "Sales": "sales",
+               "CustomerReceipts": "customer_receipts", "Purchases": "purchases",
+               "SupplierPayments": "supplier_payments", "Expenses": "expenses", "Loans": "loans",
+               "LoanPayments": "loan_payments", "CashAdjustments": "cash_adjustments"}
+PROJECTIONS = {}
+for sheet_name, spec in SCHEMA.items():
+    columns = [Column("source_id", String(80), ForeignKey("workbook_sources.id"), primary_key=True)]
+    for field, kind in spec["fields"].items():
+        column_type = Date if kind == "date" else Numeric(18, 3 if "quantity" in kind else 2) if "money" in kind or "quantity" in kind else String(500)
+        args = [ForeignKey("businesses.id")] if field == "business_id" else []
+        columns.append(Column(field, column_type, *args, primary_key=field == spec["id"], nullable=False, index=field == "business_id"))
+    columns.append(Column("batch_id", String(80), ForeignKey("import_batches.id"), nullable=False))
+    PROJECTIONS[sheet_name] = Table(TABLE_NAMES[sheet_name], Base.metadata, *columns)

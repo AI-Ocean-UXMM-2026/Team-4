@@ -8,6 +8,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.db
+*.db-*
+.artifacts/
+*.xlsx.inspect.ndjson
 dist
 dist-ssr
 .output

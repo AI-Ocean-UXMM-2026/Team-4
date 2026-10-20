@@ -1,0 +1,98 @@
+// Workbook v1. Exact monetary/quantity values cross the API as decimal strings.
+export type DecimalString = string;
+export type Business = { id: string; name: string; source_version: number };
+export type RowIssue = { sheet: string; row: number; field: string; reason: string };
+export type ImportResult = {
+  import_batch_id?: string;
+  status: "success" | "failed" | "up_to_date";
+  source_version: number;
+  row_counts: { inserted?: number; updated?: number; unchanged?: number };
+  errors: RowIssue[];
+  warnings: RowIssue[];
+  created_at?: string;
+};
+export type SyncStatus = {
+  source_id: string | null;
+  kind: "manual" | "onedrive";
+  source_version: number;
+  graph_enabled: boolean;
+  connected: boolean;
+  linked: boolean;
+  drive_id: string | null;
+  item_id: string | null;
+  last_import_at: string | null;
+  last_checked_at: string | null;
+  max_upload_bytes: number;
+  imports: ImportResult[];
+};
+export type WorkbookFile = { id: string; name: string; drive_id: string; is_folder: boolean };
+type Dated = { business_id: string; date: string };
+export type WorkbookTables = {
+  Settings: {
+    business_id: string;
+    business_name: string;
+    currency: "MMK";
+    opening_date: string;
+    opening_cash_mmk: DecimalString;
+  }[];
+  Products: {
+    business_id: string;
+    product_id: string;
+    name: string;
+    opening_stock: DecimalString;
+    unit_cost_mmk: DecimalString;
+  }[];
+  Sales: (Dated & {
+    sale_id: string;
+    product_id: string;
+    quantity: DecimalString;
+    unit_price_mmk: DecimalString;
+    payment_type: "cash" | "credit";
+    cash_received_mmk: DecimalString;
+  })[];
+  CustomerReceipts: (Dated & { receipt_id: string; sale_id: string; amount_mmk: DecimalString })[];
+  Purchases: (Dated & {
+    purchase_id: string;
+    product_id: string;
+    quantity: DecimalString;
+    unit_cost_mmk: DecimalString;
+    payment_type: "cash" | "credit";
+    cash_paid_mmk: DecimalString;
+  })[];
+  SupplierPayments: (Dated & {
+    payment_id: string;
+    purchase_id: string;
+    amount_mmk: DecimalString;
+  })[];
+  Expenses: (Dated & {
+    expense_id: string;
+    category: string;
+    amount_mmk: DecimalString;
+    description: string;
+  })[];
+  Loans: (Dated & {
+    loan_id: string;
+    lender: string;
+    loan_type: "reducing_balance" | "flat" | "interest_only";
+    principal_mmk: DecimalString;
+  })[];
+  LoanPayments: (Dated & {
+    payment_id: string;
+    loan_id: string;
+    principal_mmk: DecimalString;
+    interest_mmk: DecimalString;
+  })[];
+  CashAdjustments: (Dated & {
+    adjustment_id: string;
+    direction: "in" | "out";
+    amount_mmk: DecimalString;
+    reason: string;
+  })[];
+};
+export type Snapshot = { business_id: string; source_version: number; tables: WorkbookTables };
+export type PlatformConfig = {
+  auth_mode: "demo" | "supabase";
+  graph_enabled: boolean;
+  allow_demo_reset: boolean;
+  modules: Record<string, boolean>;
+};
