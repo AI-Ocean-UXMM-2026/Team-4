@@ -1,65 +1,86 @@
 import { useState } from "react";
+import { RangeField, ScenarioResult } from "./ScenarioUI";
+
+type Response = { result: Record<string, unknown> };
 
 export function CashGapSimulator({
   simulate,
 }: {
   simulate: <T>(type: string, assumptions: Record<string, unknown>) => Promise<T>;
 }) {
-  const [dio, setDio] = useState(30),
-    [dso, setDso] = useState(12),
-    [extension, setExtension] = useState(15);
-  const [result, setResult] = useState<unknown>();
+  const [dio, setDio] = useState(30);
+  const [dso, setDso] = useState(12);
+  const [extension, setExtension] = useState(15);
+  const [result, setResult] = useState<Response | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    setPending(true);
+    setError(null);
+    setResult(null);
+    try {
+      setResult(
+        await simulate<Response>("cash_gap", {
+          dio_days: dio,
+          dso_days: dso,
+          dpo_days: 25,
+          supplier_extension_days: extension,
+          demo_estimate: true,
+        }),
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not calculate this scenario.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
-    <section>
-      <h2>Step 2: Cash Gap Simulator</h2>
-      <p>
-        Illustrative day-count assumptions, including 25 supplier payment days. These are not
-        imported business figures. CCC is days, not MMK.
-      </p>
-      <label>
-        DIO {dio}
-        <input
-          type="range"
-          min="0"
-          max="180"
+    <section className="bf-card space-y-5">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">Step 2</p>
+        <h2 className="mt-1 text-xl font-bold">Explore the cash gap</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Change example day counts to compare cash conversion cycles. The 25 supplier payment days
+          are an illustrative assumption; results are in days, not MMK.
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <RangeField
+          label="Inventory days (DIO)"
           value={dio}
-          onChange={(e) => setDio(Number(e.target.value))}
+          min={0}
+          max={180}
+          unit=" days"
+          onChange={setDio}
         />
-      </label>
-      <label>
-        DSO {dso}
-        <input
-          type="range"
-          min="0"
-          max="180"
+        <RangeField
+          label="Collection days (DSO)"
           value={dso}
-          onChange={(e) => setDso(Number(e.target.value))}
+          min={0}
+          max={180}
+          unit=" days"
+          onChange={setDso}
         />
-      </label>
-      <label>
-        Requested supplier extension {extension} days
-        <input
-          type="range"
-          min="0"
-          max="90"
+        <RangeField
+          label="Supplier extension"
           value={extension}
-          onChange={(e) => setExtension(Number(e.target.value))}
+          min={0}
+          max={90}
+          unit=" days"
+          onChange={setExtension}
         />
-      </label>
-      <button
-        onClick={() =>
-          void simulate<unknown>("cash_gap", {
-            dio_days: dio,
-            dso_days: dso,
-            dpo_days: 25,
-            supplier_extension_days: extension,
-            demo_estimate: true,
-          }).then(setResult)
-        }
-      >
-        Compare projected CCC
+      </div>
+      <button className="bf-button" disabled={pending} onClick={() => void run()}>
+        {pending ? "Comparing…" : "Compare projected cycle"}
       </button>
-      {result !== undefined && <pre>{JSON.stringify(result, null, 2)}</pre>}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <ScenarioResult response={result} />
     </section>
   );
 }

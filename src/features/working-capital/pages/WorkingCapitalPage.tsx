@@ -4,6 +4,7 @@ import { ReservePlanner } from "../components/ReservePlanner";
 import { UnlockCashSimulator } from "../components/UnlockCashSimulator";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
 import { usePlatform } from "@/app/providers";
+import { Link } from "@tanstack/react-router";
 
 export function WorkingCapitalPage() {
   const { business } = usePlatform();
@@ -11,24 +12,89 @@ export function WorkingCapitalPage() {
     business.id,
     business.source_version,
   );
-  if (loading) return <p>Loading working-capital snapshot…</p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (loading)
+    return (
+      <p role="status" className="bf-card text-muted-foreground">
+        Loading working-capital snapshot…
+      </p>
+    );
+  if (error)
+    return (
+      <p role="alert" className="bf-card text-destructive">
+        {error}
+      </p>
+    );
   return (
-    <main>
-      <header>
-        <h1>Smart Working Capital Management</h1>
-        <p>Simulation only; your records have not changed.</p>
-        {snapshot?.warnings.map((warning) => (
-          <p key={warning}>
-            <small>{warning}</small>
-          </p>
-        ))}
+    <main className="space-y-6">
+      <header className="rounded-2xl bg-primary px-6 py-8 text-primary-foreground sm:px-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Working Capital</p>
+        <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
+          Plan cash with clearer choices
+        </h1>
+        <p className="mt-3 max-w-2xl text-sm opacity-90 sm:text-base">
+          Explore inventory, collections, cash timing, and reserves. Simulations are read-only and
+          do not change your records.
+        </p>
       </header>
-      <section>
-        <h2>Inventory & purchasing planner</h2>
-        <p>Purchasing budget: {snapshot?.purchasing_budget.budget_mmk ?? "Insufficient data"}</p>
+      {snapshot?.warnings.length ? (
+        <section className="bf-card border-warning/50 bg-warning/10" aria-label="Data limitations">
+          <h2 className="text-sm font-semibold">Information still needed</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {snapshot.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <section className="bf-card space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">
+              Your imported records
+            </p>
+            <h2 className="mt-1 text-xl font-bold">Inventory & purchasing</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review stock and recent sales before planning a purchase.
+            </p>
+          </div>
+          <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
+            {snapshot?.inventory.length ?? 0} products
+          </span>
+        </div>
+        <div className="rounded-xl border bg-background p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Purchasing budget
+          </p>
+          <p className="mt-1 text-xl font-bold">
+            {snapshot?.purchasing_budget.budget_mmk == null
+              ? "Insufficient data"
+              : `${Number(snapshot.purchasing_budget.budget_mmk).toLocaleString("en-US")} MMK`}
+          </p>
+          {snapshot?.purchasing_budget.budget_mmk == null && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Required cash inputs are missing from workbook v1.
+            </p>
+          )}
+        </div>
         <InventoryRiskTable items={snapshot?.inventory ?? []} />
+        {!snapshot?.inventory.length && (
+          <Link
+            to="/data-source"
+            className="inline-block text-sm font-semibold text-primary underline"
+          >
+            Open Data Source
+          </Link>
+        )}
       </section>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">
+          Illustrative scenarios
+        </p>
+        <h2 className="mt-1 text-2xl font-bold">Explore what could change</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Example inputs below are not your imported business figures.
+        </p>
+      </div>
       <UnlockCashSimulator simulate={simulate} />
       <CashGapSimulator simulate={simulate} />
       <ReservePlanner planReserve={planReserve} />
