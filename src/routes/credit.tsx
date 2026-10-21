@@ -1,3 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ModuleRoute } from "@/app/routes";
-export const Route = createFileRoute("/credit")({ component: () => <ModuleRoute page="credit" /> });
+import { CreditPage } from "@/features/credit/pages/CreditPage";
+
+export const Route = createFileRoute("/credit")({ component: CreditPage });
