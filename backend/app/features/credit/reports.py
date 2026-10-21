@@ -3,7 +3,7 @@
 from datetime import date
 
 
-DISCLAIMER = "Self-reported, synthetic demo; acceptance and eligibility depend on the lender. This is preparation support, not a credit score or loan approval."
+DISCLAIMER = "Self-reported records; acceptance and eligibility depend on the lender. This is preparation support, not a credit score or loan approval."
 
 
 def preparation_report(inputs: dict, categories: list[dict], loans: list[dict]) -> dict:
@@ -13,7 +13,7 @@ def preparation_report(inputs: dict, categories: list[dict], loans: list[dict]) 
     return {
         "business_profile": inputs.get("business"),
         "period_covered": period,
-        "financial_summary": {"available": False, "note": "Waiting for the P1 financial snapshot integration; no cash or profit figures are estimated here."},
+        "financial_summary": {"available": False, "note": "This report does not include cash or profit figures. Review Financial Health for available financial data."},
         "outstanding_loans": [{"loan_id": loan["loan_id"], "outstanding_principal_mmk": loan["outstanding_principal_mmk"]} for loan in loans],
         "missing_records": missing,
         "generated_on": date.today(),

@@ -15,11 +15,12 @@ def projection_rows(session, sheet: str, business_id: str) -> list[dict]:
 def credit_inputs(session, business_id: str) -> dict:
     business = session.scalar(select(Business).where(Business.id == business_id))
     if business is None:
-        return {"business": None, "loans": [], "payments": [], "tables": {}}
+        return {"business": None, "source_version": None, "loans": [], "payments": [], "tables": {}}
     sheets = ("Loans", "LoanPayments", "Sales", "CustomerReceipts", "Purchases", "SupplierPayments", "Expenses")
     tables = {sheet: projection_rows(session, sheet, business_id) for sheet in sheets}
     return {
         "business": {"id": business.id, "name": business.name, "industry": business.industry, "city": business.city},
+        "source_version": business.version,
         "loans": tables["Loans"],
         "payments": tables["LoanPayments"],
         "tables": tables,

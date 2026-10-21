@@ -1,6 +1,6 @@
 # P4 AI Business Analyzer handoff
 
-The backend exports `app.features.ai.router.router`. P5's current `app/main.py` discovers it automatically and applies `authorize_business`. The frontend exports `AIAnalyzerPage` from `src/features/ai-analyzer/AIAnalyzerPage.tsx`; P5 should replace the current `/ai` preview with that page.
+The backend exports `app.features.ai.router.router`. P5's `app/main.py` discovers it automatically and applies `authorize_business`. The `/ai` route renders `AIAnalyzerPage` from `src/features/ai-analyzer/AIAnalyzerPage.tsx`.
 
 ## Endpoints
 
@@ -11,9 +11,9 @@ Both require authenticated business membership. The backend reads P1, P2, and P3
 
 ## Module adapters
 
-P1 is read through `PlatformFinancialService.financial_snapshot` when its branch is integrated. P2 and P3 should each export `app.features.<module>.ai_adapter.get_ai_snapshot(business_id, sessions)`, where `sessions` is P5's SQLAlchemy session factory. The adapter must return a plain dict or Pydantic model with `business_id`, `source_version`, `synthetic`, `as_of`, and the corresponding aggregate fields in `SHARED_CONTRACTS.md`. P4 ignores P2/P3 results with a different import version. Adapter implementations must use read-only, business-scoped services, not raw transaction tables. P2/P3 branches were not on the remote when this branch was built.
+P1 is read through `PlatformFinancialService.financial_snapshot`. P2 and P3 export `app.features.<module>.ai_adapter.get_ai_snapshot(business_id, sessions)`. The adapters return business-scoped aggregates with the current `source_version`; P4 ignores an adapter result from another import version. Workbook v1 does not include supplier lead times or loan schedule terms, so those AI comparisons remain unavailable.
 
-The P1 branch currently marks its platform snapshots `synthetic=False` by default. P5/P1 should mark verified seeded demo data `synthetic=True` if the OpenAI step is wanted in the demo. Otherwise the safe rules-only result appears.
+P4 marks data synthetic only when the latest successful import has the exact SHA-256 hash of one of this repository's bundled seed workbooks for its matching demo business. Other imported data remains rules-only by default.
 
 ## Environment and privacy
 

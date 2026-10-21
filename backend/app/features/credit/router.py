@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Request
 from .amortization import UnsupportedLoanModel, amortization_schedule, round_mmk
-from .readiness import readiness_categories
+from .readiness import preparation_progress, readiness_categories
 from .repayment import repayment_totals
 from .repayment_capacity import repayment_capacity
 from .reports import preparation_report
@@ -83,6 +83,10 @@ def _load_inputs(request: Request, business_id: str) -> dict:
 @router.get("/summary", response_model=CreditSnapshot)
 def summary(request: Request, business_id: str):
     inputs = _load_inputs(request, business_id)
+    return build_credit_snapshot(inputs, business_id)
+
+
+def build_credit_snapshot(inputs: dict, business_id: str) -> dict:
     if inputs["business"] is None:
         raise HTTPException(404, "Business not found.")
     try:
@@ -90,7 +94,6 @@ def summary(request: Request, business_id: str):
     except ValueError as error:
         raise HTTPException(409, str(error)) from error
     categories = readiness_categories(inputs)
-    prepared = sum(item["status"] != "missing" for item in categories)
     due = next((loan["next_payment_due_mmk"] for loan in loans if loan["next_payment_due_mmk"] is not None), None)
     limitations = ["No credit-document metadata store exists yet; imported records remain unverified.",
                    "P1 cash context is not available in the current repository integration."]
@@ -101,12 +104,13 @@ def summary(request: Request, business_id: str):
     has_data = bool(inputs["loans"] or any(inputs["tables"].values()))
     return {
         "business_id": business_id,
+        "source_version": inputs["source_version"],
         "as_of": inputs["as_of"],
         "lender_checklist_scope": "generic_not_lender_specific",
         "data_quality": {"status": "partial" if has_data else "missing", "missing": missing_data, "limitations": limitations},
         "loans": loans,
         "readiness": categories,
-        "readiness_progress": {"prepared_categories": prepared, "total_categories": len(categories), "label": "Record preparation progress", "credit_score": None, "approval_probability": None},
+        "readiness_progress": preparation_progress(categories),
         "repayment_capacity": repayment_capacity(None, str(due) if due is not None else None),
         "preparation_report": preparation_report(inputs, categories, loans),
     }

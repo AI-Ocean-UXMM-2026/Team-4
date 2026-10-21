@@ -14,6 +14,17 @@ CHECKLIST = (
 )
 
 
+def preparation_progress(categories: list[dict]) -> dict:
+    applicable = [item for item in categories if item["status"] != "not_applicable"]
+    return {
+        "prepared_categories": sum(item["status"] != "missing" for item in applicable),
+        "total_categories": len(applicable),
+        "label": "Record preparation progress",
+        "credit_score": None,
+        "approval_probability": None,
+    }
+
+
 def _period(rows: list[dict]) -> tuple[date | None, date | None]:
     dates = [row["date"] for row in rows if row.get("date")]
     return (min(dates), max(dates)) if dates else (None, None)

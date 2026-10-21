@@ -62,6 +62,7 @@ class ReadinessCategory(BaseModel):
 
 class CreditSnapshot(BaseModel):
     business_id: str
+    source_version: int
     as_of: date
     lender_checklist_scope: Literal["generic_not_lender_specific"]
     data_quality: DataQuality

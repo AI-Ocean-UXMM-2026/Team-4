@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "../../../../../src/lib/apiClient";
+import { api } from "@/lib/apiClient";
 
 export type DecimalString = string | number;
 export type InventoryRisk = {
@@ -24,7 +24,7 @@ export type WorkingCapitalSnapshot = {
   warnings: string[];
 };
 
-export function useWorkingCapital(businessId: string, safetyBufferDays = 3) {
+export function useWorkingCapital(businessId: string, sourceVersion: number, safetyBufferDays = 3) {
   const [snapshot, setSnapshot] = useState<WorkingCapitalSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,11 @@ export function useWorkingCapital(businessId: string, safetyBufferDays = 3) {
     if (!businessId) return;
     setLoading(true);
     try {
-      setSnapshot(await api<WorkingCapitalSnapshot>(`/api/v1/working-capital/summary?business_id=${encodeURIComponent(businessId)}&safety_buffer_days=${safetyBufferDays}`));
+      setSnapshot(
+        await api<WorkingCapitalSnapshot>(
+          `/api/v1/working-capital/summary?business_id=${encodeURIComponent(businessId)}&safety_buffer_days=${safetyBufferDays}`,
+        ),
+      );
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not load working-capital data.");
@@ -40,10 +44,18 @@ export function useWorkingCapital(businessId: string, safetyBufferDays = 3) {
       setLoading(false);
     }
   }, [businessId, safetyBufferDays]);
-  useEffect(() => { void refresh(); }, [refresh]);
-  const simulate = <T,>(scenario_type: string, assumptions: Record<string, unknown>) =>
-    api<T>("/api/v1/working-capital/simulate", { method: "POST", body: JSON.stringify({ scenario_type, assumptions }) });
-  const planReserve = <T,>(payload: Record<string, unknown>) =>
-    api<T>("/api/v1/working-capital/reserve-plan", { method: "POST", body: JSON.stringify(payload) });
+  useEffect(() => {
+    void refresh();
+  }, [refresh, sourceVersion]);
+  const simulate = <T>(scenario_type: string, assumptions: Record<string, unknown>) =>
+    api<T>(`/api/v1/working-capital/simulate?business_id=${encodeURIComponent(businessId)}`, {
+      method: "POST",
+      body: JSON.stringify({ scenario_type, assumptions }),
+    });
+  const planReserve = <T>(payload: Record<string, unknown>) =>
+    api<T>(`/api/v1/working-capital/reserve-plan?business_id=${encodeURIComponent(businessId)}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   return { snapshot, error, loading, refresh, simulate, planReserve };
 }

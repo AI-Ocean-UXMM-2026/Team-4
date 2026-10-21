@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.features.credit.readiness import readiness_categories
+from app.features.credit.readiness import preparation_progress, readiness_categories
 
 
 def test_zero_debt_business_can_prepare_and_debt_is_not_applicable():
@@ -11,6 +11,8 @@ def test_zero_debt_business_can_prepare_and_debt_is_not_applicable():
     profile = next(item for item in categories if item["category"] == "business_profile")
     assert profile["status"] == "missing"
     assert "no registration document metadata" in profile["note"]
+    assert preparation_progress(categories)["prepared_categories"] == 0
+    assert preparation_progress(categories)["total_categories"] == len(categories) - 1
 
 
 def test_excel_rows_are_unverified_and_period_gaps_remain_visible():
