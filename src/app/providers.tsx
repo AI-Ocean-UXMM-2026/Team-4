@@ -94,6 +94,8 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         imported: async () => {
           await Promise.all([
             queries.invalidateQueries({ queryKey: ["snapshot", business.id] }),
+            queries.invalidateQueries({ queryKey: ["credit-summary", business.id] }),
+            queries.invalidateQueries({ queryKey: ["ai-analysis", business.id] }),
             queries.invalidateQueries({ queryKey: ["sync-status", business.id] }),
             queries.invalidateQueries({ queryKey: ["businesses"] }),
           ]);

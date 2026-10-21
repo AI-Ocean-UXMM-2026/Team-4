@@ -49,14 +49,17 @@ The official Supabase SDK manages persisted sessions, refresh and sign-out. Brow
 
 New workspaces show an empty state. Download a personalized workbook from Data Source, enter rows, save and upload. Repeated current file hashes are no-ops; changing a row with its existing ID updates that fact once, with a revision audit. Bad rows reject the complete import. Missing rows are retained with review warnings. All normalized projections remain business-scoped.
 
-[SHARED_CONTRACTS.md](SHARED_CONTRACTS.md) describes sheet fields, exact decimal values, API responses and feature integration. Three synthetic workbooks in `database/seed/` remain available for explicit administrator-controlled tests; registration never seeds or grants access to them. The four existing financial/scenario/checklist views are preserved; this authentication change does not implement missing feature-owner backend modules.
+[SHARED_CONTRACTS.md](SHARED_CONTRACTS.md) describes sheet fields, exact decimal values, API responses and feature integration. Three synthetic workbooks in `database/seed/` remain available for explicit administrator-controlled tests; registration never seeds or grants access to them. Financial Health, Working Capital, Credit Hub and AI Analyzer are mounted for authenticated business users.
+
+Workbook v1 does not provide historical cost at sale, supplier due dates, stock lead times or loan rate and term. Affected figures and insights remain unavailable; the scenario inputs in Working Capital are explicitly illustrative. Set `OPENAI_API_KEY` in the backend environment to enable AI wording for the exact bundled synthetic workbooks. Other imports use deterministic rules only unless provider use for real business data is explicitly enabled with `AI_ALLOW_REAL_DATA=true` after the required disclosure and consent. The key never belongs in `VITE_*` variables.
 
 Optional delegated OneDrive linking and explicit Sync Now require approved Microsoft app configuration. Manual uploads do not need Microsoft. [Microsoft feasibility setup](deployment/MICROSOFT_FEASIBILITY.md).
 
 ## Checks
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -c backend/pytest.ini -q
+$env:PYTHONPATH='.;backend'
+.\.venv\Scripts\python.exe -m pytest backend/app -q
 node_modules\.bin\tsc.cmd --noEmit
 npm.cmd test
 npm.cmd run build

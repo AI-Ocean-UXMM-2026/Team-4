@@ -1,3 +1,3 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ModuleRoute } from "@/app/routes";
-export const Route = createFileRoute("/ai")({ component: () => <ModuleRoute page="ai" /> });
+import { AIAnalyzerPage } from "@/features/ai-analyzer/AIAnalyzerPage";
+export const Route = createFileRoute("/ai")({ component: AIAnalyzerPage });

@@ -1,6 +1,6 @@
 # BizFlow shared contracts v1
 
-This repository arrived with a single Lovable frontend prototype and no shared contract or P1–P4 backend modules. This is the initial P5 integration proposal; feature owners must review financial interpretation before a release. The existing frontend stays at `src/` (do not create a second `frontend/` app).
+P5's workbook and authentication platform now integrates the P1–P4 feature branches. Feature owners should review financial interpretation before a release. The frontend stays at `src/` (do not create a second `frontend/` app).
 
 The machine-readable source of workbook fields is [workbook-schema.json](shared/contracts/workbook-schema.json). Frontend response types are [contracts.ts](src/lib/contracts.ts). The API schema is available at `/docs` and `/openapi.json` on the backend.
 
@@ -72,6 +72,6 @@ P5 mounts `router` exports from `app.features.financial.router`, `app.features.w
 
 Read typed SQL tables via `app.db.models.PROJECTIONS` or business-scoped snapshot API. Tables are `business_settings`, `products`, `sales`, `customer_receipts`, `purchases`, `supplier_payments`, `expenses`, `loans`, `loan_payments`, `cash_adjustments`. P1–P3 should not parse ImportedRow JSON. ImportedRow/RowRevision are ingestion audit storage.
 
-Frontend composition is `src/app/routes.tsx`. Replace the corresponding prototype view imports with owners' exported page components after review. All pages use the active business provider. Import success invalidates snapshot/status/business query keys. Owners should key derived query caches by business and source version, or extend the `imported()` invalidation list. Do not regenerate AI in a query side effect: retain analysis with its source version and show stale state until explicit refresh. P4 upstream data access must remain read-only.
+Frontend composition uses `src/app/routes.tsx` and `src/routes/`. All four feature pages use the active business provider. Import success invalidates snapshot/status/business, credit and AI query keys; Working Capital refetches when the business source version changes. AI analysis retains its source version and shows stale state until an explicit rerun. P4 upstream data access remains read-only.
 
-No feature branches were merged: none were supplied. No P1–P4 financial/credit/AI backend logic was invented. The local preview is explicitly labeled as a heuristic prototype; cash surplus is not accounting profit or borrowing eligibility.
+The P1–P4 branches were merged on the integration branch. Workbook v1 remains unchanged for this MVP. Missing loan terms, supplier due dates, stock lead times and historical cash inputs are reported as unavailable; no accounting profit or borrowing eligibility is inferred from incomplete records.
