@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { AIAnalysis, Checklist, Dashboard, Survive } from "@/components/PrototypeModules";
+import { AIAnalysis, Checklist, Survive } from "@/components/PrototypeModules";
 import { snapshotDisplay, type DisplayData } from "@/lib/snapshotAdapter";
 import { Loading, usePlatform, useSnapshot } from "./providers";
+import { ConnectedFinancialPage } from "@/features/financial/pages/ConnectedFinancialPage";
 
 export type ModulePage = "financial" | "working-capital" | "credit" | "ai";
 export function ModuleRoute({ page }: { page: ModulePage }) {
+  if (page === "financial") return <ConnectedFinancialPage />;
+  return <PrototypeModuleRoute page={page} />;
+}
+
+function PrototypeModuleRoute({ page }: { page: Exclude<ModulePage, "financial"> }) {
   const snapshot = useSnapshot();
   if (snapshot.isPending) return <Loading />;
   if (snapshot.isError) return <p role="alert">{snapshot.error.message}</p>;
@@ -33,7 +39,6 @@ export function ModuleRoute({ page }: { page: ModulePage }) {
           Manage workbook
         </Link>
       </div>
-      {page === "financial" && <Dashboard {...display} />}
       {page === "working-capital" && (
         <Survive data={display.data} goCredit={() => window.location.assign("/credit")} />
       )}
