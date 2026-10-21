@@ -26,7 +26,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="text-lg font-semibold text-slate-900">Revenue and operating expenses</h2>
         <div className="mt-5 rounded-xl bg-slate-50 px-5 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No trend data available yet</p>
+          <p className="text-sm font-medium text-slate-700">No reporting periods available.</p>
           <p className="mt-1 text-sm text-slate-500">
             Import records covering more than one reporting period to see a comparison.
           </p>

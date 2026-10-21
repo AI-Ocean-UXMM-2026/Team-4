@@ -67,7 +67,7 @@ export function FinancialPage({
           {synthetic && (
             <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Preview data
+              Synthetic demo data
             </span>
           )}
         </div>
@@ -133,6 +133,19 @@ export function FinancialPage({
       )}
       {state.status === "ready" && !dataRefreshing && state.snapshot && (
         <>
+          {state.snapshot.data_quality.warnings.length > 0 && (
+            <aside
+              aria-label="Financial data warnings"
+              className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
+            >
+              <p className="font-semibold">Please note about this report</p>
+              <ul className="mt-2 list-inside list-disc space-y-1">
+                {state.snapshot.data_quality.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </aside>
+          )}
           <FinancialKpiCards snapshot={state.snapshot} />
           <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-5">
             <div className="min-w-0 xl:col-span-3">

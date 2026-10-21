@@ -91,9 +91,14 @@ export function OutstandingBalances({
                     >
                       <span className="inline-flex items-center gap-1.5">
                         {overdue && <AlertCircle size={13} aria-hidden="true" />}
-                        {item.due_date ?? "Unavailable"}
+                        {item.due_date ?? "Due date unavailable"}
+                        {overdue && " · Overdue"}
                       </span>
-                      {overdue && <span className="mt-1 block text-[11px]">Overdue</span>}
+                      {overdue && (
+                        <span className="mt-1 block text-[11px]" aria-hidden="true">
+                          Overdue
+                        </span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3 text-right font-semibold text-slate-950">
                       {formatMmk(item.amount_mmk)}
