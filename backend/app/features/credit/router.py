@@ -96,7 +96,7 @@ def build_credit_snapshot(inputs: dict, business_id: str) -> dict:
     categories = readiness_categories(inputs)
     due = next((loan["next_payment_due_mmk"] for loan in loans if loan["next_payment_due_mmk"] is not None), None)
     limitations = ["No credit-document metadata store exists yet; imported records remain unverified.",
-                   "P1 cash context is not available in the current repository integration."]
+                   "Cash information from Financial Health is not connected to Credit Hub yet."]
     missing_data = ["p1_cash_snapshot", "document_metadata"]
     if any(loan["schedule_status"] == "missing_terms" for loan in loans):
         limitations.append("The workbook v1 loan columns do not include interest rate or term; schedules are unavailable until those terms are supplied.")

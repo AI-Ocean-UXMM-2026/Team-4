@@ -1,4 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { usePlatform, useSnapshot } from "@/app/providers";
 import { api } from "@/lib/apiClient";
 import type { FinancialClient, FinancialSnapshot, Trends } from "../types";
@@ -22,7 +23,7 @@ export function ConnectedFinancialPage() {
 
   const { business } = usePlatform();
   const snapshot = useSnapshot();
-  if (snapshot.isPending) return <p role="status">{t("Loading current financial records…")}</p>;
+  if (snapshot.isPending) return <LoadingAnimation label="Loading current financial records…" />;
   if (snapshot.isError) return <p role="alert">{t(snapshot.error.message)}</p>;
   if (snapshot.data.business_id !== business.id)
     return <p role="alert">{t("Business records are changing. Refresh to continue.")}</p>;

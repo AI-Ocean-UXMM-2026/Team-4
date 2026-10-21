@@ -1,4 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate } from "@tanstack/react-router";
@@ -96,6 +97,8 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           await Promise.all([
             queries.invalidateQueries({ queryKey: ["snapshot", business.id] }),
             queries.invalidateQueries({ queryKey: ["credit-summary", business.id] }),
+            queries.invalidateQueries({ queryKey: ["working-capital", business.id] }),
+            queries.invalidateQueries({ queryKey: ["financial-summary", business.id] }),
             queries.invalidateQueries({ queryKey: ["ai-analysis", business.id] }),
             queries.invalidateQueries({ queryKey: ["sync-status", business.id] }),
             queries.invalidateQueries({ queryKey: ["businesses"] }),
@@ -108,11 +111,5 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   );
 }
 export function Loading() {
-  const { t } = useTranslation();
-
-  return (
-    <p role="status" className="p-10 text-muted-foreground">
-      {t("Loading Shay Sett…")}
-    </p>
-  );
+  return <LoadingAnimation fullScreen />;
 }

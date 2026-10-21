@@ -1,4 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, CalendarDays, Database, RefreshCw, UploadCloud } from "lucide-react";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
@@ -170,12 +171,7 @@ export function FinancialPage({
       )}
 
       {hasRecords && (state.status === "loading" || dataRefreshing) && (
-        <p
-          role="status"
-          className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground"
-        >
-          {t("Loading current financial records…")}
-        </p>
+        <LoadingAnimation label="Loading current financial records…" />
       )}
       {hasRecords && state.status === "error" && !dataRefreshing && (
         <div

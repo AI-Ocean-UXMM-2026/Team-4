@@ -17,7 +17,7 @@ export function RepaymentCapacity({ data }: { data: CreditSummary["repayment_cap
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">{data.explanation}</p>
+        <p className="text-sm text-muted-foreground">{t(data.explanation)}</p>
         {data.repayment_gap_mmk !== null && (
           <p className="mt-3 font-semibold">
             {t("Planning gap:")} {Number(data.repayment_gap_mmk).toLocaleString("en-US")} {t("MMK")}

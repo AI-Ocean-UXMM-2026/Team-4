@@ -9,7 +9,7 @@ export function TopBar() {
   const { business, businesses, setBusinessId, signOut } = usePlatform();
   return (
     <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-8">
-      <div className="mr-auto">
+      <div className="mr-auto lg:hidden">
         <Brand />
       </div>
       <DisplayPreferences />

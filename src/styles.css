@@ -15,6 +15,8 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -347,7 +349,89 @@ html[lang="my"] .bf-auth-story h2 {
   border-color: #b5a4dc30;
 }
 
+@media print {
+  :root, .dark {
+    --background: #fff;
+    --foreground: #111;
+    --card: #fff;
+    --card-foreground: #111;
+    --muted: #eee;
+    --muted-foreground: #444;
+    --secondary: #eee;
+    --border: #bbb;
+  }
+  body, .bf-app { background: #fff !important; color: #111 !important; }
+  .bf-app aside, .bf-app-header, .bf-app footer,
+  .bf-app a[href="#main-content"], [data-loading-screen],
+  .bf-app [role="tablist"] { display: none !important; }
+  .bf-app > .min-w-0 { padding-left: 0 !important; }
+  .bf-app main { max-width: none; padding: 0 !important; }
+  .bf-app *, .bf-app *::before, .bf-app *::after {
+    color: #111 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .credit-record-folder { break-inside: avoid; page-break-inside: avoid; }
+  .credit-record-folder > svg path { fill: #fff !important; stroke: #777 !important; }
+  .credit-record-folder span { border: 1px solid #bbb; }
+  .credit-record-folder [aria-hidden="true"].h-0\.5 { background: #777 !important; }
+  tr { break-inside: avoid; }
+}
+
+.credit-print-report { display: none; }
+@media print {
+  @page { size: A4 portrait; margin: 16mm; }
+  .credit-page > :not(.credit-print-report) { display: none !important; }
+  .credit-page > .credit-print-report {
+    display: block !important;
+    margin: 0 !important;
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+  .credit-print-report header { border-bottom: 2px solid #222; padding-bottom: 4mm; margin-bottom: 5mm; }
+  .credit-print-report .report-brand { font-size: 9pt; letter-spacing: 0.03em; }
+  .credit-print-report h1 { font-size: 19pt; font-weight: 700; margin: 2mm 0; }
+  .credit-print-report h2 { font-size: 11pt; font-weight: 700; border-bottom: 1px solid #aaa; padding-bottom: 1.5mm; margin: 5mm 0 2mm; break-after: avoid; }
+  .credit-print-report .report-details { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 5mm; }
+  .credit-print-report .report-details div { display: flex; gap: 2mm; }
+  .credit-print-report dt { font-weight: 600; }
+  .credit-print-report dd { margin: 0; }
+  .credit-print-report table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 2mm; }
+  .credit-print-report th, .credit-print-report td { text-align: left; vertical-align: top; padding: 2mm; border-bottom: 1px solid #ccc; overflow-wrap: anywhere; }
+  .credit-print-report th { font-weight: 700; border-bottom: 1px solid #555; }
+  .credit-print-report thead { display: table-header-group; }
+  .credit-print-report .report-money { text-align: right; }
+  .credit-print-report ul { list-style: disc; padding-left: 5mm; }
+  .credit-print-report li { margin-bottom: 1.5mm; }
+  .credit-print-report .report-note { font-size: 8pt; margin-top: 2mm; }
+  .credit-print-report .report-disclaimer { font-size: 8pt; border-top: 1px solid #999; padding-top: 3mm; margin-top: 6mm; }
+}
+
+.bf-loading-bar {
+  --bar-top: 56px;
+  --bar-height: 27px;
+  animation: bf-bar-rise 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-fill-mode: both;
+}
+.bf-loading-bar-two { --bar-top: 36px; --bar-height: 47px; animation-delay: 0.16s; }
+.bf-loading-bar-three { --bar-top: 16px; --bar-height: 67px; animation-delay: 0.32s; }
+@keyframes bf-bar-rise {
+  0%, 8% { y: 80px; height: 3px; opacity: 0.65; }
+  38%, 52% { y: var(--bar-top); height: var(--bar-height); opacity: 1; }
+  86%, 100% { y: 80px; height: 3px; opacity: 0.65; }
+}
+.bf-app:has([data-loading-screen]) footer { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
+  .bf-loading-bar {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
   *,
   *::before,
   *::after {

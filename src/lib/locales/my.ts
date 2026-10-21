@@ -1,4 +1,56 @@
 export const my: Record<string, string> = {
+  "Bank loan guide": "ဘဏ်ချေးငွေလမ်းညွှန်",
+  "Report date": "အစီရင်ခံရက်",
+  "Industry": "လုပ်ငန်းအမျိုးအစား",
+  "City": "မြို့",
+  "Record category": "မှတ်တမ်းအမျိုးအစား",
+  "Records": "မှတ်တမ်းအရေအတွက်",
+  "Lender": "ငွေချေးပေးသူ",
+  "Loan summary": "ချေးငွေအကျဉ်းချုပ်",
+  "Principal repaid": "ပြန်ဆပ်ပြီးအရင်း",
+  "Principal repayment progress": "အရင်းပြန်ဆပ်မှု အခြေအနေ",
+  "{0}% of principal repaid": "အရင်း {0}% ပြန်ဆပ်ပြီး",
+  "reducing balance": "ကျန်အရင်းပေါ် အတိုးတွက်နည်း",
+  "Business profile and registration": "လုပ်ငန်းအချက်အလက်နှင့် မှတ်ပုံတင်",
+  "Sales history": "အရောင်းမှတ်တမ်း",
+  "Expense history": "အသုံးစရိတ်မှတ်တမ်း",
+  "Cash-flow history": "ငွေဝင်ငွေထွက်မှတ်တမ်း",
+  "Customer receivables and supplier payables":
+    "ဖောက်သည်များထံမှ ရရန်ငွေနှင့် ကုန်ပေးသွင်းသူများကို ပေးရန်ငွေ",
+  "Existing debt and repayment records": "ရှိပြီးသားချေးငွေနှင့် ပြန်ဆပ်မှုမှတ်တမ်း",
+  "Other lender-requested documents": "ငွေချေးပေးသူ တောင်းဆိုသော အခြားစာရွက်စာတမ်းများ",
+  "uploaded unverified": "ထည့်သွင်းထားပြီး · အတည်မပြုရသေး",
+  "excel imported": "Excel မှ ထည့်သွင်းထားသည်",
+  "not applicable": "မသက်ဆိုင်ပါ",
+  none: "မရှိသေးပါ",
+  "Imported record presence does not verify a lender document.":
+    "တင်ထားသောမှတ်တမ်းရှိခြင်းသည် ငွေချေးပေးသူလိုအပ်သည့် စာရွက်စာတမ်းကို အတည်ပြုပြီးဖြစ်သည်ဟု မဆိုလိုပါ။",
+  "Business profile details are recorded, but no registration document metadata is available.":
+    "လုပ်ငန်းအချက်အလက်များ ထည့်သွင်းထားပြီးဖြစ်သော်လည်း လုပ်ငန်းမှတ်ပုံတင်စာရွက်စာတမ်း အချက်အလက် မရှိသေးပါ။",
+  "Simplified operational report; taxes and depreciation excluded.":
+    "ဤသည်မှာ လုပ်ငန်းလည်ပတ်မှု အကျဉ်းချုပ်အစီရင်ခံစာဖြစ်ပြီး အခွန်နှင့် တန်ဖိုးလျော့စရိတ် မပါဝင်ပါ။",
+  "Interest uses cash-paid amounts, not accrued interest.":
+    "အတိုးကို တကယ်ပေးချေထားသော ပမာဏအရ တွက်ထားပါသည်။ ကျသင့်ပြီး မပေးချေရသေးသော အတိုး မပါဝင်ပါ။",
+  "Workbook v1 has no supplier due dates or loan schedules; obligations have unknown due dates.":
+    "Excel ပုံစံ ဗားရှင်း ၁ တွင် ကုန်ပေးသွင်းသူကို ပေးချေရမည့်ရက်နှင့် ချေးငွေပြန်ဆပ်ဇယား မပါသဖြင့် ပေးရန်ငွေများ၏ သတ်မှတ်ရက်ကို မသိနိုင်သေးပါ။",
+  "Historical unit cost at sale is not imported. COGS and profit are unavailable; current product cost is not substituted.":
+    "ရောင်းချခဲ့သည့်အချိန်က တစ်ခုချင်းကုန်ရင်းတန်ဖိုး မပါဝင်သဖြင့် ရောင်းပြီးကုန်ရင်းနှင့် အမြတ်ကို မတွက်နိုင်သေးပါ။ လက်ရှိကုန်ရင်းတန်ဖိုးကို အစားထိုးမသုံးထားပါ။",
+  "Expense payment status/date is not imported. Actual cash and unpaid-expense obligations cannot be determined.":
+    "အသုံးစရိတ်များ ပေးချေပြီးမှုနှင့် ပေးချေသည့်ရက် မပါဝင်သဖြင့် တကယ့်ငွေလက်ကျန်နှင့် မပေးချေရသေးသော အသုံးစရိတ်ကို မသတ်မှတ်နိုင်သေးပါ။",
+  "No credit-document metadata store exists yet; imported records remain unverified.":
+    "ချေးငွေဆိုင်ရာ စာရွက်စာတမ်းအချက်အလက် သိမ်းဆည်းသည့်စနစ် မရှိသေးသဖြင့် တင်ထားသောမှတ်တမ်းများကို အတည်မပြုရသေးပါ။",
+  "Cash balances and operating payments from Financial Health are not available yet. Repayment planning uses cash, not profit.":
+    "ငွေကြေးအခြေအနေကဏ္ဍမှ ငွေလက်ကျန်နှင့် လုပ်ငန်းပေးချေမှု အချက်အလက်များ မရရှိသေးပါ။ ပြန်ဆပ်ရန်စီမံရာတွင် အမြတ်အစား လက်တွေ့ငွေကို အသုံးပြုပါသည်။",
+  "Cash information from Financial Health is not connected to Credit Hub yet.":
+    "ငွေကြေးအခြေအနေကဏ္ဍမှ ငွေလက်ကျန်နှင့် ငွေဝင်ငွေထွက် အချက်အလက်များကို ချေးငွေစီမံမှုကဏ္ဍနှင့် မချိတ်ဆက်ရသေးပါ။",
+  "The workbook v1 loan columns do not include interest rate or term; schedules are unavailable until those terms are supplied.":
+    "Excel ပုံစံ ဗားရှင်း ၁ ၏ ချေးငွေစာရင်းတွင် အတိုးနှုန်းနှင့် ချေးငွေသက်တမ်း မပါဝင်သဖြင့် ယင်းအချက်များ ဖြည့်စွက်မပေးမချင်း ပြန်ဆပ်ဇယားကို မတွက်နိုင်သေးပါ။",
+  "Supplier lead times, mandatory payments and protected reserve are not in workbook v1; purchasing budget is unavailable until supplied as explicit scenario assumptions.":
+    "Excel ပုံစံ ဗားရှင်း ၁ တွင် ကုန်မှာယူပြီး ရောက်ရှိရန်ကြာချိန်၊ မဖြစ်မနေ ပေးချေရမည့်ငွေနှင့် ချန်ထားရမည့်အရန်ငွေ မပါဝင်ပါ။ ယင်းအချက်များကို စမ်းတွက်ရန် ယူဆချက်များအဖြစ် သီးခြားမဖြည့်မချင်း ကုန်ဝယ်ရန်ဘတ်ဂျက်ကို မတွက်နိုင်သေးပါ။",
+  "Sidebar control": "ဘေးမီနူး ပုံစံ",
+  Expanded: "အမြဲဖြန့်ထားရန်",
+  Collapsed: "အိုင်ကွန်များသာ ပြရန်",
+  "Expand on hover": "မောက်စ်တင်လျှင် ဖြန့်ရန်",
   " days": " ရက်",
   " MMK": " ကျပ်",
   ". Financial pages refresh after each successful import.":
@@ -229,7 +281,8 @@ export const my: Record<string, string> = {
   "Purchasing budget": "ဝယ်ယူရန် လျာထားငွေ",
   "Reconnect Microsoft": "Microsoft ပြန်ချိတ်ဆက်ရန်",
   "Record presence only. Preparation progress is not a credit score or loan approval.":
-    "မှတ်တမ်းရှိမှုကိုသာ စစ်ဆေးခြင်း ဖြစ်ပါသည်။ ပြင်ဆင်မှုတိုးတက်မှုသည် ချေးငွေအမှတ် သို့မဟုတ် ချေးငွေခွင့်ပြုချက် မဟုတ်ပါ။",
+    "မှတ်တမ်းရှိမှုကိုသာ ပြပါသည်။ ချေးငွေအမှတ် သို့မဟုတ် ခွင့်ပြုချက် မဟုတ်ပါ။",
+  "Record preparation progress": "မှတ်တမ်းပြင်ဆင်မှု",
   "Recorded cash": "မှတ်တမ်းပါ ငွေသား",
   "Recorded loans": "မှတ်တမ်းပါ ချေးငွေများ",
   "Records covered:": "ပါဝင်သော မှတ်တမ်းများ —",
@@ -287,6 +340,8 @@ export const my: Record<string, string> = {
   "Your first upload will appear here.": "ပထမဆုံး တင်ထားသောဖိုင်ကို ဤနေရာတွင် မြင်ရပါမည်။",
   "Your imported records": "သင်ထည့်သွင်းထားသော မှတ်တမ်းများ",
   "added ·": "အသစ်ထည့်သွင်း ·",
+  "{0} of {1} record categories already added":
+    "မှတ်တမ်း {0} / {1} မျိုး ထည့်ပြီး",
   categories: "အမျိုးအစား",
   "months with records": "လစာ မှတ်တမ်း",
   priority: "ဦးစားပေး",

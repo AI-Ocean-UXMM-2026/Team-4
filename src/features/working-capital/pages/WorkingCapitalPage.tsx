@@ -1,4 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { CashGapSimulator } from "../components/CashGapSimulator";
 import { InventoryRiskTable } from "../components/InventoryRiskTable";
 import { ReservePlanner } from "../components/ReservePlanner";
@@ -15,12 +16,7 @@ export function WorkingCapitalPage() {
     business.id,
     business.source_version,
   );
-  if (loading)
-    return (
-      <p role="status" className="bf-card text-muted-foreground">
-        {t("Loading working-capital snapshot…")}
-      </p>
-    );
+  if (loading) return <LoadingAnimation label="Loading working-capital snapshot…" />;
   if (error)
     return (
       <p role="alert" className="bf-card text-destructive">

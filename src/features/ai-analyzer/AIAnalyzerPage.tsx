@@ -1,4 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
+import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { Link } from "@tanstack/react-router";
 import { useBusinessAnalysis } from "./useBusinessAnalysis";
 import type { Insight } from "./types";
@@ -104,7 +105,9 @@ export function AIAnalyzerPage() {
           {t("Current import version:")} {business.source_version}
         </p>
       </header>
-      {isLoading && <p role="status">{t("Loading your latest analysis…")}</p>}
+      {(isLoading || isAnalyzing) && (
+        <LoadingAnimation label={isAnalyzing ? "Analyzing…" : "Loading your latest analysis…"} />
+      )}
       {error && (
         <p role="alert" className="text-destructive">
           {t(error.message)}
