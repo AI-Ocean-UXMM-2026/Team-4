@@ -32,9 +32,9 @@ begin
     'purchases','supplier_payments','expenses','loans','loan_payments','cash_adjustments',
     'import_batches','imported_rows','row_revisions']
   loop
-    execute format('alter table public.%I enable row level security', table_name);
-    execute format('revoke all on public.%I from anon, authenticated', table_name);
-    execute format('grant select on public.%I to authenticated', table_name);
-    execute format('create policy business_member_read on public.%I for select to authenticated using (public.bizflow_is_member(business_id))', table_name);
+    execute format('alter table public.%%I enable row level security', table_name);
+    execute format('revoke all on public.%%I from anon, authenticated', table_name);
+    execute format('grant select on public.%%I to authenticated', table_name);
+    execute format('create policy business_member_read on public.%%I for select to authenticated using (public.bizflow_is_member(business_id))', table_name);
   end loop;
 end $$;
