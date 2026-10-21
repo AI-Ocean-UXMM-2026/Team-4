@@ -1,0 +1,69 @@
+export type Money = string;
+export type ScheduleLine = {
+  period: number;
+  due_date: string;
+  scheduled_installment_mmk: Money;
+  principal_due_mmk: Money;
+  interest_due_mmk: Money;
+  projected_principal_mmk: Money;
+};
+export type ActualPayment = {
+  payment_id: string;
+  date: string;
+  principal_mmk: Money;
+  interest_mmk: Money;
+};
+export type Loan = {
+  loan_id: string;
+  lender: string;
+  repayment_model: string;
+  principal_mmk: Money;
+  disbursement_date: string;
+  annual_rate_pct: string | null;
+  term_months: number | null;
+  actual_principal_paid_mmk: Money;
+  actual_interest_paid_mmk: Money;
+  outstanding_principal_mmk: Money;
+  schedule_status: "available" | "unsupported_loan_model" | "missing_terms";
+  schedule_explanation: string | null;
+  schedule: ScheduleLine[];
+  actual_payments: ActualPayment[];
+  next_due_date: string | null;
+  next_payment_due_mmk: Money | null;
+  next_payment_status: "unpaid" | "no_future_installment" | "unknown";
+};
+export type ReadinessCategory = {
+  category: string;
+  title: string;
+  status: "missing" | "uploaded_unverified" | "reviewed" | "not_applicable";
+  source: "excel_imported" | "user_entered" | "lender_verified" | "none";
+  record_count: number;
+  period_start: string | null;
+  period_end: string | null;
+  coverage_months: number;
+  months_without_records: string[];
+  note: string | null;
+};
+export type CreditSummary = {
+  business_id: string;
+  as_of: string;
+  lender_checklist_scope: "generic_not_lender_specific";
+  data_quality: { status: "complete" | "partial" | "missing"; missing: string[]; limitations: string[] };
+  loans: Loan[];
+  readiness: ReadinessCategory[];
+  readiness_progress: { prepared_categories: number; total_categories: number; label: string };
+  repayment_capacity: {
+    status: "appears_covered_from_recorded_cash" | "potential_shortfall" | "insufficient_data";
+    projected_cash_available_before_loan_mmk: Money | null;
+    repayment_gap_mmk: Money | null;
+    explanation: string;
+  };
+  preparation_report: {
+    business_profile: { id: string; name: string; industry?: string; city?: string } | null;
+    period_covered: { start: string | null; end: string | null };
+    financial_summary: { available: boolean; note: string };
+    outstanding_loans: { loan_id: string; outstanding_principal_mmk: Money }[];
+    missing_records: string[];
+    disclaimer: string;
+  };
+};
