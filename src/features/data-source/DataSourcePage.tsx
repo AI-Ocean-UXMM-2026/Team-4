@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Loading, usePlatform } from "@/app/providers";
 import { api, businessPath } from "@/lib/apiClient";
@@ -6,22 +7,25 @@ import { ExcelUpload } from "./ExcelUpload";
 import { OneDriveConnect } from "./OneDriveConnect";
 import { SyncStatus } from "./SyncStatus";
 export function DataSourcePage() {
+  const { t } = useTranslation();
+
   const { business } = usePlatform();
   const query = useQuery({
     queryKey: ["sync-status", business.id],
     queryFn: () => api<Status>(businessPath("sync-status", business.id)),
   });
   if (query.isPending) return <Loading />;
-  if (query.isError) return <p role="alert">{query.error.message}</p>;
+  if (query.isError) return <p role="alert">{t(query.error.message)}</p>;
   return (
     <div className="space-y-6">
       <div>
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
-          Business settings
+          {t("Business settings")}
         </p>
-        <h1 className="text-3xl font-bold">Your data starts here.</h1>
+        <h1 className="text-3xl font-bold">{t("Your data starts here.")}</h1>
         <p className="mt-2 text-muted-foreground">
-          One workbook for {business.name}. Financial pages refresh after each successful import.
+          {t("One workbook for")} {business.name}
+          {t(". Financial pages refresh after each successful import.")}
         </p>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">

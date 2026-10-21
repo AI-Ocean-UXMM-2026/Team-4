@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 import { Download, Upload } from "lucide-react";
 import { usePlatform } from "@/app/providers";
@@ -5,6 +6,8 @@ import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
+  const { t } = useTranslation();
+
   const { business, imported } = usePlatform();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,18 +29,20 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   return (
     <section className="bf-card">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Upload Excel workbook</h2>
+        <h2 className="text-lg font-semibold">{t("Upload Excel workbook")}</h2>
         <Upload size={20} className="text-primary" />
       </div>
       <p className="mb-5 text-sm text-muted-foreground">
-        Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once.
+        {t(
+          "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once.",
+        )}
       </p>
       <label className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6">
         <span className="mb-3 block text-sm font-semibold">
-          Choose .xlsx file · up to {Math.round(maxBytes / 1024 / 1024)} MB
+          {t("Choose .xlsx file · up to")} {Math.round(maxBytes / 1024 / 1024)} {t("MB")}
         </span>
         <input
-          aria-label="Excel workbook"
+          aria-label={t("Excel workbook")}
           type="file"
           accept=".xlsx"
           disabled={busy}
@@ -84,19 +89,19 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
             }
           }}
         >
-          {busy ? "Validating and importing…" : "Import workbook"}
+          {busy ? t("Validating and importing…") : t("Import workbook")}
         </button>
         <button
           className="bf-button-secondary inline-flex items-center gap-2"
           onClick={() => void download()}
         >
           <Download size={16} />
-          Download template
+          {t("Download template")}
         </button>
       </div>
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive">
-          {error}
+          {t(error)}
         </p>
       )}
       {result && (
@@ -104,8 +109,12 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           {result.status !== "failed" && (
             <p className="font-semibold text-primary">
               {result.status === "up_to_date"
-                ? "Already up to date. No duplicate rows added."
-                : `Imported: ${result.row_counts.inserted || 0} added, ${result.row_counts.updated || 0} updated, ${result.row_counts.unchanged || 0} unchanged.`}
+                ? t("Already up to date. No duplicate rows added.")
+                : t("Imported: {0} added, {1} updated, {2} unchanged.", {
+                    "0": result.row_counts.inserted || 0,
+                    "1": result.row_counts.updated || 0,
+                    "2": result.row_counts.unchanged || 0,
+                  })}
             </p>
           )}
           <Issues result={result} />

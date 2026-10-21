@@ -1,9 +1,12 @@
+import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 import { Cloud } from "lucide-react";
 import { usePlatform } from "@/app/providers";
 import { api, businessPath } from "@/lib/apiClient";
 import type { ImportResult, SyncStatus, WorkbookFile } from "@/lib/contracts";
 export function OneDriveConnect({ status }: { status: SyncStatus }) {
+  const { t } = useTranslation();
+
   const { business, imported } = usePlatform();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -29,19 +32,20 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
   return (
     <section className="bf-card">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">OneDrive connection</h2>
+        <h2 className="text-lg font-semibold">{t("OneDrive connection")}</h2>
         <Cloud className="text-primary" size={22} />
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
         {status.graph_enabled
           ? status.linked
-            ? "A cloud workbook is linked. Sync Now imports its latest saved version."
-            : "Connect an approved Microsoft account and choose your workbook."
-          : "School Microsoft access is not configured. Manual upload is ready to use."}
+            ? t("A cloud workbook is linked. Sync Now imports its latest saved version.")
+            : t("Connect an approved Microsoft account and choose your workbook.")
+          : t("School Microsoft access is not configured. Manual upload is ready to use.")}
       </p>
       <p className="mb-5 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-        OneDrive must finish uploading your Excel changes before BizFlow can read them. Sync Now
-        checks the cloud copy. Local-only changes require re-upload.
+        {t(
+          "OneDrive must finish uploading your Excel changes before Shay Sett can read them. Sync Now checks the cloud copy. Local-only changes require re-upload.",
+        )}
       </p>
       <div className="flex flex-wrap gap-3">
         <button
@@ -56,7 +60,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
             })
           }
         >
-          {status.connected ? "Reconnect Microsoft" : "Connect Microsoft"}
+          {status.connected ? t("Reconnect Microsoft") : t("Connect Microsoft")}
         </button>
         {status.connected && (
           <button
@@ -64,7 +68,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
             className="bf-button-secondary"
             onClick={() => void run(() => browse())}
           >
-            Choose workbook
+            {t("Choose workbook")}
           </button>
         )}
         <button
@@ -83,7 +87,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
             })
           }
         >
-          {busy ? "Working…" : "Sync Now"}
+          {busy ? t("Working…") : t("Sync Now")}
         </button>
       </div>
       {files.length > 0 && (
@@ -92,7 +96,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
             className="block text-sm text-primary underline"
             onClick={() => void run(() => browse())}
           >
-            OneDrive root
+            {t("OneDrive root")}
           </button>
           {files.map((file) => (
             <button
@@ -114,7 +118,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
                 })
               }
             >
-              {file.is_folder ? "Folder: " : "Workbook: "}
+              {file.is_folder ? t("Folder: ") : t("Workbook: ")}
               {file.name}
             </button>
           ))}
@@ -134,7 +138,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
             })
           }
         >
-          Disconnect OneDrive
+          {t("Disconnect OneDrive")}
         </button>
       )}
       {message && (

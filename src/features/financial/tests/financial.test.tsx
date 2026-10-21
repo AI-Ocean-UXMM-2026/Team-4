@@ -76,14 +76,14 @@ describe("Financial reporting", () => {
         today="2026-10-20"
       />,
     );
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      expect.stringContaining("No workbook imported"),
-    );
+    expect(
+      await screen.findByRole("heading", { name: "Start with your business data" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
     expect(api.summary).not.toHaveBeenCalled();
     expect(api.trends).not.toHaveBeenCalled();
     expect(screen.getByText("Synthetic demo data")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Review data source" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Set up my data" }).getAttribute("href")).toBe(
       "/data-source",
     );
   });

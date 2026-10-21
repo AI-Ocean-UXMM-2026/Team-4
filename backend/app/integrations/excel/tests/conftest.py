@@ -46,7 +46,7 @@ def client(tmp_path):
         return jwt.encode({"sub": user_id, "aud": "authenticated", "iss": issuer or settings.supabase_url + "/auth/v1", "iat": moment-100, "exp": moment-1 if expired else moment+3600, "role": "authenticated"}, private_key, algorithm="RS256")
     def transport(request):
         if request.url.path.endswith("/settings"):
-            return httpx.Response(200, json={"mailer_autoconfirm": False, "external": {"email": True}, "disable_signup": False})
+            return httpx.Response(200, json={"mailer_autoconfirm": True, "external": {"email": True}, "disable_signup": False})
         if request.url.path.endswith("/user"):
             try:
                 sub = jwt.decode(request.headers.get("Authorization", "").removeprefix("Bearer "), private_key.public_key(), algorithms=["RS256"], audience="authenticated")["sub"]

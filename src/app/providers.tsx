@@ -1,7 +1,8 @@
+import { useTranslation } from "@/lib/i18n";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate } from "@tanstack/react-router";
-import { api, ApiError } from "@/lib/apiClient";
+import { api } from "@/lib/apiClient";
 import type { Business, PlatformConfig, Snapshot } from "@/lib/contracts";
 import { useAccount, useAuth, useConfig } from "./session";
 
@@ -34,19 +35,19 @@ export function AccountGate({
   children: ReactNode;
   onboarding?: boolean;
 }) {
+  const { t } = useTranslation();
+
   const { session, ready, signOut } = useAuth();
   const account = useAccount();
   if (!ready) return <Loading />;
   if (!session) return <Navigate to="/sign-in" replace />;
   if (account.isPending) return <Loading />;
   if (account.isError) {
-    if (account.error instanceof ApiError && account.error.code === "EMAIL_UNVERIFIED")
-      return <Navigate to="/verify-email" replace />;
     return (
       <div className="bf-card mx-auto my-12 max-w-md">
-        <p role="alert">{account.error.message}</p>
+        <p role="alert">{t(account.error.message)}</p>
         <button className="bf-button mt-4" onClick={() => void signOut()}>
-          Return to sign in
+          {t("Return to sign in")}
         </button>
       </div>
     );
@@ -107,9 +108,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   );
 }
 export function Loading() {
+  const { t } = useTranslation();
+
   return (
     <p role="status" className="p-10 text-muted-foreground">
-      Loading BIZFLOW…
+      {t("Loading Shay Sett…")}
     </p>
   );
 }

@@ -18,7 +18,7 @@ def reserve_email_request(sessions, action, email, ip):
         if provider:
             remaining = (provider.started_at.replace(tzinfo=timezone.utc) - now()).total_seconds()
             if remaining > 0:
-                raise APIError(429, "AUTH_RATE_LIMITED", "The email provider is limiting requests. Please wait before trying again.", headers={"Retry-After": str(math.ceil(remaining))})
+                raise APIError(429, "AUTH_RATE_LIMITED", "The account service is limiting requests. Please wait before trying again.", headers={"Retry-After": str(math.ceil(remaining))})
         retry_after = 0
         for subject, window, limit in rules:
             key = hashlib.sha256((action + ":" + subject).encode()).hexdigest()
@@ -29,7 +29,7 @@ def reserve_email_request(sessions, action, email, ip):
             if elapsed >= window:
                 row.started_at, row.count = moment, 0
             if row.count >= limit:
-                raise APIError(429, "AUTH_RATE_LIMITED", "Please wait before requesting another email.", headers={"Retry-After": str(max(1, math.ceil(window - elapsed)))})
+                raise APIError(429, "AUTH_RATE_LIMITED", "Please wait before making another account request.", headers={"Retry-After": str(max(1, math.ceil(window - elapsed)))})
             row.count += 1
             if row.count >= limit:
                 retry_after = max(retry_after, window if elapsed >= window else math.ceil(window - elapsed))

@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,19 +14,24 @@ function usePolicy() {
   const config = useConfig();
   return {
     config,
-    policy: config.data?.password_policy || { min_length: 8, required_characters: [] },
+    policy: config.data?.password_policy || {
+      min_length: 8,
+      required_characters: ["lower", "upper", "number", "symbol"],
+    },
   };
 }
-function useAvailability() {
+function useAvailability(signup = false) {
   const query = useConfig();
   const notice = query.isError
     ? "Unable to verify account configuration. Please try again shortly."
     : !query.data
       ? "Checking account configuration..."
-      : !query.data.auth_status?.ready || !authClient()
-        ? query.data.auth_status?.message ||
-          "Account access is being configured. Please try again later."
-        : "";
+      : !query.data.auth_configured || !authClient()
+        ? "Account access is temporarily unavailable. Please try again later."
+        : signup && !query.data.auth_status?.ready
+          ? query.data.auth_status?.message ||
+            "Account creation is temporarily unavailable. Please try again later."
+          : "";
   return { notice, blocked: !!notice };
 }
 function useCooldown(initial?: number) {
@@ -40,34 +46,46 @@ function useCooldown(initial?: number) {
     seconds: Math.max(0, Math.ceil((deadline - clock) / 1000)),
     active: () => deadline > Date.now(),
     restart: (seconds?: number) => {
-      setClock(Date.now());
-      setDeadline(seconds !== undefined ? Date.now() + seconds * 1000 : 0);
+      const now = Date.now();
+      setClock(now);
+      setDeadline(seconds !== undefined ? now + seconds * 1000 : 0);
     },
   };
 }
 type EmailResult = {
-  status: "verification_required" | "check_email";
+  status: "check_email" | "verification_required";
   cooldown_seconds?: number;
   message: string;
 };
-function useEmailRequest(initialCooldown?: number) {
+type RegistrationResult = {
+  status: "registered";
+  session: { access_token: string; refresh_token: string };
+};
+function useAccountRequest(initialCooldown?: number) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const cooldown = useCooldown(initialCooldown);
-  const submit = async (path: string, body: unknown): Promise<EmailResult | null> => {
+  const submit = async (
+    path: string,
+    body: unknown,
+  ): Promise<EmailResult | RegistrationResult | null> => {
     if (lock.current || cooldown.active()) return null;
     lock.current = true;
     setBusy(true);
     setError("");
     try {
-      const result = await api<EmailResult>(path, { method: "POST", body: JSON.stringify(body) });
-      if (result.status !== "verification_required" && result.status !== "check_email") {
-        throw new Error(
-          "The account service did not confirm this request. Check your email before retrying.",
-        );
+      const result = await api<EmailResult | RegistrationResult>(path, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      const accepted = path.endsWith("/register")
+        ? ["registered", "verification_required", "check_email"].includes(result.status)
+        : result.status === "check_email";
+      if (!accepted) {
+        throw new Error("The account service did not confirm this request. Please try again.");
       }
-      cooldown.restart(result.cooldown_seconds);
+      if (result.status !== "registered") cooldown.restart(result.cooldown_seconds);
       return result;
     } catch (failure) {
       setError(message(failure));
@@ -85,31 +103,41 @@ const message = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong. Please try again.";
 
 export function SignInPage() {
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const navigate = useNavigate();
   const availability = useAvailability();
   const { session, ready } = useAuth();
   if (ready && session) return <Navigate to="/" replace />;
   return (
     <AuthShell>
-      <h1 className="text-3xl font-bold">Sign in to BIZFLOW</h1>
-      <p className="mb-7 mt-3 text-muted-foreground">Manage your business finances in one place.</p>
+      <h1 className="text-3xl font-bold">{t("Sign in to Shay Sett")}</h1>
+      <p className="mb-7 mt-3 text-muted-foreground">
+        {t("Manage your business finances in one place.")}
+      </p>
       <form
         noValidate
         className="space-y-5"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (availability.blocked || busy) return;
+          if (busy) return;
           setError("");
+          setNeedsConfirmation(false);
           if (!validEmail(email)) {
             setError("Enter a valid email address.");
             return;
           }
           if (!password) {
             setError("Enter your password.");
+            return;
+          }
+          if (availability.blocked) {
+            setError(availability.notice);
             return;
           }
           setBusy(true);
@@ -119,12 +147,17 @@ export function SignInPage() {
               password,
             });
             if (error) {
+              setNeedsConfirmation(error.code === "email_not_confirmed");
               setError(
                 error.code === "email_not_confirmed"
-                  ? "Verify your email before signing in. You can request a new verification email below."
+                  ? "Confirm your email before signing in. Open the link in your inbox or request a new one below."
                   : error.status === 429
                     ? "Too many attempts. Please wait and try again."
-                    : "Email or password is incorrect",
+                    : error.name === "AuthRetryableFetchError" ||
+                        error.status === 0 ||
+                        (error.status !== undefined && error.status >= 500)
+                      ? "Cannot reach the account service. Check your connection and try again."
+                      : "Email or password is incorrect",
               );
               return;
             }
@@ -138,7 +171,7 @@ export function SignInPage() {
         }}
       >
         <Field
-          label="Email address"
+          label={t("Email address")}
           name="email"
           type="email"
           autoComplete="username"
@@ -153,23 +186,23 @@ export function SignInPage() {
             to="/forgot-password"
             className="text-sm font-semibold text-primary hover:underline"
           >
-            Forgot password?
+            {t("Forgot password?")}
           </Link>
         </div>
-        <FormError message={error || availability.notice} />
-        <button disabled={busy || availability.blocked} className="bf-button w-full">
-          {busy ? "Signing in…" : "Sign in"}
+        <FormError message={error} />
+        {needsConfirmation && (
+          <Link to="/verify-email" className="block text-sm font-semibold text-primary">
+            {t("Request a confirmation email")}
+          </Link>
+        )}
+        <button disabled={busy} className="bf-button w-full">
+          {busy ? t("Signing in…") : t("Sign in")}
         </button>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        New to BIZFLOW?{" "}
+        {t("New to Shay Sett?")}{" "}
         <Link to="/register" className="font-semibold text-primary hover:underline">
-          Create an account
-        </Link>
-      </p>
-      <p className="mt-4 text-center text-xs">
-        <Link to="/verify-email" className="text-muted-foreground underline">
-          Resend verification email
+          {t("Create an account")}
         </Link>
       </p>
     </AuthShell>
@@ -177,6 +210,8 @@ export function SignInPage() {
 }
 
 export function RegisterPage() {
+  const { t } = useTranslation();
+
   const { policy } = usePolicy();
   const [step, setStep] = useState(1);
   const [account, setAccount] = useState({
@@ -187,31 +222,35 @@ export function RegisterPage() {
   });
   const [business, setBusiness] = useState<BusinessDetails>({ ...emptyBusiness });
   const [error, setError] = useState("");
-  const request = useEmailRequest();
-  const availability = useAvailability();
-  const busy = request.busy;
-  const [submitted, setSubmitted] = useState<EmailResult | null>(null);
+  const request = useAccountRequest();
+  const availability = useAvailability(true);
+  const navigate = useNavigate();
+  const queries = useQueryClient();
+  const signupLock = useRef(false);
+  const [finishing, setFinishing] = useState(false);
+  const [verification, setVerification] = useState<EmailResult | null>(null);
+  const busy = request.busy || finishing;
   const set = (key: keyof typeof account, value: string) =>
     setAccount({ ...account, [key]: value });
-  if (submitted)
-    return <VerificationPage initialEmail={account.email.trim()} initialResult={submitted} />;
+  if (verification)
+    return <VerificationPage initialEmail={account.email.trim()} initialResult={verification} />;
   return (
     <AuthShell>
       <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">
-        Step {step} of 2 · {step === 1 ? "Account details" : "Business details"}
+        {t("Step")} {step} {t("of 2 ·")} {step === 1 ? t("Account details") : t("Business details")}
       </p>
-      <h1 className="text-3xl font-bold">Create your account</h1>
+      <h1 className="text-3xl font-bold">{t("Create your account")}</h1>
       <p className="mb-6 mt-3 text-sm text-muted-foreground">
         {step === 1
-          ? "Start with your name and a secure password."
-          : "Tell us about the business you’ll manage."}
+          ? t("Start with your name and a secure password.")
+          : t("Tell us about the business you’ll manage.")}
       </p>
       <form
         noValidate
         className="space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (busy || (step === 2 && (availability.blocked || request.cooldown.active()))) return;
+          if (signupLock.current || busy || (step === 2 && request.cooldown.active())) return;
           setError("");
           if (!account.full_name.trim() || account.full_name.trim().length > 120) {
             setStep(1);
@@ -238,22 +277,46 @@ export function RegisterPage() {
             setError(problem);
             return;
           }
-          const result = await request.submit("/api/v1/auth/register", {
-            ...account,
-            full_name: account.full_name.trim(),
-            email: account.email.trim(),
-            business,
-          });
-          if (result) {
+          if (availability.blocked) {
+            setError(availability.notice);
+            return;
+          }
+          signupLock.current = true;
+          setFinishing(true);
+          try {
+            const result = await request.submit("/api/v1/auth/register", {
+              ...account,
+              full_name: account.full_name.trim(),
+              email: account.email.trim(),
+              business,
+            });
+            if (!result) return;
             setAccount((previous) => ({ ...previous, password: "", confirm_password: "" }));
-            setSubmitted(result);
+            if (result.status !== "registered") {
+              setVerification(result);
+              return;
+            }
+            const { error: sessionError } = await requireAuthClient().auth.setSession(
+              result.session,
+            );
+            if (sessionError)
+              throw new Error(
+                "Your account was created, but automatic sign-in failed. Please sign in.",
+              );
+            await queries.invalidateQueries({ queryKey: ["account"] });
+            await navigate({ to: "/onboarding" });
+          } catch (failure) {
+            setError(message(failure));
+          } finally {
+            signupLock.current = false;
+            setFinishing(false);
           }
         }}
       >
         {step === 1 ? (
           <>
             <Field
-              label="Full name"
+              label={t("Full name")}
               name="full_name"
               required
               maxLength={120}
@@ -262,7 +325,7 @@ export function RegisterPage() {
               onChange={(e) => set("full_name", e.target.value)}
             />
             <Field
-              label="Email address"
+              label={t("Email address")}
               name="email"
               type="email"
               required
@@ -278,7 +341,7 @@ export function RegisterPage() {
             />
             <Requirements policy={policy} />
             <PasswordField
-              label="Confirm password"
+              label={t("Confirm password")}
               autoComplete="new-password"
               value={account.confirm_password}
               onChange={(value) => set("confirm_password", value)}
@@ -287,7 +350,7 @@ export function RegisterPage() {
         ) : (
           <BusinessFields value={business} onChange={setBusiness} />
         )}
-        <FormError message={availability.notice || error || request.error} />
+        <FormError message={error || request.error} />
         <div className="flex gap-3">
           {step === 2 && (
             <button
@@ -299,32 +362,27 @@ export function RegisterPage() {
                 setError("");
               }}
             >
-              Back
+              {t("Back")}
             </button>
           )}
           <button
-            disabled={
-              busy || (step === 2 && (availability.blocked || request.cooldown.seconds > 0))
-            }
+            disabled={busy || (step === 2 && request.cooldown.seconds > 0)}
             className="bf-button flex-1"
           >
             {busy
-              ? "Creating account..."
+              ? t("Creating account...")
               : step === 1
-                ? "Continue"
+                ? t("Continue")
                 : request.cooldown.seconds
-                  ? `Try again in ${request.cooldown.seconds}s`
-                  : "Create account"}
+                  ? t("Try again in {0}s", { "0": request.cooldown.seconds })
+                  : t("Create account")}
           </button>
         </div>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        <Link to="/verify-email" className="mb-3 block font-semibold text-primary">
-          Already requested? Check your email or resend verification
-        </Link>
-        Already have an account?{" "}
+        {t("Already have an account?")}{" "}
         <Link to="/sign-in" className="font-semibold text-primary">
-          Sign in
+          {t("Sign in")}
         </Link>
       </p>
     </AuthShell>
@@ -358,44 +416,69 @@ function EmailRequestPage({
   initialEmail?: string;
   initialResult?: EmailResult | undefined;
 }) {
+  const { t } = useTranslation();
+
+  const verification = kind === "verification";
+  const existingAccount = verification && initialResult?.status === "check_email";
   const [email, setEmail] = useState(initialEmail);
   const [error, setError] = useState("");
   const [accepted, setAccepted] = useState(!!initialResult);
-  const request = useEmailRequest(initialResult?.cooldown_seconds);
+  const request = useAccountRequest(initialResult?.cooldown_seconds);
   const availability = useAvailability();
-  const verification = kind === "verification";
-  const problem = availability.notice || error || request.error;
+  const problem = error || request.error;
   return (
     <AuthShell>
       <h1 className="text-3xl font-bold">
-        {verification ? "Check your email" : "Forgot your password?"}
+        {existingAccount
+          ? t("Continue with your account")
+          : verification
+            ? t("Confirm your email")
+            : t("Forgot your password?")}
       </h1>
       <p className="mb-6 mt-3 text-sm leading-relaxed text-muted-foreground">
-        {verification
-          ? "Open your verification link before signing in to finish business setup. For a new registration, your business details resume after verification. If you already have an account, sign in or reset your password."
-          : "Enter your email address to request a secure reset link."}
+        {existingAccount
+          ? t(
+              "If you already registered with this email, sign in with your existing password or reset it. If you are waiting for confirmation, check your inbox or request a new link below.",
+            )
+          : verification
+            ? t(
+                "Open the confirmation link in your email, then sign in to finish setting up your business. If you already have an account, sign in or reset your password.",
+              )
+            : t("Enter your email address to request a secure reset link.")}
       </p>
+      {existingAccount && (
+        <div className="mb-6 flex flex-wrap gap-4 text-sm font-semibold text-primary">
+          <Link to="/sign-in">{t("Sign in")}</Link>
+          <Link to="/forgot-password">{t("Reset password")}</Link>
+        </div>
+      )}
       <form
         noValidate
         className="space-y-4"
         onSubmit={async (event) => {
           event.preventDefault();
-          if (availability.blocked || request.busy || request.cooldown.active()) return;
+          if (request.busy || request.cooldown.active()) return;
           setError("");
           setAccepted(false);
           if (!validEmail(email)) {
             setError("Enter a valid email address.");
             return;
           }
+          if (availability.blocked) {
+            setError(availability.notice);
+            return;
+          }
           const result = await request.submit(
-            `/api/v1/auth/${verification ? "resend-verification" : "forgot-password"}`,
-            { email: email.trim() },
+            verification ? "/api/v1/auth/resend-verification" : "/api/v1/auth/forgot-password",
+            {
+              email: email.trim(),
+            },
           );
           if (result) setAccepted(true);
         }}
       >
         <Field
-          label="Email address"
+          label={t("Email address")}
           name="email"
           type="email"
           required
@@ -410,31 +493,37 @@ function EmailRequestPage({
         {!problem && accepted && (
           <p role="status" className="text-sm text-primary">
             {verification
-              ? "If this address needs verification, check your inbox and spam folder for the link. This response does not confirm email delivery."
-              : "If an account exists for this email, check your inbox and spam folder for a password reset link. This response does not confirm email delivery."}
+              ? t(
+                  "If this address needs confirmation, check your inbox and spam folder for the link.",
+                )
+              : t(
+                  "If an account exists for this email, check your inbox and spam folder for a password reset link.",
+                )}
           </p>
         )}
         <button
           className="bf-button w-full"
-          disabled={request.busy || availability.blocked || request.cooldown.seconds > 0}
+          disabled={request.busy || request.cooldown.seconds > 0}
         >
           {request.busy
-            ? "Sending?"
+            ? t("Sending...")
             : request.cooldown.seconds
-              ? `${verification ? "Resend" : "Try again"} in ${request.cooldown.seconds}s`
+              ? t("Try again in {0}s", { "0": request.cooldown.seconds })
               : verification
-                ? "Resend verification email"
-                : "Send reset link"}
+                ? t("Resend confirmation email")
+                : t("Send reset link")}
         </button>
       </form>
       <Link to="/sign-in" className="mt-6 block text-center text-sm font-semibold text-primary">
-        Back to sign in
+        {t("Back to sign in")}
       </Link>
     </AuthShell>
   );
 }
 
 export function EmailCallbackPage() {
+  const { t } = useTranslation();
+
   const [error, setError] = useState("");
   const pending = useRef<Promise<{ recovery: boolean }> | null>(null);
   const navigate = useNavigate();
@@ -459,24 +548,24 @@ export function EmailCallbackPage() {
   return (
     <AuthShell>
       <h1 className="text-2xl font-bold">
-        {error ? "We couldn’t verify this link" : "Verifying your link…"}
+        {error ? t("We couldn’t verify this link") : t("Verifying your link…")}
       </h1>
       {error ? (
         <div className="mt-5 space-y-4">
           <FormError message={error} />
           <Link to="/verify-email" className="block text-sm font-semibold text-primary">
-            Request a verification email
+            {t("Request a confirmation email")}
           </Link>
           <Link to="/forgot-password" className="block text-sm font-semibold text-primary">
-            Request a password reset
+            {t("Request a password reset")}
           </Link>
           <Link to="/sign-in" className="block text-sm text-muted-foreground">
-            Back to sign in
+            {t("Back to sign in")}
           </Link>
         </div>
       ) : (
         <p role="status" className="mt-4 text-muted-foreground">
-          Please wait while we confirm your account.
+          {t("Please wait while we confirm your account.")}
         </p>
       )}
     </AuthShell>
@@ -484,6 +573,8 @@ export function EmailCallbackPage() {
 }
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation();
+
   const { recoveryReady, signOut, setRecoveryReady } = useAuth();
   const { policy } = usePolicy();
   const [password, setPassword] = useState("");
@@ -494,28 +585,32 @@ export function ResetPasswordPage() {
   if (done)
     return (
       <AuthShell>
-        <h1 className="text-2xl font-bold">Password updated</h1>
-        <p className="my-4 text-muted-foreground">Sign in with your new password to continue.</p>
+        <h1 className="text-2xl font-bold">{t("Password updated")}</h1>
+        <p className="my-4 text-muted-foreground">
+          {t("Sign in with your new password to continue.")}
+        </p>
         <Link to="/sign-in" className="bf-button inline-block">
-          Back to sign in
+          {t("Back to sign in")}
         </Link>
       </AuthShell>
     );
   if (!recoveryReady)
     return (
       <AuthShell>
-        <h1 className="text-2xl font-bold">Open your password reset link</h1>
+        <h1 className="text-2xl font-bold">{t("Open your password reset link")}</h1>
         <p className="my-4 text-muted-foreground">
-          This reset session is missing or has expired. Request a new link to choose a password.
+          {t(
+            "This reset session is missing or has expired. Request a new link to choose a password.",
+          )}
         </p>
         <Link to="/forgot-password" className="bf-button inline-block">
-          Request a new reset link
+          {t("Request a new reset link")}
         </Link>
       </AuthShell>
     );
   return (
     <AuthShell>
-      <h1 className="mb-6 text-3xl font-bold">Choose a new password</h1>
+      <h1 className="mb-6 text-3xl font-bold">{t("Choose a new password")}</h1>
       <form
         noValidate
         className="space-y-4"
@@ -549,21 +644,21 @@ export function ResetPasswordPage() {
         }}
       >
         <PasswordField
-          label="New password"
+          label={t("New password")}
           autoComplete="new-password"
           value={password}
           onChange={setPassword}
         />
         <Requirements policy={policy} />
         <PasswordField
-          label="Confirm password"
+          label={t("Confirm password")}
           autoComplete="new-password"
           value={confirm}
           onChange={setConfirm}
         />
         <FormError message={error} />
         <button disabled={busy} className="bf-button w-full">
-          {busy ? "Updating password…" : "Update password"}
+          {busy ? t("Updating password…") : t("Update password")}
         </button>
       </form>
     </AuthShell>
@@ -588,6 +683,8 @@ function BusinessSetup({
   initial: BusinessDetails;
   initialName: string;
 }) {
+  const { t } = useTranslation();
+
   const [business, setBusiness] = useState({ ...initial });
   const [name, setName] = useState(initialName);
   const [error, setError] = useState("");
@@ -597,10 +694,11 @@ function BusinessSetup({
   const { signOut } = useAuth();
   return (
     <AuthShell>
-      <h1 className="text-3xl font-bold">Finish business setup</h1>
+      <h1 className="text-3xl font-bold">{t("Finish business setup")}</h1>
       <p className="mb-6 mt-3 text-sm text-muted-foreground">
-        Confirm your details to create your own empty workspace. You can return here after signing
-        in if you need to finish later.
+        {t(
+          "Confirm your details to create your own empty workspace. You can return here after signing in if you need to finish later.",
+        )}
       </p>
       <form
         noValidate
@@ -635,7 +733,7 @@ function BusinessSetup({
         }}
       >
         <Field
-          label="Full name"
+          label={t("Full name")}
           name="full_name"
           required
           autoComplete="name"
@@ -646,14 +744,14 @@ function BusinessSetup({
         <BusinessFields value={business} onChange={setBusiness} />
         <FormError message={error} />
         <button className="bf-button w-full" disabled={busy}>
-          {busy ? "Saving workspace…" : "Create business workspace"}
+          {busy ? t("Saving workspace…") : t("Create business workspace")}
         </button>
       </form>
       <button
         className="mt-5 w-full text-sm text-muted-foreground underline"
         onClick={() => void signOut()}
       >
-        Sign out and finish later
+        {t("Sign out and finish later")}
       </button>
     </AuthShell>
   );
