@@ -5,6 +5,7 @@ import { UnlockCashSimulator } from "../components/UnlockCashSimulator";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
 import { usePlatform } from "@/app/providers";
 import { Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 export function WorkingCapitalPage() {
   const { business } = usePlatform();
@@ -26,16 +27,11 @@ export function WorkingCapitalPage() {
     );
   return (
     <main className="space-y-6">
-      <header className="rounded-2xl bg-primary px-6 py-8 text-primary-foreground sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Working Capital</p>
-        <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
-          Plan cash with clearer choices
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm opacity-90 sm:text-base">
-          Explore inventory, collections, cash timing, and reserves. Simulations are read-only and
-          do not change your records.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Working Capital"
+        title="Plan cash with clearer choices"
+        description="Explore inventory, collections, cash timing, and reserves. Simulations are read-only and do not change your records."
+      />
       {snapshot?.warnings.length ? (
         <section className="bf-card border-warning/50 bg-warning/10" aria-label="Data limitations">
           <h2 className="text-sm font-semibold">Information still needed</h2>

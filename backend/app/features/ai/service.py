@@ -5,9 +5,11 @@ import json
 import time
 from datetime import datetime, timezone
 
+import httpx
+
 from .context_builder import build_context
 from .deterministic_flags import flags
-from .llm_client import OpenAIWordingClient
+from .llm_client import AIWordingClient
 from .parser import grounded_insights
 from .schemas import AIAnalysis, SnapshotBundle
 
@@ -19,10 +21,30 @@ _locks: dict[str, asyncio.Lock] = {}
 _call_times: dict[str, list[float]] = {}
 
 
+def provider_failure_warning(error: Exception, provider_name: str = "OpenAI") -> str:
+    if isinstance(error, httpx.HTTPStatusError):
+        try:
+            code = (error.response.json().get("error") or {}).get("code")
+        except (ValueError, AttributeError):
+            code = None
+        if code == "credit_balance_exhausted":
+            return f"{provider_name} API credits are exhausted; rules-based findings are shown."
+        if error.response.status_code == 402:
+            return f"{provider_name} account has insufficient credits; rules-based findings are shown."
+        if error.response.status_code == 401:
+            return f"{provider_name} rejected the backend API key; rules-based findings are shown."
+        if code in {"organization_spend_limit_exceeded", "project_spend_limit_exceeded",
+                    "organization_usage_limit_exceeded"}:
+            return f"{provider_name} account or project usage limit was reached; rules-based findings are shown."
+        if error.response.status_code == 429:
+            return f"{provider_name} rate limit was reached; rules-based findings are shown."
+    return "AI wording was unavailable or failed evidence validation; rules-based findings are shown."
+
+
 class AnalysisService:
     def __init__(self, provider, client=None):
         self.provider = provider
-        self.client = client or OpenAIWordingClient()
+        self.client = client or AIWordingClient()
 
     def latest(self, business_id: str) -> AIAnalysis | None:
         version = self.provider.version(business_id)
@@ -43,9 +65,11 @@ class AnalysisService:
         context = build_context(bundle)
         selected = flags(context)
         digest = hashlib.sha256(json.dumps(bundle.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
+        client_key = hashlib.sha256(self.client.api_key.encode()).hexdigest()[:12]
         cache_key = (
             f"{business_id}:{bundle.source_version}:{bundle.import_batch_id}:{digest}:"
-            f"{bool(self.client.api_key)}:{getattr(self.client, 'allow_real_data', False)}"
+            f"{getattr(self.client, 'provider', 'openai')}:{getattr(self.client, 'model', '')}:"
+            f"{client_key}:{getattr(self.client, 'allow_real_data', False)}"
         )
         cached = _cache.get(cache_key)
         if cached and time.monotonic() - cached[0] < CACHE_TTL_SECONDS:
@@ -67,9 +91,10 @@ class AnalysisService:
             try:
                 selected = grounded_insights(await self.client.explain(selected, context), selected)
                 status = "completed"
-            except Exception:
+            except Exception as error:
                 # No provider payload, key, or financial details are logged.
-                warnings.append("AI wording was unavailable or failed evidence validation; rules-based findings are shown.")
+                provider_name = "OpenRouter" if getattr(self.client, "provider", "openai") == "openrouter" else "OpenAI"
+                warnings.append(provider_failure_warning(error, provider_name))
         elif selected and not context["synthetic"] and not getattr(self.client, "allow_real_data", False):
             warnings.append("AI provider was not called because this snapshot is not marked synthetic.")
         elif selected and not self.client.api_key:

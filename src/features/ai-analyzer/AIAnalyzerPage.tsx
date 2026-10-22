@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useBusinessAnalysis } from "./useBusinessAnalysis";
 import type { Insight } from "./types";
 
@@ -80,22 +81,20 @@ export function AIAnalyzerPage() {
     useBusinessAnalysis();
   return (
     <main className="space-y-6">
-      <header className="bf-card space-y-3">
-        <p className="text-xs font-bold uppercase tracking-widest text-primary">
-          Business insights
-        </p>
-        <h1 className="text-3xl font-bold">AI Business Analyzer</h1>
-        <p className="text-sm text-muted-foreground">
-          Review evidence-backed findings from your financial, working capital, and credit
-          snapshots.
-        </p>
-        <button className="bf-button" onClick={run} disabled={isAnalyzing}>
-          {isAnalyzing ? "Analyzing…" : "Analyze Business"}
-        </button>
-        <p className="text-xs text-muted-foreground">
+      <PageHeader
+        eyebrow="Business insights"
+        title="AI Business Analyzer"
+        description="Review evidence-backed findings from your financial, working capital, and credit snapshots."
+        action={
+          <button className="bf-button" onClick={run} disabled={isAnalyzing}>
+            {isAnalyzing ? "Analyzing…" : "Analyze Business"}
+          </button>
+        }
+      >
+        <p className="mt-3 text-xs text-muted-foreground">
           Current import version: {business.source_version}
         </p>
-      </header>
+      </PageHeader>
       {isLoading && <p role="status">Loading your latest analysis…</p>}
       {error && (
         <p role="alert" className="text-destructive">

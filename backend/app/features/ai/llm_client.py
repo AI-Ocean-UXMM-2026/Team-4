@@ -1,4 +1,4 @@
-"""Optional OpenAI wording step; all evidence stays under server control."""
+"""Optional provider wording step; all evidence stays under server control."""
 import asyncio
 import json
 import os
@@ -28,11 +28,20 @@ OUTPUT_SCHEMA = {
 }
 
 
-class OpenAIWordingClient:
+class AIWordingClient:
     def __init__(self, api_key: str | None = None, model: str | None = None,
-                 allow_real_data: bool | None = None):
-        self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY", "")
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-5-mini")
+                 allow_real_data: bool | None = None, provider: str | None = None):
+        self.provider = (provider or os.getenv("AI_PROVIDER", "openai")).lower()
+        if self.provider not in {"openai", "openrouter"}:
+            raise ValueError("AI_PROVIDER must be openai or openrouter")
+        if self.provider == "openrouter":
+            self.api_key = api_key if api_key is not None else os.getenv("OPENROUTER_API_KEY", "")
+            self.model = model or os.getenv("OPENROUTER_MODEL", "openai/gpt-5-mini")
+            self.endpoint = "https://openrouter.ai/api/v1/responses"
+        else:
+            self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY", "")
+            self.model = model or os.getenv("OPENAI_MODEL", "gpt-5-mini")
+            self.endpoint = "https://api.openai.com/v1/responses"
         self.allow_real_data = (
             allow_real_data if allow_real_data is not None
             else os.getenv("AI_ALLOW_REAL_DATA", "").lower() == "true"
@@ -44,7 +53,7 @@ class OpenAIWordingClient:
         payload = {
             "model": self.model,
             "store": False,
-            "max_output_tokens": 800,
+            "max_output_tokens": 2000,
             "instructions": (
                 "You write concise business-analysis wording, not a chatbot. "
                 "Use only the supplied flags and metrics. Return one item per flag ID. "
@@ -65,13 +74,25 @@ class OpenAIWordingClient:
                 "strict": True, "schema": OUTPUT_SCHEMA,
             }},
         }
-        async with httpx.AsyncClient(timeout=httpx.Timeout(12.0)) as client:
+        if self.provider == "openrouter":
+            payload["provider"] = {"require_parameters": True}
+            if self.model == "openai/gpt-5-mini":
+                payload["reasoning"] = {"effort": "minimal"}
+        async with httpx.AsyncClient(timeout=httpx.Timeout(30.0)) as client:
             for attempt in range(2):
                 response = await client.post(
-                    "https://api.openai.com/v1/responses",
+                    self.endpoint,
                     headers={"Authorization": f"Bearer {self.api_key}"},
                     json=payload,
                 )
+                if response.status_code == 429:
+                    try:
+                        error_code = (response.json().get("error") or {}).get("code")
+                    except (ValueError, AttributeError):
+                        error_code = None
+                    if error_code in {"credit_balance_exhausted", "organization_spend_limit_exceeded",
+                                      "project_spend_limit_exceeded", "organization_usage_limit_exceeded"}:
+                        response.raise_for_status()
                 if response.status_code in (429, 500, 502, 503, 504) and attempt == 0:
                     await asyncio.sleep(0.4)
                     continue

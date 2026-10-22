@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { CalendarDays, Database, RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
 import { CashflowTrendChart } from "../components/CashflowTrendChart";
 import { OutstandingBalances } from "../components/OutstandingBalances";
@@ -57,38 +58,35 @@ export function FinancialPage({
     sourceVersion,
   );
   return (
-    <main className="mx-auto max-w-[1440px] space-y-5 px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{businessName}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-            Financial Health
-          </h1>
-          {synthetic && (
-            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Synthetic demo data
-            </span>
-          )}
-        </div>
-        <a
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
-          href="/data-source"
-        >
-          <Database size={16} />
-          Manage data
-        </a>
-      </header>
+    <main className="space-y-6">
+      <PageHeader
+        eyebrow="Business overview"
+        title="Financial Health"
+        description={`Financial figures and recent trends for ${businessName}.`}
+        action={
+          <a className="bf-button-secondary inline-flex items-center gap-2" href="/data-source">
+            <Database size={16} />
+            Manage data
+          </a>
+        }
+      >
+        {synthetic && (
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-warning/20 px-2.5 py-1 text-xs font-medium">
+            <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+            Synthetic demo data
+          </span>
+        )}
+      </PageHeader>
 
       <section
         aria-label="Reporting period"
-        className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,.025)] sm:gap-4 sm:p-4"
+        className="bf-card flex flex-wrap items-end gap-3 sm:gap-4"
       >
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Reporting period
           <select
             aria-label="Reporting period"
-            className="mt-1.5 block min-w-44 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+            className="mt-1.5 block min-w-44 rounded-lg border bg-background px-3 py-2.5 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             value={selection}
             onChange={(e) => setSelection(e.target.value)}
           >
@@ -96,12 +94,12 @@ export function FinancialPage({
             <option value="30days">Last 30 days</option>
           </select>
         </label>
-        <p className="inline-flex items-center gap-2 pb-2.5 text-sm text-slate-500">
+        <p className="inline-flex items-center gap-2 pb-2.5 text-sm text-muted-foreground">
           <CalendarDays size={16} />
           {period.start} – {period.end} · Yangon time
         </p>
         <button
-          className="ml-auto inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+          className="bf-button-secondary ml-auto inline-flex items-center gap-2"
           onClick={() => {
             setRefresh((x) => x + 1);
             void onRefresh?.();
@@ -113,17 +111,14 @@ export function FinancialPage({
       </section>
 
       {(state.status === "loading" || dataRefreshing) && (
-        <p
-          role="status"
-          className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600"
-        >
+        <p role="status" className="bf-card text-sm text-muted-foreground">
           Loading current financial records…
         </p>
       )}
       {state.status === "error" && !dataRefreshing && (
         <div
           role="alert"
-          className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900"
+          className="bf-card border-destructive/30 bg-destructive/10 text-sm text-destructive"
         >
           {state.error}{" "}
           <a className="ml-1 font-semibold underline" href="/data-source">
@@ -136,7 +131,7 @@ export function FinancialPage({
           {state.snapshot.data_quality.warnings.length > 0 && (
             <aside
               aria-label="Financial data warnings"
-              className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
+              className="bf-card border-warning/50 bg-warning/10 text-sm"
             >
               <p className="font-semibold">Please note about this report</p>
               <ul className="mt-2 list-inside list-disc space-y-1">

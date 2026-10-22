@@ -4,9 +4,21 @@ from io import BytesIO
 
 from openpyxl import load_workbook
 
+from app.core.demo_data import is_synthetic_seed_workbook
 from app.features.ai.context_builder import build_context
 from app.features.ai.snapshot_provider import SnapshotProvider
 from app.integrations.excel.tests.conftest import client, upload, workbook_bytes
+
+
+def test_pinned_local_demo_requires_exact_business_and_import_hash(monkeypatch):
+    digest = "a" * 64
+    monkeypatch.setenv("AI_SYNTHETIC_DEMO_BUSINESS_ID", "demo-business")
+    monkeypatch.setenv("AI_SYNTHETIC_DEMO_IMPORT_SHA256", digest)
+    assert is_synthetic_seed_workbook("demo-business", digest)
+    assert not is_synthetic_seed_workbook("another-business", digest)
+    assert not is_synthetic_seed_workbook("demo-business", "b" * 64)
+    monkeypatch.setenv("AI_SYNTHETIC_DEMO_IMPORT_SHA256", "invalid")
+    assert not is_synthetic_seed_workbook("demo-business", digest)
 
 
 def test_feature_routes_and_business_authorization(client):
