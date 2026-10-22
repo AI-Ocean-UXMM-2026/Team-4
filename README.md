@@ -1,8 +1,8 @@
 # BIZFLOW
 
-Business cashflow application with Supabase email/password authentication, verified account registration, owned workspaces and Excel ingestion. The existing Lovable frontend remains in `src/`; FastAPI is in `backend/`.
+Business cashflow application with Supabase email/password authentication, account registration, owned workspaces and Excel ingestion. The existing Lovable frontend remains in `src/`; FastAPI is in `backend/`.
 
-The shared demo-password login and public demo reset have been removed. New accounts must verify their email and complete business setup before accessing records. After verification, completing onboarding creates one empty workspace belonging to the provider-verified user. Existing data is preserved and is never automatically assigned to new accounts.
+The shared demo-password login and public demo reset have been removed. Registration supports Supabase with email confirmation enabled or disabled. Users follow the confirmation link when required, or sign in immediately when the provider returns a session, then complete business setup before accessing records. Completing onboarding creates one empty workspace belonging to the authenticated user. Existing data is preserved and is never automatically assigned to new accounts.
 
 ## Configure and run
 
@@ -20,10 +20,10 @@ Configure these placeholders in private `.env`:
 - `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`: backend project connection. Use the project's publishable/anon key, never a service-role key.
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`: the same public values for the official browser SDK.
 - `FRONTEND_URL`: trusted app origin, e.g. `http://localhost:3000`. Configure its exact callback URLs in Supabase Auth.
-- `AUTH_PASSWORD_MIN_LENGTH` and `AUTH_PASSWORD_REQUIRED_CHARACTERS`: mirror the password policy configured in Supabase so forms display the same requirements. Supabase remains authoritative, including any breached-password checks.
+- `AUTH_PASSWORD_MIN_LENGTH` and `AUTH_PASSWORD_REQUIRED_CHARACTERS`: set the displayed/frontend/backend password rules (default: 8 characters with lowercase, uppercase, a number and a symbol). Configure Supabase with matching or stronger rules; it also enforces any breached-password checks.
 - `DATABASE_URL`: local SQLite can store application data during development while authentication uses real Supabase. Production uses Supabase Postgres with `postgresql+psycopg://...?...sslmode=require`.
 
-Enable Supabase email/password sign-up, **require email confirmation** (`mailer_autoconfirm=false`), configure email delivery and apply the migrations. The backend checks confirmation settings and fails closed if confirmation is disabled. See [authentication setup](deployment/AUTHENTICATION.md) for exact callback/email-template settings and testing.
+Enable Supabase email/password sign-up and apply the migrations. The app supports either **Confirm email** setting: enabled uses an email link; disabled returns a session immediately. Configure email delivery for confirmation and password recovery, and allow the app's exact callback URL. See [authentication setup](deployment/AUTHENTICATION.md) for setup and testing.
 
 ```powershell
 # SQLite: additive local upgrade, preserves existing rows.
@@ -41,9 +41,9 @@ On macOS/Linux use `.venv/bin/python` and `npm` instead of their Windows forms. 
 
 Registration has two steps: account details, then business details. Sole proprietors may use a shop/trading name; no legal registration number is required. Currency is currently MMK, consistent with the workbook contract.
 
-The validated full name and business draft are saved in Supabase user metadata until verification. Passwords go only to Supabase over TLS; they never enter the application database or browser storage. Metadata is revalidated after server identity verification and never proves ownership. After opening the email link, users confirm business setup. A database transaction creates their profile, business and owner membership; retries return the same workspace. Interrupted registration resumes after sign-in.
+The validated full name and business draft are saved in Supabase user metadata until business setup is complete. Passwords go only to Supabase over TLS; they never enter the application database or browser storage. Metadata is revalidated after server identity verification and never proves ownership. After registration or email confirmation, the browser establishes the Supabase session and users confirm business setup. A database transaction creates their profile, business and owner membership; retries return the same workspace. Interrupted registration resumes after sign-in.
 
-The official Supabase SDK manages persisted sessions, refresh and sign-out. Browser session state alone grants no API access: FastAPI verifies the JWT signature/issuer/audience/expiry, checks the user with Supabase, and requires confirmed email plus business membership/setup. Old custom/demo JWTs and passwords are rejected. Password reset uses provider-issued one-use links; invalid/expired links show a request-new-link action.
+The official Supabase SDK manages persisted sessions, refresh and sign-out. Browser session state alone grants no API access: FastAPI verifies the JWT signature/issuer/audience/expiry, checks the user with Supabase, and requires business membership/setup. Old custom/demo JWTs and passwords are rejected. Password reset uses provider-issued one-use links; invalid/expired links show a request-new-link action.
 
 ## Data workflow
 
@@ -66,7 +66,7 @@ npm.cmd run build
 .\.venv\Scripts\python.exe tools/prepare_browser_test.py
 ```
 
-Auth tests use signed test JWTs and mocked Supabase HTTP/SDK responses; they do not simulate email delivery in the application. The browser smoke exercises public screens and protected redirects without creating a fake account. Live signup/SMTP, two-user Supabase RLS/storage and provider recovery must also be tested with configured test accounts; [AUTHENTICATION.md](deployment/AUTHENTICATION.md) lists the procedure and opt-in RLS test variables.
+Auth tests use signed test JWTs and mocked Supabase HTTP/SDK responses; they do not simulate email delivery in the application. The browser smoke exercises public screens and protected redirects without creating a fake account. Live signup, two-user Supabase RLS/storage and provider recovery must also be tested with configured test accounts; [AUTHENTICATION.md](deployment/AUTHENTICATION.md) lists the procedure and opt-in RLS test variables.
 
 Deployment files, same-origin gateway, migration instructions and release checks: [deployment runbook](deployment/RUNBOOK.md). No public deployment has been performed.
 

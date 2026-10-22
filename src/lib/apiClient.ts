@@ -37,10 +37,10 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
       throw new ApiError(
         0,
         "AUTH_REQUEST_UNCONFIRMED",
-        "The signup response was not received. Check your email or request a verification email before trying signup again.",
+        "The signup response was not received. Try signing in before registering again.",
       );
     }
-    throw new Error("Cannot reach BizFlow. Check that the backend is running.");
+    throw new Error("Cannot reach Shay Sett. Check your connection and try again.");
   }
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));

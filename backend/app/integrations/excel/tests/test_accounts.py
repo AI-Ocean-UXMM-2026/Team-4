@@ -19,16 +19,16 @@ from conftest import upload
 
 
 BUSINESS = {"name": "  Aye Trading  ", "industry": "Retail", "city": "Yangon", "phone": "+95 9 12345678", "address": "", "currency": "MMK"}
-REGISTRATION = {"full_name": "  Aye Aye  ", "email": "  aye@example.test  ", "password": " a secure password ", "confirm_password": " a secure password ", "business": BUSINESS}
+REGISTRATION = {"full_name": "  Aye Aye  ", "email": "  aye@example.test  ", "password": " StrongPassword1! ", "confirm_password": " StrongPassword1! ", "business": BUSINESS}
 
 
-def provider_reply(client, status=200, body=None, inspect=None, headers=None):
+def provider_reply(client, status=200, body=None, inspect=None, headers=None, confirmation_required=False):
     def transport(request):
         if request.url.path.endswith("/settings"):
-            return httpx.Response(200, json={"mailer_autoconfirm": False, "external": {"email": True}, "disable_signup": False})
+            return httpx.Response(200, json={"mailer_autoconfirm": not confirmation_required, "external": {"email": True}, "disable_signup": False})
         if inspect:
             inspect(request)
-        return httpx.Response(status, json=body if body is not None else {"id": "new-provider-user", "email": "aye@example.test", "email_confirmed_at": None, "identities": [{"provider": "email"}]}, headers=headers)
+        return httpx.Response(status, json=body if body is not None else {"user": {"id": "new-provider-user", "email": "aye@example.test"}, "access_token": "provider-access", "refresh_token": "provider-refresh"}, headers=headers)
     client.app.state.auth.client.close()
     client.app.state.auth.client = httpx.Client(base_url="https://auth.example.test/auth/v1/", transport=httpx.MockTransport(transport))
 
@@ -44,10 +44,9 @@ def test_registration_validates_and_preserves_only_nonsecret_draft(client):
     response = client.post("/api/v1/auth/register", json=REGISTRATION)
     assert response.status_code == 200
     payload = json.loads(sent[0].content)
-    assert response.json()["status"] == "verification_required"
-    assert response.json()["cooldown_seconds"] == 60
+    assert response.json() == {"status": "registered", "session": {"access_token": "provider-access", "refresh_token": "provider-refresh"}}
     assert payload["email"] == "aye@example.test"
-    assert payload["password"] == " a secure password "  # Password whitespace is never trimmed.
+    assert payload["password"] == " StrongPassword1! "  # Password whitespace is never trimmed.
     assert payload["data"]["registration_business"]["name"] == "Aye Trading"
     assert "password" not in json.dumps(payload["data"])
     assert sent[0].url.params["redirect_to"] == "http://localhost:3000/auth/callback"
@@ -58,6 +57,10 @@ def test_registration_validates_and_preserves_only_nonsecret_draft(client):
 
 @pytest.mark.parametrize("change", [
     {"full_name": "  "}, {"email": "invalid-email"}, {"password": "short", "confirm_password": "short"},
+    { "password": "weakpassword", "confirm_password": "weakpassword" },
+    { "password": "STRONGPASSWORD1!", "confirm_password": "STRONGPASSWORD1!" },
+    { "password": "StrongPassword!", "confirm_password": "StrongPassword!" },
+    { "password": "StrongPassword1", "confirm_password": "StrongPassword1" },
     {"confirm_password": "different"}, {"business": {**BUSINESS, "name": " "}},
     {"business": {**BUSINESS, "industry": ""}}, {"business": {**BUSINESS, "city": " "}},
     {"business": {**BUSINESS, "phone": "not-a-phone"}}, {"business": {**BUSINESS, "currency": "USD"}},
@@ -70,11 +73,11 @@ def test_registration_rejects_invalid_input_without_echoing_password(client, cha
     assert payload["password"] not in response.text
 
 
-def test_duplicate_email_has_same_generic_result(client):
+def test_duplicate_email_prompts_sign_in_without_creating_workspace(client):
     provider_reply(client, 422, {"error_code": "user_already_exists"})
     response = client.post("/api/v1/auth/register", json=REGISTRATION)
-    assert response.status_code == 200
-    assert "already exists" not in response.text
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "ACCOUNT_EXISTS"
     with client.app.state.sessions() as session:
         assert session.scalar(select(func.count()).select_from(Business)) == 2
 
@@ -86,16 +89,14 @@ def test_provider_password_policy_is_enforced(client):
     assert response.json()["error"]["code"] == "PASSWORD_WEAK"
 
 
-def test_email_autoconfirm_cannot_bypass_verification(client):
+def test_email_autoconfirm_allows_signed_in_accounts(client):
     client.app.state.auth._public_settings = {"mailer_autoconfirm": True}
-    import time
-    client.app.state.auth._settings_checked_at = time.monotonic()
-    assert client.get("/api/v1/auth/me").status_code == 503
+    assert client.get("/api/v1/auth/me").status_code == 200
 
 
 def test_resend_and_reset_are_generic_and_rate_limited(client):
     provider_reply(client, 400, {"error_code": "user_not_found"})
-    for endpoint in ("resend-verification", "forgot-password"):
+    for endpoint in ("forgot-password",):
         response = client.post("/api/v1/auth/" + endpoint, json={"email": "nobody@example.test"})
         assert response.status_code == 200
         assert "nobody" not in response.text
@@ -104,7 +105,7 @@ def test_resend_and_reset_are_generic_and_rate_limited(client):
         assert 1 <= int(retry.headers["Retry-After"]) <= 60
 
 
-@pytest.mark.parametrize("endpoint", ["resend-verification", "forgot-password"])
+@pytest.mark.parametrize("endpoint", ["forgot-password"])
 def test_provider_delivery_failure_does_not_reveal_existing_accounts(client, endpoint):
     provider_reply(client, 503, {"error_code": "unexpected_failure"})
     result = client.post("/api/v1/auth/" + endpoint, json={"email": "existing@example.test"})
@@ -129,9 +130,8 @@ def test_missing_config_does_not_consume_allowance_or_create_accounts(client):
 
 
 @pytest.mark.parametrize("settings", [
-    {"mailer_autoconfirm": True, "external": {"email": True}},
-    {"mailer_autoconfirm": False, "external": {"email": False}},
-    {"mailer_autoconfirm": False, "external": {"email": True}, "disable_signup": True},
+    {"mailer_autoconfirm": True, "external": {"email": False}},
+    {"mailer_autoconfirm": True, "external": {"email": True}, "disable_signup": True},
 ])
 def test_public_readiness_checks_provider_not_just_key_presence(client, settings):
     client.app.state.auth._public_settings = settings
@@ -182,28 +182,65 @@ def test_provider_rate_limit_is_explicit_and_preserves_only_known_timing(client,
         assert len(requests) == 1
 
 
-def test_resend_uses_supported_endpoint_and_never_signup(client):
+def test_confirmation_resend_uses_provider_resend_not_signup(client):
     sent = []
-    provider_reply(client, inspect=sent.append)
-    assert client.post("/api/v1/auth/resend-verification", json={"email": "pending@example.test"}).status_code == 200
+    provider_reply(client, inspect=sent.append, confirmation_required=True)
+    response = client.post("/api/v1/auth/resend-verification", json={"email": "owner@example.test"})
+    assert response.status_code == 200
+    assert response.json()["status"] == "check_email"
     assert sent[0].url.path == "/auth/v1/resend"
-    assert json.loads(sent[0].content) == {"type": "signup", "email": "pending@example.test"}
-    assert "password" not in sent[0].content.decode()
+    assert json.loads(sent[0].content) == {"type": "signup", "email": "owner@example.test"}
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_confirmation_enabled_allows_signup_and_preserves_pending_business(client, nested):
+    pending = {"id": "new-pending-user", "email": "aye@example.test", "email_confirmed_at": None, "identities": [{"provider": "email"}]}
+    provider_reply(client, body={"user": pending} if nested else pending, confirmation_required=True)
+    assert client.get("/api/v1/config").json()["auth_status"]["ready"] is True
+    response = client.post("/api/v1/auth/register", json=REGISTRATION)
+    assert response.status_code == 200
+    assert response.json()["status"] == "verification_required"
+    assert response.json()["cooldown_seconds"] > 0
+    assert "session" not in response.json()
+    with client.app.state.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(Business)) == 2
+        assert session.get(User, "new-pending-user") is None
+
+
+def test_confirmation_enabled_duplicate_response_never_creates_a_session(client):
+    provider_reply(client, body={"id": "obfuscated-id", "email": "aye@example.test", "identities": []}, confirmation_required=True)
+    response = client.post("/api/v1/auth/register", json=REGISTRATION)
+    assert response.status_code == 200
+    assert response.json()["status"] == "check_email"
+    assert "session" not in response.json()
+
+
+@pytest.mark.parametrize("body", [
+    {},
+    {"id": "pending", "email": "other@example.test"},
+    {"id": "pending", "email": "aye@example.test", "access_token": "incomplete"},
+    {"id": "pending", "email": "aye@example.test", "email_confirmed_at": "confirmed"},
+])
+def test_confirmation_flow_rejects_malformed_or_incomplete_provider_responses(client, body):
+    provider_reply(client, body=body, confirmation_required=True)
+    response = client.post("/api/v1/auth/register", json=REGISTRATION)
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "AUTH_REQUEST_UNCONFIRMED"
 
 
 @pytest.mark.parametrize("body", [{}, {"access_token": "unexpected", "user": {"id": "u"}}, {"id": "u", "email_confirmed_at": "confirmed"}, {"id": "u", "email": "other@example.test"}])
-def test_signup_does_not_invent_verification_success(client, body):
+def test_signup_requires_provider_session(client, body):
     provider_reply(client, body=body)
     response = client.post("/api/v1/auth/register", json=REGISTRATION)
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "AUTH_REQUEST_UNCONFIRMED"
 
 
-def test_obfuscated_existing_account_does_not_assert_new_pending_signup(client):
+def test_obfuscated_existing_account_cannot_start_a_session(client):
     provider_reply(client, body={"id": "obfuscated-id", "email": "aye@example.test", "identities": []})
     result = client.post("/api/v1/auth/register", json=REGISTRATION)
-    assert result.status_code == 200
-    assert result.json()["status"] == "check_email"
+    assert result.status_code == 503
+    assert result.json()["error"]["code"] == "AUTH_REQUEST_UNCONFIRMED"
     with client.app.state.sessions() as session:
         assert session.scalar(select(func.count()).select_from(Business)) == 2
 
@@ -227,7 +264,7 @@ def test_concurrent_signup_for_same_email_sends_only_once(client):
 def test_transport_timeout_is_unconfirmed_and_logs_no_credentials(client, caplog):
     def transport(request):
         if request.url.path.endswith("/settings"):
-            return httpx.Response(200, json={"mailer_autoconfirm": False, "external": {"email": True}})
+            return httpx.Response(200, json={"mailer_autoconfirm": True, "external": {"email": True}})
         raise httpx.ReadTimeout("sensitive upstream details", request=request)
     client.app.state.auth.client.close()
     client.app.state.auth.client = httpx.Client(base_url="https://auth.example.test/auth/v1/", transport=httpx.MockTransport(transport))
@@ -239,11 +276,8 @@ def test_transport_timeout_is_unconfirmed_and_logs_no_credentials(client, caplog
         assert secret not in result.text + caplog.text
 
 
-def test_verification_gate_and_resume_draft(client):
+def test_signed_in_account_can_resume_draft_without_email_confirmation(client):
     user(client, verified=False, metadata={"full_name": "Aye Aye", "registration_business": BUSINESS})
-    assert client.get("/api/v1/auth/me").status_code == 403
-    assert client.post("/api/v1/auth/onboarding", json={**BUSINESS, "full_name": "Aye Aye"}).status_code == 403
-    client.app.state.test_users["new-owner"]["email_confirmed_at"] = "2026-10-20T00:00:00Z"
     response = client.get("/api/v1/auth/me")
     assert response.status_code == 200
     assert response.json()["pending_business"]["name"] == "Aye Trading"

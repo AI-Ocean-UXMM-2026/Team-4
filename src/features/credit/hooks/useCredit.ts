@@ -6,7 +6,7 @@ import type { CreditSummary } from "../types";
 export function useCredit() {
   const { business } = usePlatform();
   return useQuery({
-    queryKey: ["credit-summary", business.id],
+    queryKey: ["credit-summary", business.id, business.source_version],
     queryFn: () =>
       api<CreditSummary>(`/api/v1/credit/summary?business_id=${encodeURIComponent(business.id)}`),
   });

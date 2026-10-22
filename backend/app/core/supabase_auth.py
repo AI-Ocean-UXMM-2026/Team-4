@@ -36,7 +36,7 @@ class SupabaseAuth:
             logging.getLogger(__name__).warning("Supabase operation=%s transport_failure; outcome unknown", path)
             if path not in ("signup", "resend", "recover"):
                 raise APIError(503, "AUTH_UNAVAILABLE", "Account service is unavailable. Please try again later.") from None
-            raise APIError(503, "AUTH_REQUEST_UNCONFIRMED", "The account service did not confirm the request. Check your email before retrying; you can also request a verification email.") from None
+            raise APIError(503, "AUTH_REQUEST_UNCONFIRMED", "The account service did not confirm the request. Try signing in before registering again.") from None
         try:
             data = response.json()
         except ValueError:
@@ -67,19 +67,18 @@ class SupabaseAuth:
             raise APIError(503, "AUTH_UNAVAILABLE", "Account verification is temporarily unavailable.") from None
         except (jwt.PyJWTError, ValueError, TypeError, KeyError):
             raise APIError(401, "UNAUTHENTICATED", "Your session expired. Sign in again.") from None
-        self.require_email_confirmation()
-        # Email confirmation is verified with the provider, never inferred from browser metadata.
+        # Verify the signed-in account with Supabase, without requiring an email link.
         response = self.request("GET", "user", headers={"Authorization": "Bearer " + token})
         if response.status_code != 200:
             raise APIError(401, "UNAUTHENTICATED", "Your session expired. Sign in again.")
         user = response.json()
         if user.get("id") != claims["sub"] or user.get("is_anonymous"):
-            raise APIError(401, "UNAUTHENTICATED", "Sign in with a verified email account.")
-        if not user.get("email_confirmed_at") or not user.get("email"):
-            raise APIError(403, "EMAIL_UNVERIFIED", "Verify your email before continuing.")
+            raise APIError(401, "UNAUTHENTICATED", "Sign in with an email account.")
+        if not user.get("email"):
+            raise APIError(401, "UNAUTHENTICATED", "Sign in with an email account.")
         return Identity(user["id"], user["email"], user.get("user_metadata") or {})
 
-    def require_email_confirmation(self, *, signup=False):
+    def require_account_configuration(self, *, signup=False):
         if self._public_settings is None or time.monotonic() - self._settings_checked_at > 60:
             response = self.request("GET", "settings")
             if response.status_code != 200:
@@ -92,10 +91,12 @@ class SupabaseAuth:
                 raise APIError(503, "AUTH_SETUP_REQUIRED", "Account configuration could not be verified. Contact your administrator.") from None
             self._public_settings = data
             self._settings_checked_at = time.monotonic()
-        if self._public_settings.get("mailer_autoconfirm") is not False:
-            raise APIError(503, "AUTH_SETUP_REQUIRED", "Account email verification must be enabled by your administrator.")
         if signup and (self._public_settings.get("disable_signup") or not self._public_settings.get("external", {}).get("email")):
             raise APIError(503, "REGISTRATION_UNAVAILABLE", "Email registration is not available. Contact your administrator.")
+
+    @property
+    def email_confirmation_required(self):
+        return bool(self._public_settings and self._public_settings.get("mailer_autoconfirm") is False)
 
     def close(self):
         self.client.close()

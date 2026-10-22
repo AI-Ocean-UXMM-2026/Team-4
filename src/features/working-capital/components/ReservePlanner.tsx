@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 import { RangeField, ScenarioResult } from "./ScenarioUI";
 
@@ -8,6 +9,8 @@ export function ReservePlanner({
 }: {
   planReserve: <T>(payload: Record<string, unknown>) => Promise<T>;
 }) {
+  const { t } = useTranslation();
+
   const [months, setMonths] = useState(3);
   const [contribution, setContribution] = useState(100000);
   const [result, setResult] = useState<Response | null>(null);
@@ -37,16 +40,17 @@ export function ReservePlanner({
   return (
     <section className="bf-card space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-primary">Step 3</p>
-        <h2 className="mt-1 text-xl font-bold">Build a safety reserve</h2>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">{t("Step 3")}</p>
+        <h2 className="mt-1 text-xl font-bold">{t("Build a safety reserve")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Plan with example monthly essential costs of 500,000 MMK and a dedicated reserve of
-          300,000 MMK. These are not imported figures; dedicated reserve differs from total cash.
+          {t(
+            "Plan with example monthly essential costs of 500,000 MMK and a dedicated reserve of 300,000 MMK. These are not imported figures; dedicated reserve differs from total cash.",
+          )}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <RangeField
-          label="Target coverage"
+          label={t("Target coverage")}
           value={months}
           min={1}
           max={6}
@@ -54,7 +58,7 @@ export function ReservePlanner({
           onChange={setMonths}
         />
         <RangeField
-          label="Monthly contribution"
+          label={t("Monthly contribution")}
           value={contribution}
           min={0}
           max={1000000}
@@ -64,11 +68,11 @@ export function ReservePlanner({
         />
       </div>
       <button className="bf-button" disabled={pending} onClick={() => void run()}>
-        {pending ? "Planning…" : "Plan reserve milestones"}
+        {pending ? t("Planning…") : t("Plan reserve milestones")}
       </button>
       {error && (
         <p role="alert" className="text-sm text-destructive">
-          {error}
+          {t(error)}
         </p>
       )}
       <ScenarioResult response={result} />

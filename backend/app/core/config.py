@@ -14,7 +14,7 @@ class Settings:
     supabase_url: str = ""
     supabase_publishable_key: str = ""
     password_min_length: int = 8
-    password_required_characters: str = ""
+    password_required_characters: str = "lower,upper,number,symbol"
     frontend_url: str = "http://localhost:3000"
     cors_origins: tuple[str, ...] = ("http://localhost:3000",)
     max_upload_bytes: int = 5 * 1024 * 1024
@@ -41,7 +41,7 @@ def get_settings() -> Settings:
         supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
         supabase_publishable_key=os.getenv("SUPABASE_PUBLISHABLE_KEY", ""),
         password_min_length=int(os.getenv("AUTH_PASSWORD_MIN_LENGTH", "8")),
-        password_required_characters=os.getenv("AUTH_PASSWORD_REQUIRED_CHARACTERS", ""),
+        password_required_characters=os.getenv("AUTH_PASSWORD_REQUIRED_CHARACTERS", "lower,upper,number,symbol"),
         frontend_url=os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/"),
         cors_origins=tuple(x.strip() for x in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if x.strip()),
         max_upload_bytes=int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024))),
