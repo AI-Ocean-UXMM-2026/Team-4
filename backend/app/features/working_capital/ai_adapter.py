@@ -1,16 +1,12 @@
 """Versioned, business-scoped P2 aggregates for the AI analyzer."""
 
-from sqlalchemy import select
-
-from ...db.models import Business
 from ...modules.working_capital.repository import WorkingCapitalRepository
 
 
 def get_ai_snapshot(business_id: str, sessions) -> dict:
     with sessions.begin() as session:
-        if session.bind.dialect.name == "sqlite":
-            session.connection().exec_driver_sql("BEGIN")
-        session.scalar(select(Business).where(Business.id == business_id).with_for_update(read=True))
+        # The repository starts the SQLite read snapshot and holds the shared
+        # business lock on PostgreSQL while loading all projection tables.
         summary = WorkingCapitalRepository(session).summary(business_id)
     return {
         "business_id": summary["business_id"],
