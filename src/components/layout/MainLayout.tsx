@@ -4,7 +4,8 @@ import { usePlatform } from "@/app/providers";
 import { Navigation } from "./Navigation";
 import { TopBar } from "./TopBar";
 import { AuroraBackdrop } from "./AuroraBackdrop";
-import { ArrowUpRight, Menu, PanelLeft } from "lucide-react";
+import { Menu, PanelLeft } from "lucide-react";
+import { LogoMark } from "./LogoMark";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -51,7 +52,7 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
       <AuroraBackdrop />
       <a
         href="#main-content"
-        className="sr-only fixed left-4 top-4 z-50 rounded-xl bg-primary px-4 py-3 font-semibold text-white focus:not-sr-only"
+        className="sr-only fixed left-4 top-4 z-50 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground focus:not-sr-only"
       >
         {t("Skip to content")}
       </a>
@@ -83,7 +84,7 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
             onClick={() => changeSidebarMode(expanded ? "collapsed" : "expanded")}
             className="bf-brand-mark grid h-12 w-11 shrink-0 place-items-center rounded-xl"
           >
-            <ArrowUpRight size={21} aria-hidden="true" />
+            <LogoMark className="h-10 w-10" />
           </button>
           <div className="w-40 shrink-0 opacity-0 transition-opacity duration-300 group-data-[expanded=true]/sidebar:opacity-100 motion-reduce:transition-none">
             <span className="block text-base font-semibold">ရှေ့ဆက်</span>

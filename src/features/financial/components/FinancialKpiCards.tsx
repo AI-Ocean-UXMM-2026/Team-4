@@ -34,29 +34,29 @@ function MetricCard({
     positive: "bg-emerald-50 text-emerald-700 ring-emerald-100",
     warning: "bg-amber-50 text-amber-700 ring-amber-100",
     negative: "bg-rose-50 text-rose-700 ring-rose-100",
-    neutral: "bg-violet-50 text-violet-700 ring-violet-100",
+    neutral: "bg-secondary text-primary ring-border",
   }[tone];
   return (
     <article
       className={`bf-metric-card ${featured ? "bf-metric-featured" : ""} ${prominent ? "min-h-40" : ""}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className={`text-sm font-medium ${featured ? "text-white" : "text-muted-foreground"}`}>
+        <p className={`text-sm font-medium ${featured ? "text-inherit" : "text-muted-foreground"}`}>
           {t(label)}
         </p>
         <span
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${featured ? "bg-white/15 text-white ring-white/25" : palette}`}
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${featured ? "bg-white/25 text-inherit ring-white/35" : palette}`}
         >
           <Icon size={17} aria-hidden="true" />
         </span>
       </div>
       <p
-        className={`mt-4 break-words font-semibold tracking-tight ${featured ? "text-white" : "text-foreground"} ${prominent ? "text-2xl sm:text-[1.7rem]" : "text-xl"}`}
+        className={`mt-4 break-words font-semibold tracking-tight ${featured ? "text-inherit" : "text-foreground"} ${prominent ? "text-2xl sm:text-[1.7rem]" : "text-xl"}`}
       >
         {formatMmk(value)}
       </p>
       <p
-        className={`mt-1.5 text-xs leading-5 ${featured ? "text-violet-100" : "text-muted-foreground"}`}
+        className={`mt-1.5 text-xs leading-5 ${featured ? "text-[var(--feature-muted)]" : "text-muted-foreground"}`}
       >
         {t(note)}
       </p>

@@ -27,7 +27,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
       </header>
       <div className="mx-auto grid min-h-[calc(100svh-100px)] max-w-[1220px] items-center gap-10 py-8 lg:grid-cols-[1.05fr_1fr] lg:py-7">
         <aside className="bf-auth-story">
-          <p className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-violet-100">
+          <p className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-inherit">
             <Sparkles size={13} aria-hidden="true" />
             {t("Built around your business")}
           </p>
@@ -36,9 +36,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <br />
             {t("A stronger")}
             <br />
-            <span className="text-violet-200">{t("business.")}</span>
+            <span className="text-inherit">{t("business.")}</span>
           </h2>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-violet-100">
+          <p className="mt-5 max-w-sm text-sm leading-7 text-inherit">
             {t(
               "Keep your finances connected, understand your cashflow, and plan your next step with confidence.",
             )}
@@ -49,9 +49,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
                 <Layers3 size={17} />
                 {t("One connected workspace")}
               </span>
-              <ArrowUpRight size={17} className="text-violet-200" />
+              <ArrowUpRight size={17} className="text-inherit" />
             </div>
-            <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-violet-100">
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-inherit">
               {[
                 { Icon: Wallet, label: "Cash flow" },
                 { Icon: ChartNoAxesCombined, label: "Insights" },
@@ -61,7 +61,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
                   key={label}
                   className="bf-flow-tile rounded-xl border border-white/10 bg-white/10 px-2 py-4"
                 >
-                  <Icon size={21} strokeWidth={1.5} className="mx-auto mb-2 text-white" />
+                  <Icon size={21} strokeWidth={1.5} className="mx-auto mb-2 text-inherit" />
                   {t(label)}
                 </div>
               ))}
@@ -75,7 +75,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
           >
             <path
               d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
-              stroke="white"
+              stroke="currentColor"
               strokeOpacity=".2"
             />
             <path
@@ -85,17 +85,17 @@ export function AuthShell({ children }: { children: ReactNode }) {
               strokeWidth="2"
               pathLength="1"
             />
-            <circle cx="8" cy="29" r="3" fill="#c4b5fd" />
-            <circle cx="220" cy="11" r="4" fill="#ddd6fe" />
-            <circle cx="432" cy="29" r="3" fill="#99f6e4" />
+            <circle cx="8" cy="29" r="3" fill="#fed7aa" />
+            <circle cx="220" cy="11" r="4" fill="#ffedd5" />
+            <circle cx="432" cy="29" r="3" fill="#fed7aa" />
             <defs>
               <linearGradient id="shay-flow-light">
-                <stop stopColor="#c4b5fd" />
-                <stop offset="1" stopColor="#99f6e4" />
+                <stop stopColor="#fed7aa" />
+                <stop offset="1" stopColor="#fed7aa" />
               </linearGradient>
             </defs>
           </svg>
-          <div className="mt-8 flex items-center gap-3 text-xs text-violet-200">
+          <div className="mt-8 flex items-center gap-3 text-xs text-inherit">
             <span className="h-px w-8 bg-white/30" />
             {t("Less guesswork. More confidence.")}
           </div>

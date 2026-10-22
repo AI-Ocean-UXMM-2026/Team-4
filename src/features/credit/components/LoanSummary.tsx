@@ -14,14 +14,14 @@ export function LoanSummary({ loan }: { loan: Loan }) {
   return (
     <section
       aria-label={t("Loan summary")}
-      className="rounded-2xl border border-violet-400/30 bg-card p-5 text-card-foreground sm:p-6"
+      className="rounded-2xl border border-primary/30 bg-card p-5 text-card-foreground sm:p-6"
     >
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <h2 className="text-xl font-bold">{loan.lender || t("Loan")}</h2>
         <p className="text-xs text-muted-foreground sm:border-l sm:pl-4">
           {t("Loan ID:")} {loan.loan_id}
         </p>
-        <span className="rounded-full border border-violet-400/20 bg-secondary px-3 py-1 text-xs">
+        <span className="rounded-full border border-primary/20 bg-secondary px-3 py-1 text-xs">
           {t(loan.repayment_model.replaceAll("_", " "))}
         </span>
       </header>
@@ -35,7 +35,9 @@ export function LoanSummary({ loan }: { loan: Loan }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="min-w-0 border-l pl-4">
             <p className="text-xs text-muted-foreground">{t("Original principal")}</p>
-            <p className="mt-1 break-words text-lg font-semibold sm:text-xl">{mmk(loan.principal_mmk)}</p>
+            <p className="mt-1 break-words text-lg font-semibold sm:text-xl">
+              {mmk(loan.principal_mmk)}
+            </p>
           </div>
           <div className="min-w-0 border-l pl-4">
             <p className="text-xs text-muted-foreground">{t("Principal repaid")}</p>
@@ -55,10 +57,7 @@ export function LoanSummary({ loan }: { loan: Loan }) {
             aria-valuenow={percent}
             className="h-2 overflow-hidden rounded-full bg-muted"
           >
-            <div
-              className="h-full rounded-full bg-violet-500 dark:bg-violet-400"
-              style={{ width: `${percent}%` }}
-            />
+            <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
           </div>
           <p className="mt-2 text-xs">
             {t("{0}% of principal repaid", { "0": percent.toFixed(1) })}
@@ -67,7 +66,9 @@ export function LoanSummary({ loan }: { loan: Loan }) {
       )}
       <p className="mt-3 text-sm text-muted-foreground">
         {t("Actual interest paid")}:{" "}
-        <span className="text-lg font-semibold text-foreground sm:text-xl">{mmk(loan.actual_interest_paid_mmk)}</span>
+        <span className="text-lg font-semibold text-foreground sm:text-xl">
+          {mmk(loan.actual_interest_paid_mmk)}
+        </span>
       </p>
       {loan.schedule_status === "available" && loan.next_payment_due_mmk !== null && (
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t pt-4 text-sm">

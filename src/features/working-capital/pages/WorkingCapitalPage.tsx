@@ -25,14 +25,12 @@ export function WorkingCapitalPage() {
     );
   return (
     <main className="space-y-6">
-      <header className="bf-purple-banner rounded-3xl px-6 py-8 text-white sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">
-          {t("Working Capital")}
-        </p>
+      <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Working Capital")}</p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
           {t("Plan cash with clearer choices")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm opacity-90 sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm text-[var(--feature-muted)] sm:text-base">
           {t(
             "Explore inventory, collections, cash timing, and reserves. Simulations are read-only and do not change your records.",
           )}

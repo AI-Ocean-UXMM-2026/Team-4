@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144" fill="none">
+  <rect width="144" height="144" rx="29" fill="#fff"/>
+  <defs>
+    <mask id="step-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <path fill="#fff" d="M0 0h128v128H0z"/>
+      <rect x="36" y="36" width="78" height="92" rx="16" fill="#000"/>
+    </mask>
+    <mask id="forward-arrow" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128">
+      <path fill="#fff" d="M0 0h128v128H0z"/>
+      <path d="M37 128L80 80L72 74Q69 71 73 69L100 58Q104 56 104 61V88Q104 93 100 89L94 84L55 128Z" fill="#000"/>
+    </mask>
+  </defs>
+  <g transform="translate(8 8)" mask="url(#forward-arrow)">
+    <rect x="78" y="6" width="44" height="70" rx="11" fill="#FF7900" mask="url(#step-gap)"/>
+    <rect x="40" y="40" width="70" height="82" rx="12" fill="#FF7900"/>
+    <path d="M18 78H81L50 122H18C11.373 122 6 116.627 6 110V90C6 83.373 11.373 78 18 78Z" fill="#351A0C"/>
+  </g>
+</svg>

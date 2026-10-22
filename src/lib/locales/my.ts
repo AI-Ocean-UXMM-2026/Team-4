@@ -1,4 +1,19 @@
 export const my: Record<string, string> = {
+  "Workbook rejected. No business records were changed.":
+    "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
+  "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",
+  "This workbook uses a different business ID.":
+    "ဤ Excel ဖိုင်တွင် လုပ်ငန်း ID အခြားတစ်ခုကို သုံးထားပါသည်။",
+  "You are importing into {0}.": "{0} လုပ်ငန်းသို့ အချက်အလက်ထည့်သွင်းနေပါသည်။",
+  "If this is your workbook, replace business_id in Settings and every populated sheet with the ID below. Save the file, then upload it again. Keep the other row IDs unchanged.":
+    "ဤဖိုင်သည် သင့်လုပ်ငန်းဖိုင်ဖြစ်ပါက Settings နှင့် အချက်အလက်ရှိသော စာရွက်တိုင်းတွင် business_id ကို အောက်ပါ ID ဖြင့် အစားထိုးပါ။ ဖိုင်ကို သိမ်းပြီး ပြန်တင်ပါ။ အခြားအတန်း ID များကို မပြောင်းပါနှင့်။",
+  "Your business ID": "သင့်လုပ်ငန်း ID",
+  "Copy business ID": "လုပ်ငန်း ID ကူးယူရန်",
+  "Business ID copied": "လုပ်ငန်း ID ကူးယူပြီးပါပြီ",
+  "Select the business ID above and copy it manually.":
+    "အပေါ်ရှိ လုပ်ငန်း ID ကို ရွေးချယ်ပြီး ကိုယ်တိုင် ကူးယူပါ။",
+  "Starting a new workbook? Download the template above. It already contains your business ID in Settings.":
+    "ဖိုင်အသစ် စတင်လိုပါက အပေါ်ရှိ ပုံစံဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပါ။ Settings တွင် သင့်လုပ်ငန်း ID ထည့်ထားပြီးဖြစ်ပါသည်။",
   "Bank loan guide": "ဘဏ်ချေးငွေလမ်းညွှန်",
   "Report date": "အစီရင်ခံရက်",
   Industry: "လုပ်ငန်းအမျိုးအစား",

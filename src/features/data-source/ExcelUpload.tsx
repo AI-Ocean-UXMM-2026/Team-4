@@ -5,6 +5,7 @@ import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
+import { WorkbookBusinessHelp } from "./WorkbookBusinessHelp";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
@@ -13,6 +14,9 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
+  const businessMismatch = result?.errors.some(
+    (issue) => issue.field === "business_id" && issue.reason === "Row belongs to another business",
+  );
   const download = async () => {
     try {
       const blob = await api<Blob>(businessPath("template", business.id));
@@ -104,6 +108,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           {t(error)}
         </p>
       )}
+      {businessMismatch && <WorkbookBusinessHelp business={business} />}
       {result && (
         <div aria-live="polite" className="mt-4 text-sm">
           {result.status !== "failed" && (

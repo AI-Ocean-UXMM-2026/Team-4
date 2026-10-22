@@ -30,12 +30,12 @@ export function CreditPage() {
   return (
     <div className="credit-page space-y-5">
       <CreditPrintReport data={data} />
-      <header className="bf-purple-banner rounded-3xl px-6 py-8 text-white sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">{t("Credit Hub")}</p>
+      <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
+        <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Credit Hub")}</p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
           {t("Manage credit and prepare records")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm opacity-90 sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm text-[var(--feature-muted)] sm:text-base">
           {t(
             "Track actual repayments separately from estimated obligations, and organize records for a financing discussion.",
           )}
@@ -80,7 +80,7 @@ export function CreditPage() {
                   <select
                     value={selected?.loan_id}
                     onChange={(event) => setLoanId(event.target.value)}
-                    className="min-h-11 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:border-violet-400/60 focus-visible:ring-2 focus-visible:ring-ring"
+                    className="min-h-11 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {data.loans.map((loan) => (
                       <option key={loan.loan_id} value={loan.loan_id}>

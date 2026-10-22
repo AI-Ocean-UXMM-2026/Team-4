@@ -29,7 +29,7 @@ export function DataSourcePage() {
         </p>
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <ExcelUpload maxBytes={query.data.max_upload_bytes} />
+        <ExcelUpload key={business.id} maxBytes={query.data.max_upload_bytes} />
         <OneDriveConnect status={query.data} />
       </div>
       <SyncStatus status={query.data} />

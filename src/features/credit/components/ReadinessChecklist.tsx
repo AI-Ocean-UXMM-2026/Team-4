@@ -13,15 +13,20 @@ export function ReadinessChecklist({ items }: { items: ReadinessCategory[] }) {
         {items.map((item) => (
           <article
             key={item.category}
-            className="credit-record-folder relative min-w-0 rounded-md border border-violet-400/25 bg-card p-5 sm:p-6"
+            className="credit-record-folder relative min-w-0 rounded-md border border-primary/25 bg-card p-5 sm:p-6"
           >
             <svg
               viewBox="0 0 20 20"
-              className="pointer-events-none absolute right-0 top-0 h-5 w-5 text-violet-400/30"
+              className="pointer-events-none absolute right-0 top-0 h-5 w-5 text-primary/30"
               aria-hidden="true"
             >
               <path d="M0 0H20V20Z" fill="var(--background)" />
-              <path d="M0 0V15Q0 20 5 20H20L0 0Z" fill="var(--card)" stroke="currentColor" strokeWidth="0.75" />
+              <path
+                d="M0 0V15Q0 20 5 20H20L0 0Z"
+                fill="var(--card)"
+                stroke="currentColor"
+                strokeWidth="0.75"
+              />
             </svg>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
               <h3 className="min-w-0 flex-1 basis-48 text-sm font-semibold leading-7">
@@ -31,10 +36,7 @@ export function ReadinessChecklist({ items }: { items: ReadinessCategory[] }) {
                 {t(item.status.replaceAll("_", " "))}
               </span>
             </div>
-            <div
-              aria-hidden="true"
-              className="mb-4 h-0.5 w-6 rounded-full bg-violet-500/60 dark:bg-violet-400/60"
-            />
+            <div aria-hidden="true" className="mb-4 h-0.5 w-6 rounded-full bg-primary/60" />
             <div className="space-y-2 text-xs leading-6 text-muted-foreground">
               <p>
                 {t("Source:")} {t(item.source.replaceAll("_", " "))} · {item.record_count}{" "}

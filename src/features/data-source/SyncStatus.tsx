@@ -22,7 +22,7 @@ export function Issues({ result }: { result: ImportResult }) {
               <td className="p-2">{issue.sheet}</td>
               <td className="p-2">{issue.row || t("Previous import")}</td>
               <td className="p-2">{issue.field}</td>
-              <td className="p-2">{issue.reason}</td>
+              <td className="p-2">{t(issue.reason)}</td>
             </tr>
           ))}
         </tbody>

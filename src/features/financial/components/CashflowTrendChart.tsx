@@ -168,10 +168,10 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
                 <th scope="row" className="px-3 py-2.5 font-medium text-muted-foreground">
                   {point.period.start} – {point.period.end}
                 </th>
-                <td className="px-3 py-2.5 font-medium text-violet-800">
+                <td className="px-3 py-2.5 font-medium text-primary">
                   {formatMmk(point.revenue_mmk)}
                 </td>
-                <td className="px-3 py-2.5 font-medium text-blue-800">
+                <td className="px-3 py-2.5 font-medium text-cyan-800 dark:text-cyan-200">
                   {formatMmk(point.operating_expenses_mmk)}
                 </td>
               </tr>

@@ -30,7 +30,7 @@ export function OutstandingBalances({
             {t("Outstanding payments")}
           </h2>
         </div>
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary ring-1 ring-border">
           <CircleDollarSign size={18} aria-hidden="true" />
         </span>
       </div>

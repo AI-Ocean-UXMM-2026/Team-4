@@ -3,8 +3,8 @@ export function AuroraBackdrop() {
   return (
     <div className="bf-aurora" aria-hidden="true">
       <div className="bf-aurora-liquid" />
-      <div className="bf-aurora-ribbon bf-aurora-violet" />
-      <div className="bf-aurora-ribbon bf-aurora-blue" />
+      <div className="bf-aurora-ribbon bf-aurora-pearl" />
+      <div className="bf-aurora-ribbon bf-aurora-accent" />
     </div>
   );
 }
