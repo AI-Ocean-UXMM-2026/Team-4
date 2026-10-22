@@ -27,11 +27,11 @@ class SourceVersionChanged(Exception):
 
 def provider_failure_warning(error: Exception, provider_name: str = "OpenAI") -> str:
     if isinstance(error, httpx.TimeoutException):
-        return f"{provider_name} timed out; rules-based findings are shown. Try Analyze Business again."
+        return f"{provider_name} timed out; verified rules-based findings are shown. Try Analyze with AI again."
     if isinstance(error, ValueError):
         if str(error) == "AI response was not completed":
-            return "AI response was incomplete; rules-based findings are shown. Try Analyze Business again."
-        return "AI wording failed evidence validation; rules-based findings are shown. Try Analyze Business again."
+            return "AI response was incomplete; verified rules-based findings are shown. Try Analyze with AI again."
+        return "AI wording failed evidence validation; verified rules-based findings are shown. Try Analyze with AI again."
     if isinstance(error, httpx.HTTPStatusError):
         try:
             code = (error.response.json().get("error") or {}).get("code")

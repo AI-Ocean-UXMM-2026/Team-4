@@ -21,6 +21,18 @@ export type WorkingCapitalSnapshot = {
   source_version: number | null;
   inventory: InventoryRisk[];
   purchasing_budget: { status: string; budget_mmk: DecimalString | null };
+  unlock_cash: {
+    as_of: string | null;
+    stock_value_mmk: DecimalString | null;
+    receivables_mmk: DecimalString | null;
+    expense_candidates: {
+      expense_id: string;
+      category: string;
+      description: string | null;
+      amount_mmk: DecimalString;
+    }[];
+    average_weekly_running_cost_mmk: DecimalString | null;
+  };
   warnings: string[];
 };
 

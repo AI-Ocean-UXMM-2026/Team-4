@@ -35,6 +35,8 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
                 errors.append(issue(name, row.excel_row, key, message))
             if "date" in value and value["date"] < opening:
                 err("date", "Transaction predates the opening date")
+            if name == "Purchases" and value.get("due_date") is not None and value["due_date"] < value["date"]:
+                err("due_date", "Due date precedes the purchase date")
             if name in references:
                 target, key = references[name]
                 other = index.get(target, {}).get(value[key])

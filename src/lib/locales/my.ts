@@ -165,9 +165,32 @@ export const my: Record<string, string> = {
   "Amount still needed": "လိုအပ်နေသေးသော ပမာဏ",
   "Analyze Business": "လုပ်ငန်းကို သုံးသပ်ရန်",
   "Analyze with AI": "AI ဖြင့် သုံးသပ်ရန်",
-  "Use rules only": "စည်းမျဉ်းများဖြင့်သာ သုံးသပ်ရန်",
-  "I agree to send summary financial amounts and findings from this import to the configured external AI provider for this analysis. The workbook, names, and individual transaction rows are not sent.":
-    "ဤသုံးသပ်ချက်အတွက် ဤဖိုင်မှ စုစည်းထားသော ငွေကြေးပမာဏများနှင့် တွေ့ရှိချက်များကို ပြင်ပ AI ဝန်ဆောင်မှုသို့ ပို့ရန် သဘောတူပါသည်။ Excel ဖိုင်၊ အမည်များနှင့် ငွေလွှဲတစ်ကြောင်းချင်း၏ မှတ်တမ်းများကို မပို့ပါ။",
+  "No analysis yet. Import business records, then select Analyze with AI.":
+    "သုံးသပ်ချက် မရှိသေးပါ။ လုပ်ငန်းမှတ်တမ်းများကို တင်ပြီး AI ဖြင့် သုံးသပ်ရန်ကို ရွေးပါ။",
+  "This report uses an older import. Select Analyze with AI again for the current version.":
+    "ဤအစီရင်ခံစာသည် ယခင်ဗားရှင်းကို အသုံးပြုထားပါသည်။ နောက်ဆုံးဗားရှင်းအတွက် AI ဖြင့် သုံးသပ်ရန်ကို ထပ်မံရွေးပါ။",
+  "AI was not used — verified findings shown":
+    "AI ကို အသုံးမပြုနိုင်ခဲ့ပါ — စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားသည်",
+  "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.":
+    "AI ဖြင့် သုံးသပ်ရန်ကို နှိပ်ပါက ဤဖိုင်မှ စုစည်းထားသော ငွေကြေးပမာဏများနှင့် တွေ့ရှိချက်များကို ပြင်ပ AI ဝန်ဆောင်မှုသို့ ပို့ရန် သဘောတူပါသည်။ Excel ဖိုင်၊ အမည်များနှင့် ငွေလွှဲတစ်ကြောင်းချင်း၏ မှတ်တမ်းများကို မပို့ပါ။",
+  "AI provider is not configured; rules-based findings are shown.":
+    "AI ဝန်ဆောင်မှုကို မသတ်မှတ်ရသေးသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI wording was unavailable or failed evidence validation; rules-based findings are shown.":
+    "AI ဖြင့် သုံးသပ်၍ မရခဲ့သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI hourly call limit reached; rules-based findings are shown.":
+    "AI ကို တစ်နာရီအတွင်း ခေါ်ဆိုနိုင်သည့် အကြိမ်ရေ ပြည့်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI response was incomplete; verified findings are shown. Try Analyze with AI again.":
+    "AI အဖြေ မပြည့်စုံခဲ့ပါ။ စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။ AI ဖြင့် ထပ်မံသုံးသပ်ပါ။",
+  "AI wording failed evidence validation; verified findings are shown. Try Analyze with AI again.":
+    "AI အဖြေသည် အထောက်အထားစစ်ဆေးမှု မအောင်မြင်ခဲ့ပါ။ စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။ AI ဖြင့် ထပ်မံသုံးသပ်ပါ။",
+  "OpenAI API credits are exhausted; rules-based findings are shown.":
+    "OpenAI API လက်ကျန်ငွေ ကုန်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenRouter API credits are exhausted; rules-based findings are shown.":
+    "OpenRouter API လက်ကျန်ငွေ ကုန်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenAI account has insufficient credits; rules-based findings are shown.":
+    "OpenAI အကောင့်တွင် လက်ကျန်ငွေ မလုံလောက်သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenRouter account has insufficient credits; rules-based findings are shown.":
+    "OpenRouter အကောင့်တွင် လက်ကျန်ငွေ မလုံလောက်သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "External AI analysis was not selected; rules-based findings are shown.":
     "ပြင်ပ AI သုံးသပ်ချက်ကို မရွေးချယ်ထားသဖြင့် စည်းမျဉ်းအခြေခံ တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "Analyzing…": "သုံးသပ်နေသည်…",

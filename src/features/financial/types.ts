@@ -6,6 +6,9 @@ export type Obligation = {
   reference_id: string;
   due_date: string | null;
   amount_mmk: string | number;
+  original_amount_mmk?: string | number | null;
+  amount_paid_mmk?: string | number | null;
+  name?: string | null;
 };
 export type FinancialSnapshot = {
   business_id: string;
@@ -32,15 +35,19 @@ export type FinancialSnapshot = {
   import_batch_id: string | null;
   source_version?: number | null;
   synthetic?: boolean;
+  loan_principal_outstanding_mmk?: Money;
+  loan_schedule_available?: boolean;
 };
 export type Trends = {
   business_id: string;
+  granularity?: "weekly" | "monthly";
   points: {
     period: Period;
     revenue_mmk: Money;
     operating_expenses_mmk: Money;
     revenue_record_count: number | null;
     operating_expense_record_count: number | null;
+    is_partial?: boolean;
   }[];
   as_of: string | null;
   import_batch_id: string | null;
@@ -50,7 +57,12 @@ export type Trends = {
 /** P5 supplies its common authenticated client through this interface. */
 export interface FinancialClient {
   summary(businessId: string, period: Period, signal: AbortSignal): Promise<FinancialSnapshot>;
-  trends(businessId: string, end: string, signal: AbortSignal): Promise<Trends>;
+  trends(
+    businessId: string,
+    period: Period,
+    granularity: "weekly" | "monthly",
+    signal: AbortSignal,
+  ): Promise<Trends>;
 }
 export const formatMmk = (value: Money) => {
   if (value === null) return translate("Unavailable");

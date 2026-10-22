@@ -1,5 +1,13 @@
 import "@testing-library/jest-dom/vitest";
 
+if (!("ResizeObserver" in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
+
 Object.defineProperty(window, "scrollTo", {
   writable: true,
   value: () => {},

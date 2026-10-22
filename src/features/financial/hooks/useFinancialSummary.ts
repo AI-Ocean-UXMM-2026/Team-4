@@ -10,26 +10,54 @@ type State = {
   error?: string;
 };
 
+function trendsCoverPeriod(trends: Trends, period: Period) {
+  if (!trends.points.length || trends.points[0]?.period.start !== period.start) return false;
+  for (let index = 0; index < trends.points.length; index += 1) {
+    const point = trends.points[index];
+    if (!point || point.period.start > point.period.end) return false;
+    if (index > 0) {
+      const previous = trends.points[index - 1];
+      if (!previous) return false;
+      const nextDate = new Date(`${previous.period.end}T00:00:00Z`);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      if (point.period.start !== nextDate.toISOString().slice(0, 10)) return false;
+    }
+  }
+  return trends.points[trends.points.length - 1]?.period.end === period.end;
+}
+
 export function useFinancialSummary(
   client: FinancialClient,
   businessId: string,
   period: Period,
+  granularity: "weekly" | "monthly",
   importBatchId: string | null,
   refreshKey: number,
   sourceVersion?: number,
 ) {
+  const periodStart = period.start;
+  const periodEnd = period.end;
   const requestKey = JSON.stringify([
     businessId,
     period.start,
     period.end,
+    granularity,
     importBatchId,
     refreshKey,
     sourceVersion,
   ]);
   const cache = useContext(QueryClientContext);
   const cacheKey = useMemo(
-    () => ["financial-summary", businessId, period.start, period.end, importBatchId, sourceVersion],
-    [businessId, period.start, period.end, importBatchId, sourceVersion],
+    () => [
+      "financial-summary",
+      businessId,
+      period.start,
+      period.end,
+      granularity,
+      importBatchId,
+      sourceVersion,
+    ],
+    [businessId, period.start, period.end, granularity, importBatchId, sourceVersion],
   );
   const cached = cache?.getQueryData<State>(cacheKey);
   const generation = useRef(0);
@@ -60,8 +88,13 @@ export function useFinancialSummary(
       return () => controller.abort();
     }
     Promise.all([
-      client.summary(businessId, period, controller.signal),
-      client.trends(businessId, period.end, controller.signal),
+      client.summary(businessId, { start: periodStart, end: periodEnd }, controller.signal),
+      client.trends(
+        businessId,
+        { start: periodStart, end: periodEnd },
+        granularity,
+        controller.signal,
+      ),
     ])
       .then(([snapshot, trends]) => {
         if (controller.signal.aborted || generation.current !== current) return;
@@ -73,8 +106,10 @@ export function useFinancialSummary(
           (sourceVersion !== undefined &&
             (snapshot.source_version !== sourceVersion ||
               trends.source_version !== sourceVersion)) ||
-          snapshot.period.start !== period.start ||
-          snapshot.period.end !== period.end
+          snapshot.period.start !== periodStart ||
+          snapshot.period.end !== periodEnd ||
+          trends.granularity !== granularity ||
+          !trendsCoverPeriod(trends, { start: periodStart, end: periodEnd })
         ) {
           throw new Error(
             "Financial data is stale or inconsistent. Refresh after the import finishes.",
@@ -96,8 +131,9 @@ export function useFinancialSummary(
   }, [
     client,
     businessId,
-    period.start,
-    period.end,
+    periodStart,
+    periodEnd,
+    granularity,
     importBatchId,
     refreshKey,
     sourceVersion,

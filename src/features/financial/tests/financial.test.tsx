@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FinancialPage } from "../pages/FinancialPage";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
@@ -36,7 +36,16 @@ function client(batch = "batch-1"): FinancialClient {
     summary: vi.fn().mockResolvedValue(snapshot(batch)),
     trends: vi.fn().mockResolvedValue({
       business_id: "A",
-      points: [],
+      granularity: "weekly",
+      points: [
+        {
+          period: { start: "2026-10-01", end: "2026-10-20" },
+          revenue_mmk: 0,
+          operating_expenses_mmk: 0,
+          revenue_record_count: 0,
+          operating_expense_record_count: 0,
+        },
+      ],
       as_of: "2026-10-20T10:00:00Z",
       import_batch_id: batch,
     }),
@@ -44,7 +53,14 @@ function client(batch = "batch-1"): FinancialClient {
 }
 
 function Probe({ api, batch }: { api: FinancialClient; batch: string }) {
-  const state = useFinancialSummary(api, "A", { start: "2026-10-01", end: "2026-10-20" }, batch, 0);
+  const state = useFinancialSummary(
+    api,
+    "A",
+    { start: "2026-10-01", end: "2026-10-20" },
+    "weekly",
+    batch,
+    0,
+  );
   return (
     <div>
       {state.status === "ready"
@@ -129,7 +145,16 @@ describe("Financial reporting", () => {
     );
     api.trends = vi.fn().mockResolvedValue({
       business_id: "A",
-      points: [],
+      granularity: "weekly",
+      points: [
+        {
+          period: { start: "2026-10-01", end: "2026-10-20" },
+          revenue_mmk: 0,
+          operating_expenses_mmk: 0,
+          revenue_record_count: 0,
+          operating_expense_record_count: 0,
+        },
+      ],
       import_batch_id: "batch-2",
       as_of: "2026-10-20T10:00:00Z",
     });
@@ -174,11 +199,27 @@ describe("Financial reporting", () => {
       />,
     );
     expect(await screen.findByText("150,000 MMK")).toBeTruthy();
-    expect(screen.getByText("Please note about this report")).toBeTruthy();
+    expect(screen.queryByText("Please note about this report")).toBeNull();
+    expect(screen.queryByText("Interest uses cash-paid amounts.")).toBeNull();
     expect(screen.getByText(/2026-10-01 – 2026-10-20 · Yangon time/)).toBeTruthy();
-    expect(screen.getByText("2026-10-15 · Overdue")).toBeTruthy();
+    const obligationsTable = screen.getByRole("table", {
+      name: /outstanding business obligations/i,
+    });
+    const supplierRow = within(obligationsTable).getByText("P001").closest("tr");
+    expect(supplierRow?.textContent).toContain("2026-10-15");
+    expect(supplierRow?.textContent).toContain("Overdue");
     expect(screen.getByText("30,000 MMK")).toBeTruthy();
-    expect(screen.getByText("No reporting periods available.")).toBeTruthy();
+    expect(
+      screen.getByRole("table", { name: "Exact trend figures; unavailable values are not zero" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("No reporting periods available.")).toBeNull();
+    const chart = screen.getByRole("region", { name: "Revenue and operating expense trends" });
+    const obligations = screen.getByRole("region", { name: "Outstanding obligations" });
+    const chartPanel = chart.parentElement;
+    const obligationsPanel = obligations.parentElement;
+    expect(chartPanel?.parentElement).toBe(obligationsPanel?.parentElement);
+    expect(chartPanel?.nextElementSibling).toBe(obligationsPanel);
+    expect(chartPanel?.parentElement?.className).toContain("flex-col");
   });
 
   it.each([
@@ -195,9 +236,21 @@ describe("Financial reporting", () => {
       business_id: businessId,
       period,
     }));
-    api.trends = vi.fn(async (businessId) => ({
+    const granularity = ["Last 3 months", "Last 6 months", "This year"].includes(label)
+      ? "monthly"
+      : "weekly";
+    api.trends = vi.fn(async (businessId, period, requestedGranularity) => ({
       business_id: businessId,
-      points: [],
+      granularity: requestedGranularity,
+      points: [
+        {
+          period,
+          revenue_mmk: 0,
+          operating_expenses_mmk: 0,
+          revenue_record_count: 0,
+          operating_expense_record_count: 0,
+        },
+      ],
       as_of: "2026-10-20T10:00:00Z",
       import_batch_id: "batch-1",
     }));
@@ -230,6 +283,14 @@ describe("Financial reporting", () => {
     await waitFor(() =>
       expect(api.summary).toHaveBeenLastCalledWith("A", { start, end }, expect.any(AbortSignal)),
     );
+    await waitFor(() =>
+      expect(api.trends).toHaveBeenLastCalledWith(
+        "A",
+        { start, end },
+        granularity,
+        expect.any(AbortSignal),
+      ),
+    );
   });
 
   it("keeps the selected period when requesting a newly selected business", async () => {
@@ -239,9 +300,18 @@ describe("Financial reporting", () => {
       business_id: businessId,
       period,
     }));
-    api.trends = vi.fn(async (businessId) => ({
+    api.trends = vi.fn(async (businessId, period, requestedGranularity) => ({
       business_id: businessId,
-      points: [],
+      granularity: requestedGranularity,
+      points: [
+        {
+          period,
+          revenue_mmk: 0,
+          operating_expenses_mmk: 0,
+          revenue_record_count: 0,
+          operating_expense_record_count: 0,
+        },
+      ],
       as_of: "2026-10-20T10:00:00Z",
       import_batch_id: "batch-1",
     }));
@@ -270,6 +340,14 @@ describe("Financial reporting", () => {
       expect(api.summary).toHaveBeenLastCalledWith(
         "B",
         { start: "2026-10-01", end: "2026-10-22" },
+        expect.any(AbortSignal),
+      ),
+    );
+    await waitFor(() =>
+      expect(api.trends).toHaveBeenLastCalledWith(
+        "B",
+        { start: "2026-10-01", end: "2026-10-22" },
+        "weekly",
         expect.any(AbortSignal),
       ),
     );
