@@ -1,11 +1,18 @@
 """Exercise actual P5 imports, SQL projections and business authorization."""
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
+from types import SimpleNamespace
 from openpyxl import load_workbook
+from sqlalchemy import select, update
 
-from app.integrations.excel.tests.conftest import client, workbook_bytes, upload
+from app.db.connection import make_engine, session_factory
+from app.db.models import Base, Business, ImportedRow, PROJECTIONS, WorkbookSource
+from app.integrations.excel.tests.conftest import ROOT, client, edit_workbook, workbook_bytes, upload
+from app.integrations.excel.import_service import import_validated_snapshot
+from app.integrations.excel.router import snapshot as data_snapshot
 from app.features.financial.platform import calculate_platform_snapshot
-from app.features.financial.platform_repository import Ledger
+from app.features.financial.platform_repository import Ledger, SqlFinancialRepository
 from app.features.financial.schemas import Period
 from datetime import date
 
@@ -19,7 +26,9 @@ def test_real_import_summary_and_idempotency(client, workbook_bytes):
     response = client.get(URL)
     assert response.status_code == 200, response.text
     summary = response.json()
+    assert summary["synthetic"] is True
     source = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()
+    assert source["synthetic"] is True
     sales = source["tables"]["Sales"]
     expected = sum((Decimal(x["quantity"]) * Decimal(x["unit_price_mmk"]) for x in sales), Decimal(0))
     assert Decimal(summary["actual"]["revenue_mmk"]) == expected
@@ -28,8 +37,214 @@ def test_real_import_summary_and_idempotency(client, workbook_bytes):
     assert summary["actual"]["cash_balance_mmk"] is None
     assert summary["source_version"] == source["source_version"]
     assert summary["as_of"] and summary["import_batch_id"]
+    trends = client.get("/api/v1/financial/trends?business_id=tea-shop&end=2026-10-20&months=3")
+    assert trends.status_code == 200, trends.text
+    august, september, october = trends.json()["points"]
+    # Empty imported months are identified as no records, not as recorded 0 MMK.
+    assert august["revenue_record_count"] == august["operating_expense_record_count"] == 0
+    assert september["revenue_record_count"] == september["operating_expense_record_count"] == 0
+    assert october["revenue_record_count"] == len(sales) == 3
+    assert october["operating_expense_record_count"] == 2
+    assert october["period"] == {"start": "2026-10-01", "end": "2026-10-20"}
+    selected = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-01&end=2026-10-20&granularity=weekly")
+    assert selected.status_code == 200, selected.text
+    payload = selected.json()
+    assert payload["granularity"] == "weekly"
+    assert [point["period"] for point in payload["points"]] == [
+        {"start": "2026-10-01", "end": "2026-10-07"},
+        {"start": "2026-10-08", "end": "2026-10-14"},
+        {"start": "2026-10-15", "end": "2026-10-20"},
+    ]
+    assert [point["is_partial"] for point in payload["points"]] == [False, False, True]
+    assert sum(Decimal(point["revenue_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["revenue_mmk"])
+    assert sum(Decimal(point["operating_expenses_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["operating_expenses_mmk"])
+    assert sum(point["revenue_record_count"] for point in payload["points"]) == len(sales)
+    assert client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-20&end=2026-10-01&granularity=weekly").status_code == 400
+    monthly = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-08-22&end=2026-10-20&granularity=monthly")
+    assert monthly.status_code == 200, monthly.text
+    monthly_points = monthly.json()["points"]
+    assert [point["period"] for point in monthly_points] == [
+        {"start": "2026-08-22", "end": "2026-08-31"},
+        {"start": "2026-09-01", "end": "2026-09-30"},
+        {"start": "2026-10-01", "end": "2026-10-20"},
+    ]
+    assert [point["is_partial"] for point in monthly_points] == [True, False, True]
+    range_summary = client.get("/api/v1/financial/summary?business_id=tea-shop&start=2026-08-22&end=2026-10-20").json()
+    assert sum(Decimal(point["revenue_mmk"]) for point in monthly_points) == Decimal(range_summary["actual"]["revenue_mmk"])
+    assert sum(Decimal(point["operating_expenses_mmk"]) for point in monthly_points) == Decimal(range_summary["actual"]["operating_expenses_mmk"])
     assert upload(client, workbook_bytes).status_code == 200
     assert client.get(URL).json() == summary
+
+
+def test_only_exact_seed_workbook_is_marked_synthetic(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'synthetic.db'}")
+    Base.metadata.create_all(engine)
+    sessions = session_factory(engine)
+    with sessions.begin() as session:
+        session.add(Business(id="tea-shop", name="Tea Shop", industry="Food", city="Yangon"))
+    content = (ROOT / "database/seed/tea-shop.xlsx").read_bytes()
+    import_validated_snapshot(sessions, "tea-shop", "owner", content)
+    repository = SqlFinancialRepository(sessions)
+    assert repository.load_ledger("tea-shop").synthetic is True
+    request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(sessions=sessions)))
+    assert data_snapshot(request, "tea-shop", "owner")["synthetic"] is True
+
+    changed = edit_workbook(content, lambda w: setattr(w.properties, "title", "Edited copy"))
+    import_validated_snapshot(sessions, "tea-shop", "owner", changed)
+    assert repository.load_ledger("tea-shop").synthetic is False
+    assert data_snapshot(request, "tea-shop", "owner")["synthetic"] is False
+    engine.dispose()
+
+
+def test_wholesale_october_workbook_import_and_financial_availability(client):
+    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    workbook = load_workbook(BytesIO(path.read_bytes()))
+    # Bind the synthetic sample to this test user's authorized business.
+    for sheet in workbook.worksheets:
+        headers = [cell.value for cell in sheet[1]]
+        if "business_id" in headers:
+            column = headers.index("business_id") + 1
+            for row in range(2, sheet.max_row + 1):
+                sheet.cell(row, column).value = "tea-shop"
+    purchases = workbook["Purchases"]
+    due_column = purchases.max_column + 1
+    purchases.cell(1, due_column).value = "due_date"
+    purchases.cell(2, due_column).value = date(2026, 10, 25)  # PUR-001
+    content = BytesIO()
+    workbook.save(content)
+    workbook.close()
+
+    imported = upload(client, content.getvalue())
+    assert imported.status_code == 200, imported.text
+    assert imported.json()["status"] == "success"
+
+    response = client.get(
+        "/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-21"
+    )
+    assert response.status_code == 200, response.text
+    summary = response.json()
+    assert summary["synthetic"] is False
+    actual = summary["actual"]
+    assert Decimal(actual["revenue_mmk"]) == Decimal("13061400")
+    assert Decimal(actual["operating_expenses_mmk"]) == Decimal("2657000")
+    assert Decimal(actual["interest_expenses_mmk"]) == Decimal("180000")
+    assert Decimal(actual["receivables_mmk"]) == Decimal("2912900")
+    assert Decimal(actual["payables_mmk"]) == Decimal("5051200")
+    supplier = next(item for item in summary["upcoming_obligations"] if item["reference_id"] == "PUR-001")
+    assert supplier["due_date"] == "2026-10-25"
+    assert Decimal(supplier["original_amount_mmk"]) == Decimal("2184000")
+    assert Decimal(supplier["amount_paid_mmk"]) == Decimal("765000")
+    assert Decimal(supplier["amount_mmk"]) == Decimal("1419000")
+    assert Decimal(summary["loan_principal_outstanding_mmk"]) == Decimal("16600000")
+    assert summary["loan_schedule_available"] is False
+    historical = client.get("/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-31").json()
+    assert all(item["reference_id"] != "PUR-001" for item in historical["upcoming_obligations"])
+    assert Decimal(historical["loan_principal_outstanding_mmk"]) == Decimal("16050000")
+
+    # The imported v1 sheets do not state expense settlement or cost at sale.
+    # Keep the opening cash, product costs and purchase costs without presenting
+    # estimates as actual cash or historical COGS/profit.
+    assert actual["cash_balance_mmk"] is None
+    assert actual["cogs_mmk"] is None
+    assert actual["operating_profit_mmk"] is None
+    warnings = summary["data_quality"]["warnings"]
+    assert any("Expense cash movements are incomplete" in item for item in warnings)
+    assert any("Historical cost is missing" in item for item in warnings)
+
+    snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()
+    tables = snapshot["tables"]
+    assert tables["Settings"][0]["opening_cash_mmk"] == "8500000.00"
+    assert len(tables["Products"]) == 12
+    assert len(tables["Sales"]) == 48
+    assert len(tables["Purchases"]) == 28
+    assert "Rent" in {row["category"] for row in tables["Expenses"]}
+    assert {row["loan_type"] for row in tables["Loans"]} == {"Business expansion", "Working capital"}
+    assert "partial" not in {row["payment_type"] for row in tables["Sales"]}
+
+    credit_loans = client.get("/api/v1/credit/loans?business_id=tea-shop")
+    assert credit_loans.status_code == 200, credit_loans.text
+    assert all(item["schedule_status"] == "unsupported_loan_model" for item in credit_loans.json()["loans"])
+    assert all(item["schedule"] == [] for item in credit_loans.json()["loans"])
+
+
+def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client):
+    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    workbook = load_workbook(BytesIO(path.read_bytes()))
+    for sheet in workbook.worksheets:
+        headers = [cell.value for cell in sheet[1]]
+        if "business_id" in headers:
+            column = headers.index("business_id") + 1
+            for row in range(2, sheet.max_row + 1):
+                sheet.cell(row, column).value = "tea-shop"
+    content = BytesIO()
+    workbook.save(content)
+    workbook.close()
+
+    imported = upload(client, content.getvalue())
+    assert imported.status_code == 200, imported.text
+    summary_response = client.get(
+        "/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-21"
+    )
+    assert summary_response.status_code == 200, summary_response.text
+    summary = summary_response.json()
+    actual = summary["actual"]
+    assert Decimal(actual["revenue_mmk"]) == Decimal("13061400.00")
+    assert Decimal(actual["cogs_mmk"]) == Decimal("11079500.00")
+    assert Decimal(actual["operating_expenses_mmk"]) == Decimal("2657000.00")
+    assert Decimal(actual["operating_profit_mmk"]) == Decimal("-675100.00")
+    assert Decimal(actual["cash_balance_mmk"]) == Decimal("12919300.00")
+
+    warnings = summary["data_quality"]["warnings"]
+    assert any("quantity × historical unit cost" in warning for warning in warnings)
+    assert any("less recorded payments through 2026-10-21" in warning and "paid date" in warning for warning in warnings)
+
+    snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()["tables"]
+    assert snapshot["Sales"][0]["unit_cost_at_sale_mmk"] is not None
+    assert snapshot["Sales"][0]["cogs_mmk"] is not None
+    partial = next(row for row in snapshot["Expenses"] if row["payment_status"] == "partial")
+    assert partial["paid_date"] is not None
+    assert Decimal(partial["amount_paid_mmk"]) < Decimal(partial["amount_mmk"])
+
+
+def test_same_hash_reimport_backfills_fields_added_after_legacy_import(client):
+    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    workbook = load_workbook(BytesIO(path.read_bytes()))
+    for sheet in workbook.worksheets:
+        headers = [cell.value for cell in sheet[1]]
+        if "business_id" in headers:
+            column = headers.index("business_id") + 1
+            for row in range(2, sheet.max_row + 1):
+                sheet.cell(row, column).value = "tea-shop"
+    content = BytesIO()
+    workbook.save(content)
+    workbook.close()
+    uploaded = content.getvalue()
+    assert upload(client, uploaded).status_code == 200
+
+    # Recreate rows imported by the older parser while leaving the file hash unchanged.
+    with client.app.state.sessions.begin() as session:
+        source = session.scalar(select(WorkbookSource).where(WorkbookSource.business_id == "tea-shop"))
+        rows = session.scalars(select(ImportedRow).where(ImportedRow.business_id == "tea-shop", ImportedRow.source_id == source.id)).all()
+        for row in rows:
+            optional = {"Sales": ("unit_cost_at_sale_mmk", "cogs_mmk"), "Expenses": ("payment_status", "paid_date", "amount_paid_mmk")}.get(row.sheet_name)
+            if optional is None:
+                continue
+            payload = dict(row.payload)
+            for field in optional:
+                payload.pop(field, None)
+            row.payload = payload
+            table = PROJECTIONS[row.sheet_name]
+            session.execute(update(table).where(table.c.source_id == source.id, table.c["sale_id" if row.sheet_name == "Sales" else "expense_id"] == row.row_id).values(**{field: None for field in optional}))
+
+    refreshed = upload(client, uploaded)
+    assert refreshed.status_code == 200, refreshed.text
+    assert refreshed.json()["status"] == "success"
+    assert refreshed.json()["row_counts"]["updated"] == 66
+
+    summary = client.get("/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-21").json()
+    assert Decimal(summary["actual"]["cash_balance_mmk"]) == Decimal("12919300.00")
+    assert Decimal(summary["actual"]["cogs_mmk"]) == Decimal("11079500.00")
+    assert Decimal(summary["actual"]["operating_profit_mmk"]) == Decimal("-675100.00")
 
 
 def test_edit_expense_reimports_once(client, workbook_bytes):
@@ -82,3 +297,27 @@ def test_partial_initial_settlement_decimal_cash_and_receivables():
     assert snap.actual.payables_mmk == Decimal("20.00")
     assert snap.actual.cash_balance_mmk == Decimal("1060.10")
     assert snap.upcoming_obligations[0].due_date is None
+
+
+def test_cogs_falls_back_to_historical_unit_cost_once():
+    d = date(2026, 10, 1)
+    tables = {name: [] for name in ["Settings", "Sales", "CustomerReceipts", "Purchases", "SupplierPayments", "Expenses", "Loans", "LoanPayments", "CashAdjustments"]}
+    tables["Settings"] = [dict(business_id="A", opening_date=d, opening_cash_mmk="1000.00")]
+    tables["Sales"] = [dict(business_id="A", sale_id="S", date=d, quantity="2.000", unit_price_mmk="100.00", cash_received_mmk="200.00", unit_cost_at_sale_mmk="30.00", cogs_mmk=None)]
+    snap = calculate_platform_snapshot(Ledger("A", 1, tables, None, "batch"), Period(start=d, end=d))
+    assert snap.actual.cogs_mmk == Decimal("60.00")
+    assert snap.actual.operating_profit_mmk == Decimal("140.00")
+
+
+def test_future_unpaid_expense_does_not_invalidate_earlier_cash_balance():
+    from datetime import date
+    d = date(2026, 10, 1)
+    tables = {name: [] for name in ["Settings", "Sales", "CustomerReceipts", "Purchases", "SupplierPayments", "Expenses", "Loans", "LoanPayments", "CashAdjustments"]}
+    tables["Settings"] = [dict(business_id="A", opening_date=date(2026, 1, 1), opening_cash_mmk="1000.00")]
+    tables["Expenses"] = [
+        dict(business_id="A", expense_id="past", date=date(2026, 9, 1), amount_mmk="100.00", amount_paid_mmk="100.00", paid_date=date(2026, 9, 2)),
+        dict(business_id="A", expense_id="future", date=date(2026, 11, 1), amount_mmk="200.00", amount_paid_mmk=None, paid_date=None),
+    ]
+    snap = calculate_platform_snapshot(Ledger("A", 1, tables, None, "batch"), Period(start=d, end=d))
+    assert snap.actual.cash_balance_mmk == Decimal("900.00")
+    assert not any("Expense cash movements are incomplete" in warning for warning in snap.data_quality.warnings)

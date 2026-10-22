@@ -23,6 +23,7 @@
     },
     "Sales": {
       "id": "sale_id",
+      "optional_fields": ["unit_cost_at_sale_mmk", "cogs_mmk"],
       "fields": {
         "sale_id": "id",
         "business_id": "id",
@@ -30,8 +31,10 @@
         "product_id": "id",
         "quantity": "positive_quantity",
         "unit_price_mmk": "money",
-        "payment_type": "enum:cash,credit",
-        "cash_received_mmk": "money"
+        "payment_type": "enum:cash,credit,partial",
+        "cash_received_mmk": "money",
+        "unit_cost_at_sale_mmk": "money",
+        "cogs_mmk": "money"
       }
     },
     "CustomerReceipts": {
@@ -46,6 +49,7 @@
     },
     "Purchases": {
       "id": "purchase_id",
+      "optional_fields": ["due_date"],
       "fields": {
         "purchase_id": "id",
         "business_id": "id",
@@ -53,8 +57,9 @@
         "product_id": "id",
         "quantity": "positive_quantity",
         "unit_cost_mmk": "money",
-        "payment_type": "enum:cash,credit",
-        "cash_paid_mmk": "money"
+        "payment_type": "enum:cash,credit,partial",
+        "cash_paid_mmk": "money",
+        "due_date": "date"
       }
     },
     "SupplierPayments": {
@@ -69,13 +74,17 @@
     },
     "Expenses": {
       "id": "expense_id",
+      "optional_fields": ["payment_status", "paid_date", "amount_paid_mmk"],
       "fields": {
         "expense_id": "id",
         "business_id": "id",
         "date": "date",
-        "category": "enum:rent,wages,utilities,transport,marketing,other",
+        "category": "text",
         "amount_mmk": "money",
-        "description": "text"
+        "description": "text",
+        "payment_status": "enum:paid,partial,unpaid",
+        "paid_date": "date",
+        "amount_paid_mmk": "money"
       }
     },
     "Loans": {
@@ -85,7 +94,7 @@
         "business_id": "id",
         "date": "date",
         "lender": "text",
-        "loan_type": "enum:reducing_balance,flat,interest_only",
+        "loan_type": "text",
         "principal_mmk": "positive_money"
       }
     },

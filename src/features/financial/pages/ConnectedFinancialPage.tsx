@@ -11,9 +11,9 @@ const client: FinancialClient = {
       `/api/v1/financial/summary?${new URLSearchParams({ business_id: businessId, start: period.start, end: period.end })}`,
       { signal },
     ),
-  trends: (businessId, end, signal) =>
+  trends: (businessId, period, granularity, signal) =>
     api<Trends>(
-      `/api/v1/financial/trends?${new URLSearchParams({ business_id: businessId, end, months: "3" })}`,
+      `/api/v1/financial/trends?${new URLSearchParams({ business_id: businessId, start: period.start, end: period.end, granularity })}`,
       { signal },
     ),
 };
@@ -35,7 +35,7 @@ export function ConnectedFinancialPage() {
       businessName={business.name}
       importBatchId={null}
       sourceVersion={snapshot.data.source_version}
-      synthetic={false}
+      synthetic={snapshot.data.synthetic ?? false}
       dataRefreshing={snapshot.isFetching}
       onRefresh={async () => {
         await snapshot.refetch();

@@ -99,12 +99,15 @@ def calculate_snapshot(r: FinancialRecords, period: Period, obligations_before: 
                 continue
             remaining = purchase.qty * purchase.unit_cost_mmk - sum(x.amount_mmk for x in r.supplier_payments if x.purchase_id == purchase.purchase_id and x.date <= period.end)
             if remaining:
-                obligations.append(Obligation(kind="supplier", due_date=purchase.due_date, amount_mmk=remaining, reference_id=purchase.purchase_id))
+                obligations.append(Obligation(kind="supplier", due_date=purchase.due_date, amount_mmk=remaining,
+                    reference_id=purchase.purchase_id, original_amount_mmk=purchase.qty * purchase.unit_cost_mmk,
+                    amount_paid_mmk=purchase.qty * purchase.unit_cost_mmk - remaining))
     if known("Expenses"):
         for expense in r.expenses:
             if expense.date <= period.end and (expense.payment_status == "unpaid" or (expense.paid_date and expense.paid_date > period.end)):
                 if expense.due_date:
-                    obligations.append(Obligation(kind="expense", due_date=expense.due_date, amount_mmk=expense.amount_mmk, reference_id=expense.expense_id))
+                    obligations.append(Obligation(kind="expense", due_date=expense.due_date, amount_mmk=expense.amount_mmk, reference_id=expense.expense_id,
+                        original_amount_mmk=expense.amount_mmk, amount_paid_mmk=0))
                 else:
                     warnings.append(f"Expense {expense.expense_id} has no historical due date.")
     if known("Loans", "LoanPayments"):
@@ -112,10 +115,17 @@ def calculate_snapshot(r: FinancialRecords, period: Period, obligations_before: 
     obligations = sorted((x for x in obligations if x.amount_mmk and (obligations_before is None or x.due_date <= obligations_before)), key=lambda x: (x.due_date, x.kind, x.reference_id))
     if missing:
         warnings.append("Missing sheets are unavailable, not zero activity.")
+    loan_principal = None
+    if known("Loans", "LoanPayments"):
+        loan_principal = sum(x.principal_mmk for x in r.loans if x.disbursement_date <= period.end) - sum(
+            x.principal_paid_mmk for x in r.loan_payments if x.date <= period.end
+        )
     return FinancialSnapshot(business_id=r.business_id, period=period,
         actual=Actual(revenue_mmk=revenue, cogs_mmk=cogs, gross_profit_mmk=revenue - cogs if revenue is not None and cogs is not None else None, operating_expenses_mmk=expenses,
             operating_profit_mmk=operating, interest_expenses_mmk=interest, profit_before_tax_mmk=pbt,
             cash_balance_mmk=cash, receivables_mmk=ar, payables_mmk=ap),
         upcoming_obligations=obligations,
         data_quality=DataQuality(status="missing_data" if not r.available_sheets else "partial" if missing or cash is None or not r.loan_schedule_available else "complete", missing_sheets=missing, warnings=warnings),
-        as_of=r.as_of, import_batch_id=r.import_batch_id)
+        as_of=r.as_of, import_batch_id=r.import_batch_id,
+        loan_principal_outstanding_mmk=loan_principal,
+        loan_schedule_available=r.loan_schedule_available)

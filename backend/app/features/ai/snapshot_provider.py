@@ -5,8 +5,8 @@ from datetime import date
 from sqlalchemy import select
 
 from ...core.demo_data import is_synthetic_seed_workbook
-from ...db.models import Business, ImportBatch
-from .schemas import SnapshotBundle
+from ...db.models import AIAnalysisReport, Business, ImportBatch
+from .schemas import AIAnalysis, SnapshotBundle
 
 
 def _optional_snapshot(module_name: str, business_id: str, source_version: int, sessions) -> dict | None:
@@ -36,6 +36,29 @@ class SnapshotProvider:
             if business is None:
                 raise LookupError("Business not found")
             return business.version
+
+    def latest_analysis(self, business_id: str) -> AIAnalysis | None:
+        with self.sessions() as session:
+            report = session.get(AIAnalysisReport, business_id)
+            if report is None:
+                return None
+            if report.report.get("business_id") != business_id:
+                raise PermissionError("Cross-business AI report")
+            return AIAnalysis.model_validate(report.report)
+
+    def save_analysis(self, analysis: AIAnalysis) -> None:
+        report = analysis.model_dump(mode="json")
+        with self.sessions.begin() as session:
+            row = session.get(AIAnalysisReport, analysis.business_id)
+            if row is None:
+                row = AIAnalysisReport(business_id=analysis.business_id,
+                                       source_version=analysis.source_version,
+                                       report=report, generated_at=analysis.generated_at)
+                session.add(row)
+            else:
+                row.source_version = analysis.source_version
+                row.report = report
+                row.generated_at = analysis.generated_at
 
     def load(self, business_id: str) -> SnapshotBundle:
         version = self.version(business_id)

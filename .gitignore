@@ -41,3 +41,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python virtual environments
+.venv312/
+.venv-py315-backup/
+.venv*/
+
+# Temporary test files
+.vitest-temp/

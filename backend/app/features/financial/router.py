@@ -1,5 +1,6 @@
 """Authenticated financial endpoints using P5's typed projections."""
 from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from ...core.dependencies import authorize_business
@@ -36,8 +37,12 @@ def summary(start: date, end: date, business_id: str = Depends(authorized_busine
 
 
 @router.get("/trends")
-def trends(end: date, months: int = Query(3, ge=1, le=24), business_id: str = Depends(authorized_business), service: FinancialService = Depends(financial_service)):
-    return run(lambda: service.trends(business_id, end, months))
+def trends(end: date, start: date | None = None, granularity: Literal["weekly", "monthly"] | None = None,
+           months: int = Query(3, ge=1, le=24), business_id: str = Depends(authorized_business),
+           service: FinancialService = Depends(financial_service)):
+    if start is not None and start > end:
+        raise APIError(400, "FINANCIAL_INVALID", "Financial records or reporting dates are invalid.")
+    return run(lambda: service.trends(business_id, end, months, start=start, granularity=granularity))
 
 
 @router.get("/obligations", response_model=FinancialSnapshot)

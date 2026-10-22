@@ -109,6 +109,15 @@ class RowRevision(Base):
     revision: Mapped[int] = mapped_column(Integer)
 
 
+class AIAnalysisReport(Base):
+    """Latest authenticated AI report, scoped to one business and source version."""
+    __tablename__ = "ai_analysis_reports"
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id", ondelete="CASCADE"), primary_key=True)
+    source_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    report: Mapped[dict] = mapped_column(JSON, nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class OAuthState(Base):
     __tablename__ = "oauth_states"
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -128,6 +137,7 @@ for sheet_name, spec in SCHEMA.items():
     for field, kind in spec["fields"].items():
         column_type = Date if kind == "date" else Numeric(18, 3 if "quantity" in kind else 2) if "money" in kind or "quantity" in kind else String(500)
         args = [ForeignKey("businesses.id")] if field == "business_id" else []
-        columns.append(Column(field, column_type, *args, primary_key=field == spec["id"], nullable=False, index=field == "business_id"))
+        optional = field in spec.get("optional_fields", [])
+        columns.append(Column(field, column_type, *args, primary_key=field == spec["id"], nullable=optional, index=field == "business_id"))
     columns.append(Column("batch_id", String(80), ForeignKey("import_batches.id"), nullable=False))
     PROJECTIONS[sheet_name] = Table(TABLE_NAMES[sheet_name], Base.metadata, *columns)

@@ -150,6 +150,8 @@ def test_trends_share_one_snapshot_and_year_boundary():
     assert repo.calls == 1
     assert [x.period.start.isoformat() for x in result["points"]] == ["2026-11-01", "2026-12-01", "2027-01-01"]
     assert result["points"][-1].period.end == D("2027-01-15")
+    assert result["points"][-1].revenue_record_count == 0
+    assert result["points"][-1].operating_expense_record_count == 0
 
 
 @pytest.mark.parametrize("value", [-1, 1.5, True])

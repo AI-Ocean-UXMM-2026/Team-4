@@ -6,7 +6,7 @@ The machine-readable source of workbook fields is [workbook-schema.json](shared/
 
 ## Workbook format
 
-`.xlsx`, maximum 5 MiB compressed, 40 MiB expanded, 10,000 rows per sheet and 30,000 input rows overall. Header row is Excel row 1, data begins on row 2. All declared headers must exist. Keep empty required sheets with their headers. CashAdjustments is optional; ReadMe is ignored. Other sheets are ignored with a warning. Formula inputs, external workbook links, macros, duplicate headers and duplicate stable IDs are rejected.
+`.xlsx`, maximum 5 MiB compressed, 40 MiB expanded, 10,000 rows per sheet and 30,000 input rows overall. Header row is Excel row 1, data begins on row 2. Required headers must exist; optional fields may be omitted or left blank. Keep empty required sheets with their headers. CashAdjustments is optional; ReadMe is ignored. Other sheets are ignored with a warning. Formula inputs, external workbook links, macros, duplicate headers and duplicate stable IDs are rejected.
 
 Every input row has one `business_id`, identical to Settings and the authorized business in the request. IDs are text, case-sensitive, up to 80 characters, with letters, numbers, underscores or hyphens. New records receive new IDs; edits keep the existing ID. Required text cannot be blank (use a short description). Dates are Excel dates without times or ISO `YYYY-MM-DD`. Money is non-negative MMK with at most 2 decimals; quantities have at most 3 decimals. Positive fields cannot be zero. Quantity times unit price must yield exact hundredths of MMK. The parser uses Decimal, never floats, for validation.
 
@@ -14,12 +14,12 @@ Every input row has one `business_id`, identical to Settings and the authorized 
 | --- | --- | --- |
 | Settings | business_id | business_name, currency (`MMK`), opening_date, opening_cash_mmk |
 | Products | product_id | business_id, name, opening_stock, unit_cost_mmk |
-| Sales | sale_id | business_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk |
+| Sales | sale_id | business_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk, unit_cost_at_sale_mmk (optional), cogs_mmk (optional) |
 | CustomerReceipts | receipt_id | business_id, date, sale_id, amount_mmk |
-| Purchases | purchase_id | business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk |
+| Purchases | purchase_id | business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk; optional due_date |
 | SupplierPayments | payment_id | business_id, date, purchase_id, amount_mmk |
-| Expenses | expense_id | business_id, date, category, amount_mmk, description |
-| Loans | loan_id | business_id, date, lender, loan_type, principal_mmk |
+| Expenses | expense_id | business_id, date, category (free-text label), amount_mmk, description, payment_status (optional), paid_date (optional), amount_paid_mmk (optional) |
+| Loans | loan_id | business_id, date, lender, loan_type (source label), principal_mmk |
 | LoanPayments | payment_id | business_id, date, loan_id, principal_mmk, interest_mmk |
 | CashAdjustments | adjustment_id | business_id, date, direction, amount_mmk, reason |
 
@@ -27,9 +27,11 @@ Every input row has one `business_id`, identical to Settings and the authorized 
 
 - Opening cash and inventory are balances immediately before `opening_date`. Transactions may not predate that date. Products.unit_cost_mmk is opening inventory's reference cost; the prototype adapter uses it for a simple stock display, not FIFO/weighted-average accounting.
 - Sale/purchase totals equal quantity × unit price/cost. `cash` requires full initial settlement; `credit` permits zero or partial initial settlement. Later receipts/payments are separate stable rows and cannot exceed the remaining total, even cumulatively. Payment dates cannot predate their parent.
+- Incoming `partial` payment labels are stored as `credit` with the recorded initial cash settlement; expense categories and loan type labels are preserved as text. A loan purpose label does not provide repayment terms or establish a repayment model.
 - Inventory purchases precede sales on the same calendar day; IDs order same-type events. This is a daily ledger, not an intraday stock ledger. Accepted stock cannot go negative at any event.
-- Loans are new disbursements on their recorded dates, included in cash inflow. Types are `reducing_balance`, `flat`, `interest_only`; all others are rejected. Principal and interest payments are explicit facts, not recalculated schedules. Cumulative principal repayments cannot exceed disbursed principal. **Pre-period opening loans and multi-line sale/purchase documents are not supported in v1**; feature owners must agree on extensions rather than silently changing interpretation.
-- Expenses categories: `rent`, `wages`, `utilities`, `transport`, `marketing`, `other`. LoanPayments must have nonzero principal or interest. CashAdjustments direction: `in` or `out`; these are cash movements, not sales/profit.
+- Loans are new disbursements on their recorded dates, included in cash inflow. `loan_type` is preserved as a source label and does not establish repayment terms. Only a supported repayment model with explicit rate and term may produce a schedule; principal and interest payments remain actual facts. Cumulative principal repayments cannot exceed disbursed principal. **Pre-period opening loans and multi-line sale/purchase documents are not supported in v1**; feature owners must agree on extensions rather than silently changing interpretation.
+- Expense categories are descriptive text labels. LoanPayments must have nonzero principal or interest. CashAdjustments direction: `in` or `out`; these are cash movements, not sales/profit.
+- Sales may include historical `unit_cost_at_sale_mmk` and/or row-total `cogs_mmk`; if both are supplied, COGS must equal quantity times historical unit cost. Financial reports use supplied row COGS once, or calculate it from the historical unit cost; they never substitute today's product cost. Expenses may include `payment_status` (`paid`, `partial`, `unpaid`), `paid_date` and `amount_paid_mmk`. Paid amounts are dated cash movements, separate from the expense recognition amount. Old workbooks may omit these extension columns, in which case dependent totals remain unavailable.
 - One canonical workbook source per business. Linking OneDrive uses that same source as upload. Multi-workbook merging is deliberately unsupported. The natural ingestion key is `(business_id, source_id, sheet_name, row_id)` with a database uniqueness constraint.
 - Input hash/eTag and import batch identify source changes. A repeated current hash is a no-op; changed rows replace their fact once and save the old payload, batch and revision. All fact/projection changes and the successful audit commit together.
 - Rows missing from a valid file remain active and produce warnings. Required-sheet omission is an error. The combined incoming plus retained history must also validate. No deletion policy is implied. Switching to a radically different workbook requires reconciliation by owners.
@@ -78,4 +80,4 @@ Read typed SQL tables via `app.db.models.PROJECTIONS` or business-scoped snapsho
 
 Frontend composition uses `src/app/routes.tsx` and `src/routes/`. All four feature pages use the active business provider. Import success invalidates snapshot/status/business, credit and AI query keys; Working Capital refetches when the business source version changes. AI analysis retains its source version and shows stale state until an explicit rerun. P4 upstream data access remains read-only.
 
-The P1–P4 branches were merged on the integration branch. Workbook v1 remains unchanged for this MVP. Missing loan terms, supplier due dates, stock lead times and historical cash inputs are reported as unavailable; no accounting profit or borrowing eligibility is inferred from incomplete records.
+The P1–P4 branches were merged on the integration branch. The shared workbook v1 schema accepts optional historical sale-cost and expense-settlement columns plus an optional supplier purchase due_date while remaining compatible with earlier workbooks. Loan installment schedules remain unavailable unless a reliable schedule is explicitly supplied; outstanding principal is reported separately and is not treated as due. Missing loan terms, supplier due dates, stock lead times and historical cash inputs are reported as unavailable; no accounting profit or borrowing eligibility is inferred from incomplete records.

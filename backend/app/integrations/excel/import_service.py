@@ -24,11 +24,11 @@ def typed_values(sheet, payload):
     result = {}
     for key, kind in SCHEMA[sheet]["fields"].items():
         value = payload[key]
-        result[key] = date.fromisoformat(value) if kind == "date" else Decimal(value) if "money" in kind or "quantity" in kind else value
+        result[key] = None if value is None else date.fromisoformat(value) if kind == "date" else Decimal(value) if "money" in kind or "quantity" in kind else value
     return result
 
 
-def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None):
+def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False):
     digest = hashlib.sha256(content).hexdigest()
     parsed = parse_workbook(content)
     result = None
@@ -48,22 +48,32 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
         session.add(batch)
         session.flush()
         errors = validate_workbook(parsed, business_id)
-        # An unchanged hash is valid only for the latest accepted source contents.
-        if not errors and source.last_hash == digest:
+        stored = session.scalars(select(ImportedRow).where(ImportedRow.business_id == business_id, ImportedRow.source_id == source.id)).all()
+        by_key = {(row.sheet_name, row.row_id): row for row in stored}
+        incoming_keys = {name: {row.values[SCHEMA[name]["id"]] for row in parsed.sheets.get(name, [])} for name in SCHEMA}
+        active_omissions = any(
+            old.active_status == "active" and row_id not in incoming_keys[name]
+            for (name, row_id), old in by_key.items()
+        )
+        # Hash equality alone cannot prove that rows were persisted with the current schema.
+        # Reconcile when a parser/schema upgrade adds fields to an otherwise unchanged file.
+        persisted_matches = all(
+            (old := by_key.get((name, row.values.get(SCHEMA[name]["id"])))) is not None and old.payload == row.values
+            for name, rows in parsed.sheets.items() for row in rows
+        )
+        if not errors and source.last_hash == digest and persisted_matches and not (replace_omitted and active_omissions):
             batch.status = "up_to_date"
             if etag:
                 source.last_etag = etag
                 source.last_checked_at = now()
             result = batch_response(batch, business.version)
         else:
-            stored = session.scalars(select(ImportedRow).where(ImportedRow.business_id == business_id, ImportedRow.source_id == source.id)).all()
-            by_key = {(row.sheet_name, row.row_id): row for row in stored}
             if not errors:
                 # Omitted records remain active. Validate the actual resulting state, not just the new file.
                 merged = ParsedWorkbook(sheets={name: list(parsed.sheets.get(name, [])) for name in SCHEMA})
                 incoming_keys = {name: {r.values[SCHEMA[name]["id"]] for r in rows} for name, rows in merged.sheets.items()}
                 for (name, row_id), old in by_key.items():
-                    if row_id not in incoming_keys[name]:
+                    if old.active_status == "active" and row_id not in incoming_keys[name] and not replace_omitted:
                         merged.sheets[name].append(WorkbookRow(0, old.payload))
                         batch.warnings = [*batch.warnings, issue(name, 0, SCHEMA[name]["id"], f"Missing row {row_id} retained; review before deletion")]
                 errors = validate_workbook(merged, business_id)
@@ -72,29 +82,49 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
                 result = batch_response(batch, business.version)
             else:
                 counts = {"inserted": 0, "updated": 0, "unchanged": 0}
+                removed_count = 0
+                if replace_omitted:
+                    for (name, row_id), old in by_key.items():
+                        if old.active_status != "active" or row_id in incoming_keys[name]:
+                            continue
+                        session.add(RowRevision(imported_row_id=old.id, business_id=business_id,
+                                                payload=old.payload, batch_id=old.batch_id, revision=old.revision))
+                        old.active_status = "removed"
+                        old.revision += 1
+                        session.execute(PROJECTIONS[name].delete().where(
+                            PROJECTIONS[name].c.source_id == source.id,
+                            PROJECTIONS[name].c[SCHEMA[name]["id"]] == row_id,
+                        ))
+                        removed_count += 1
                 for name, rows in parsed.sheets.items():
                     spec, table = SCHEMA[name], PROJECTIONS[name]
                     for row in rows:
                         payload = row.values
                         row_id = payload[spec["id"]]
                         old = by_key.get((name, row_id))
-                        if old and old.payload == payload:
+                        if old and old.payload == payload and old.active_status == "active":
                             counts["unchanged"] += 1
                             continue
                         fields = typed_values(name, payload)
                         fields.update(source_id=source.id, batch_id=batch.id)
                         if old:
+                            was_active = old.active_status == "active"
                             session.add(RowRevision(imported_row_id=old.id, business_id=business_id, payload=old.payload,
                                                     batch_id=old.batch_id, revision=old.revision))
-                            old.payload, old.batch_id, old.revision = payload, batch.id, old.revision + 1
-                            session.execute(update(table).where(table.c.source_id == source.id, table.c[spec["id"]] == row_id).values(**fields))
+                            old.payload, old.batch_id, old.revision, old.active_status = payload, batch.id, old.revision + 1, "active"
+                            if was_active:
+                                session.execute(update(table).where(table.c.source_id == source.id, table.c[spec["id"]] == row_id).values(**fields))
+                            else:
+                                session.execute(insert(table).values(**fields))
                             counts["updated"] += 1
                         else:
                             session.add(ImportedRow(business_id=business_id, source_id=source.id, sheet_name=name,
                                                     row_id=row_id, payload=payload, batch_id=batch.id))
                             session.execute(insert(table).values(**fields))
                             counts["inserted"] += 1
-                if counts["inserted"] + counts["updated"]:
+                if removed_count:
+                    counts["removed"] = removed_count
+                if counts["inserted"] + counts["updated"] + removed_count:
                     business.version += 1
                 batch.row_counts = counts
                 source.last_hash, source.last_import_at = digest, now()

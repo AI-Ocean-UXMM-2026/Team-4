@@ -6,7 +6,7 @@ import { FinancialKpiCards } from "../components/FinancialKpiCards";
 import { CashflowTrendChart } from "../components/CashflowTrendChart";
 import { OutstandingBalances } from "../components/OutstandingBalances";
 import { useFinancialSummary } from "../hooks/useFinancialSummary";
-import type { FinancialClient } from "../types";
+import type { FinancialClient, Period } from "../types";
 
 export interface FinancialPageProps {
   client: FinancialClient;
@@ -31,6 +31,43 @@ function yangonToday() {
   }).format(new Date());
 }
 
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+function addMonthsClamped(date: Date, months: number) {
+  const day = date.getUTCDate();
+  const firstOfTarget = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
+  const lastDay = new Date(
+    Date.UTC(firstOfTarget.getUTCFullYear(), firstOfTarget.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  firstOfTarget.setUTCDate(Math.min(day, lastDay));
+  return firstOfTarget;
+}
+
+function isoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function periodForSelection(selection: string, today: string): Period {
+  const end = new Date(`${today}T00:00:00Z`);
+  if (Number.isNaN(end.getTime())) return { start: today, end: today };
+  if (selection === "previous") {
+    const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 1, 1));
+    const previousEnd = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 0));
+    return { start: isoDate(start), end: isoDate(previousEnd) };
+  }
+  if (selection === "year") return { start: `${today.slice(0, 4)}-01-01`, end: today };
+  if (selection === "3months" || selection === "6months") {
+    const months = selection === "3months" ? 3 : 6;
+    return { start: isoDate(addMonthsClamped(end, -months)), end: today };
+  }
+  if (selection === "30days") return { start: isoDate(addDays(end, -29)), end: today };
+  return { start: `${today.slice(0, 7)}-01`, end: today };
+}
+
 export function FinancialPage({
   client,
   businessId,
@@ -46,16 +83,16 @@ export function FinancialPage({
 
   const [selection, setSelection] = useState("month");
   const [refresh, setRefresh] = useState(0);
-  const period = useMemo(() => {
-    if (selection === "month") return { start: `${today.slice(0, 7)}-01`, end: today };
-    const date = new Date(`${today}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() - 29);
-    return { start: date.toISOString().slice(0, 10), end: today };
-  }, [selection, today]);
+  const period = useMemo(() => periodForSelection(selection, today), [selection, today]);
+  const trendGranularity =
+    selection === "3months" || selection === "6months" || selection === "year"
+      ? "monthly"
+      : "weekly";
   const state = useFinancialSummary(
     client,
     businessId,
     period,
+    trendGranularity,
     importBatchId,
     refresh,
     sourceVersion,
@@ -104,6 +141,10 @@ export function FinancialPage({
             >
               <option value="month">{t("Current month")}</option>
               <option value="30days">{t("Last 30 days")}</option>
+              <option value="previous">{t("Previous month")}</option>
+              <option value="3months">{t("Last 3 months")}</option>
+              <option value="6months">{t("Last 6 months")}</option>
+              <option value="year">{t("This year")}</option>
             </select>
           </label>
           <p className="inline-flex items-center gap-2 pb-2.5 text-sm text-muted-foreground">
@@ -186,28 +227,18 @@ export function FinancialPage({
       )}
       {state.status === "ready" && !dataRefreshing && state.snapshot && (
         <>
-          {state.snapshot.data_quality.warnings.length > 0 && (
-            <aside
-              aria-label={t("Financial data warnings")}
-              className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
-            >
-              <p className="font-semibold">{t("Please note about this report")}</p>
-              <ul className="mt-2 list-inside list-disc space-y-1">
-                {state.snapshot.data_quality.warnings.map((warning) => (
-                  <li key={warning}>{t(warning)}</li>
-                ))}
-              </ul>
-            </aside>
-          )}
           <FinancialKpiCards snapshot={state.snapshot} />
-          <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-5">
-            <div className="min-w-0 xl:col-span-3">
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="min-w-0 w-full">
               {state.trends && <CashflowTrendChart trends={state.trends} />}
             </div>
-            <div className="min-w-0 xl:col-span-2">
+            <div className="min-w-0 w-full">
               <OutstandingBalances
                 obligations={state.snapshot.upcoming_obligations}
                 asAt={period.end}
+                cashAvailable={state.snapshot.actual.cash_balance_mmk}
+                loanPrincipalOutstanding={state.snapshot.loan_principal_outstanding_mmk ?? null}
+                loanScheduleAvailable={state.snapshot.loan_schedule_available ?? false}
               />
             </div>
           </div>

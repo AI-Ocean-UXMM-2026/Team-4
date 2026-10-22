@@ -30,7 +30,7 @@ OUTPUT_SCHEMA = {
 
 class AIWordingClient:
     def __init__(self, api_key: str | None = None, model: str | None = None,
-                 allow_real_data: bool | None = None, provider: str | None = None):
+                 provider: str | None = None):
         self.provider = (provider or os.getenv("AI_PROVIDER", "openai")).lower()
         if self.provider not in {"openai", "openrouter"}:
             raise ValueError("AI_PROVIDER must be openai or openrouter")
@@ -42,11 +42,6 @@ class AIWordingClient:
             self.api_key = api_key if api_key is not None else os.getenv("OPENAI_API_KEY", "")
             self.model = model or os.getenv("OPENAI_MODEL", "gpt-5-mini")
             self.endpoint = "https://api.openai.com/v1/responses"
-        self.allow_real_data = (
-            allow_real_data if allow_real_data is not None
-            else os.getenv("AI_ALLOW_REAL_DATA", "").lower() == "true"
-        )
-
     async def explain(self, flags: list, context: dict) -> dict:
         if not self.api_key:
             raise RuntimeError("AI provider is not configured")

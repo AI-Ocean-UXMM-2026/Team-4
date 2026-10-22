@@ -5,13 +5,27 @@ from types import SimpleNamespace
 
 import pytest
 import httpx
+from fastapi import FastAPI, Query
+from fastapi.testclient import TestClient
 
 from app.features.ai.context_builder import build_context
 from app.features.ai.llm_client import AIWordingClient
 from app.features.ai.parser import grounded_insights
-from app.features.ai.schemas import SnapshotBundle
-from app.features.ai.service import AnalysisService, _cache, _call_times, _latest, _locks, provider_failure_warning
-from app.features.ai.snapshot_provider import _optional_snapshot
+from app.features.ai.schemas import AIAnalysis, SnapshotBundle
+from app.features.ai.service import (
+    AnalysisService,
+    _cache,
+    _call_times,
+    _latest,
+    _locks,
+    SourceVersionChanged,
+    provider_failure_warning,
+)
+from app.features.ai.snapshot_provider import SnapshotProvider, _optional_snapshot
+from app.db.connection import make_engine, session_factory
+from app.db.models import Base, Business
+from app.core.errors import APIError, api_error_handler
+from app.features.ai.router import analysis_service, authorized_business, router
 
 
 def bundle(version=2, synthetic=True, loan=False):
@@ -141,8 +155,8 @@ def anyio_backend():
 async def test_synthetic_report_uses_grounded_evidence_and_reuses_same_import():
     provider, client = Provider(bundle()), Client()
     service = AnalysisService(provider, client)
-    first = await service.analyze("biz-a")
-    second = await service.analyze("biz-a")
+    first = await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
+    second = await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
     assert first.status == "completed"
     assert first.insights[0].evidence[0].value == 200000
     assert all(insight.id != "repayment-review" for insight in first.insights)
@@ -160,7 +174,8 @@ async def test_model_wording_cannot_replace_specific_next_actions():
             result["items"][0]["suggested_action"] = "Consider the situation carefully."
             return result
 
-    result = await AnalysisService(Provider(bundle()), VagueActionClient()).analyze("biz-a")
+    result = await AnalysisService(Provider(bundle()), VagueActionClient()).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "completed"
     assert "customer receipts" in result.insights[0].suggested_actions[0]
     assert "Consider the situation carefully" not in str(result.insights)
@@ -168,17 +183,61 @@ async def test_model_wording_cannot_replace_specific_next_actions():
 
 @pytest.mark.anyio
 async def test_model_timeout_yields_honest_rules_only():
-    result = await AnalysisService(Provider(bundle()), Client(error=TimeoutError())).analyze("biz-a")
+    result = await AnalysisService(Provider(bundle()), Client(error=TimeoutError())).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "rules_only"
     assert "AI wording was unavailable" in result.warnings[-1]
 
 
 @pytest.mark.anyio
-async def test_real_data_is_never_sent_to_provider():
+async def test_real_data_without_consent_is_never_sent_to_provider():
     client = Client()
     result = await AnalysisService(Provider(bundle(synthetic=False)), client).analyze("biz-a")
     assert result.status == "rules_only"
     assert client.calls == 0
+    assert "not selected" in result.warnings[-1]
+
+
+@pytest.mark.anyio
+async def test_real_data_with_consent_uses_provider_for_current_import():
+    client = Client()
+    service = AnalysisService(Provider(bundle(synthetic=False)), client)
+    rules = await service.analyze("biz-a", expected_source_version=2)
+    ai = await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
+    assert rules.status == "rules_only"
+    assert ai.status == "completed"
+    assert client.calls == 1
+    assert "synthetic" not in ai.disclaimer
+
+
+@pytest.mark.anyio
+async def test_consent_cannot_apply_to_another_import_version():
+    client = Client()
+    service = AnalysisService(Provider(bundle(version=3, synthetic=False)), client)
+    with pytest.raises(SourceVersionChanged):
+        await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
+    with pytest.raises(ValueError):
+        await service.analyze("biz-a", provider_consent=True)
+    assert client.calls == 0
+
+
+def test_analyze_endpoint_requires_matching_import_for_opt_in():
+    model = Client()
+    service = AnalysisService(Provider(bundle(synthetic=False)), model)
+    app = FastAPI()
+    app.add_exception_handler(APIError, api_error_handler)
+    app.include_router(router)
+    app.dependency_overrides[authorized_business] = lambda business_id=Query(): business_id
+    app.dependency_overrides[analysis_service] = lambda: service
+    with TestClient(app) as http:
+        path = "/api/v1/ai/analyze?business_id=biz-a"
+        rules = http.post(path)
+        stale = http.post(path, json={"source_version": 1, "provider_consent": True})
+        ai = http.post(path, json={"source_version": 2, "provider_consent": True})
+    assert rules.status_code == 200 and rules.json()["status"] == "rules_only"
+    assert stale.status_code == 409 and stale.json()["error"]["code"] == "SOURCE_CHANGED"
+    assert ai.status_code == 200 and ai.json()["status"] == "completed"
+    assert model.calls == 1
 
 
 @pytest.mark.anyio
@@ -213,12 +272,12 @@ async def test_invented_model_numbers_revert_to_rules():
             return result
     client = InventingClient()
     service = AnalysisService(Provider(bundle()), client)
-    result = await service.analyze("biz-a")
+    result = await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "rules_only"
     assert all("900000" not in item.explanation for item in result.insights)
     assert "evidence validation" in result.warnings[-1]
     assert client.calls == 2
-    await service.analyze("biz-a")
+    await service.analyze("biz-a", expected_source_version=2, provider_consent=True)
     assert client.calls == 4  # A failed provider result must not be cached.
 
 
@@ -234,7 +293,8 @@ async def test_invalid_wording_retries_once_with_stricter_context():
             return result
 
     client = RecoveringClient()
-    result = await AnalysisService(Provider(bundle()), client).analyze("biz-a")
+    result = await AnalysisService(Provider(bundle()), client).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "completed"
     assert client.calls == 2
 
@@ -263,7 +323,8 @@ async def test_stale_import_during_generation_is_marked_outdated():
             provider.current_version += 1
             return await super().explain(insights, context)
 
-    result = await AnalysisService(provider, ImportingClient()).analyze("biz-a")
+    result = await AnalysisService(provider, ImportingClient()).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.outdated is True
 
 
@@ -271,7 +332,10 @@ async def test_stale_import_during_generation_is_marked_outdated():
 async def test_concurrent_clicks_share_one_model_call():
     client = Client()
     service = AnalysisService(Provider(bundle()), client)
-    first, second = await asyncio.gather(service.analyze("biz-a"), service.analyze("biz-a"))
+    first, second = await asyncio.gather(
+        service.analyze("biz-a", expected_source_version=2, provider_consent=True),
+        service.analyze("biz-a", expected_source_version=2, provider_consent=True),
+    )
     assert first.generated_at == second.generated_at
     assert client.calls == 1
 
@@ -280,7 +344,8 @@ async def test_concurrent_clicks_share_one_model_call():
 async def test_model_quota_falls_back_to_rules(monkeypatch):
     monkeypatch.setattr("app.features.ai.service.MAX_MODEL_CALLS_PER_HOUR", 0)
     client = Client()
-    result = await AnalysisService(Provider(bundle()), client).analyze("biz-a")
+    result = await AnalysisService(Provider(bundle()), client).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "rules_only"
     assert client.calls == 0
     assert "limit" in result.warnings[-1]
@@ -299,6 +364,29 @@ def test_optional_adapter_requires_matching_business_and_import(monkeypatch):
     assert seen == [("biz-a", "sessions"), ("biz-a", "sessions")]
 
 
+def test_latest_analysis_survives_service_recreation_and_is_business_scoped(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'ai-reports.db'}")
+    Base.metadata.create_all(engine)
+    sessions = session_factory(engine)
+    with sessions.begin() as session:
+        session.add(Business(id="biz-a", name="Business A", industry="Retail", city="Yangon"))
+    provider = SnapshotProvider(sessions)
+    generated = AIAnalysis(
+        business_id="biz-a", status="insufficient_data", data_as_of=None,
+        source_version=0, import_batch_id=None, generated_at=datetime.now(timezone.utc),
+        insights=[], warnings=["No imported records"], disclaimer="Decision support only.",
+    )
+    provider.save_analysis(generated)
+
+    restarted_service = AnalysisService(SnapshotProvider(sessions), Client())
+    latest = restarted_service.latest("biz-a")
+    assert latest is not None
+    assert latest.generated_at == generated.generated_at
+    assert latest.source_version == generated.source_version
+    assert latest.business_id == "biz-a"
+    engine.dispose()
+
+
 @pytest.mark.anyio
 async def test_showcase_insights_cover_supplier_stock_and_loan_records():
     snapshot = bundle(loan=True)
@@ -309,7 +397,8 @@ async def test_showcase_insights_cover_supplier_stock_and_loan_records():
     snapshot.credit["outstanding_principal_mmk"] = "1400000"
     snapshot.credit["missing_schedule_terms_count"] = 1
     snapshot.credit["repayment"]["assessment"] = "unavailable"
-    result = await AnalysisService(Provider(snapshot), Client()).analyze("biz-a")
+    result = await AnalysisService(Provider(snapshot), Client()).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "completed"
     assert [item.id for item in result.insights] == [
         "receivables-followup", "supplier-balances", "slow-stock-review",
@@ -328,5 +417,6 @@ async def test_unverified_overdue_claim_reverts_to_rules():
             result = await super().explain(insights, context)
             result["items"][0]["explanation"] = "Every customer balance is overdue."
             return result
-    result = await AnalysisService(Provider(bundle()), InventingClient()).analyze("biz-a")
+    result = await AnalysisService(Provider(bundle()), InventingClient()).analyze(
+        "biz-a", expected_source_version=2, provider_consent=True)
     assert result.status == "rules_only"

@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ConnectedFinancialPage } from "../pages/ConnectedFinancialPage";
 import { formatMmk } from "../types";
@@ -33,7 +33,20 @@ beforeEach(() => {
       import_batch_id: "import-1",
       as_of: "2026-10-21T03:30:00Z",
     };
-    if (url.pathname.endsWith("/trends")) return { ...common, points: [] };
+    if (url.pathname.endsWith("/trends"))
+      return {
+        ...common,
+        granularity: url.searchParams.get("granularity"),
+        points: [
+          {
+            period: { start: url.searchParams.get("start"), end: url.searchParams.get("end") },
+            revenue_mmk: "0.00",
+            operating_expenses_mmk: "0.00",
+            revenue_record_count: 0,
+            operating_expense_record_count: 0,
+          },
+        ],
+      };
     return {
       ...common,
       period: { start: url.searchParams.get("start"), end: url.searchParams.get("end") },
@@ -65,12 +78,20 @@ it("uses the shared authenticated client with active business and renders exact 
   render(<ConnectedFinancialPage />);
   expect(await screen.findByText("150.75 MMK")).toBeTruthy();
   expect(screen.getByText("80.4 MMK")).toBeTruthy();
-  expect(screen.getByText("Due date unavailable")).toBeTruthy();
+  const obligationsTable = screen.getByRole("table", { name: /outstanding business obligations/i });
+  expect(within(obligationsTable).getByText("Due date unavailable")).toBeTruthy();
   expect(
     mocks.api.mock.calls.every(
       ([path, options]) => path.includes("business_id=A") && options.signal instanceof AbortSignal,
     ),
   ).toBe(true);
+  const trendUrl = new URL(
+    mocks.api.mock.calls.find(([path]) => String(path).includes("/trends"))![0],
+    "http://test",
+  );
+  expect(trendUrl.searchParams.get("start")).toMatch(/^\d{4}-\d{2}-01$/);
+  expect(trendUrl.searchParams.get("end")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(trendUrl.searchParams.get("granularity")).toBe("weekly");
 });
 
 it("hides cards immediately when the shared import query refetches", async () => {

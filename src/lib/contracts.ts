@@ -6,7 +6,7 @@ export type ImportResult = {
   import_batch_id?: string;
   status: "success" | "failed" | "up_to_date";
   source_version: number;
-  row_counts: { inserted?: number; updated?: number; unchanged?: number };
+  row_counts: { inserted?: number; updated?: number; unchanged?: number; removed?: number };
   errors: RowIssue[];
   warnings: RowIssue[];
   created_at?: string;
@@ -49,6 +49,8 @@ export type WorkbookTables = {
     unit_price_mmk: DecimalString;
     payment_type: "cash" | "credit";
     cash_received_mmk: DecimalString;
+    unit_cost_at_sale_mmk?: DecimalString | null;
+    cogs_mmk?: DecimalString | null;
   })[];
   CustomerReceipts: (Dated & { receipt_id: string; sale_id: string; amount_mmk: DecimalString })[];
   Purchases: (Dated & {
@@ -69,11 +71,14 @@ export type WorkbookTables = {
     category: string;
     amount_mmk: DecimalString;
     description: string;
+    payment_status?: "paid" | "partial" | "unpaid" | null;
+    paid_date?: string | null;
+    amount_paid_mmk?: DecimalString | null;
   })[];
   Loans: (Dated & {
     loan_id: string;
     lender: string;
-    loan_type: "reducing_balance" | "flat" | "interest_only";
+    loan_type: string;
     principal_mmk: DecimalString;
   })[];
   LoanPayments: (Dated & {
@@ -89,7 +94,12 @@ export type WorkbookTables = {
     reason: string;
   })[];
 };
-export type Snapshot = { business_id: string; source_version: number; tables: WorkbookTables };
+export type Snapshot = {
+  business_id: string;
+  source_version: number;
+  tables: WorkbookTables;
+  synthetic?: boolean;
+};
 export type PlatformConfig = {
   auth_provider: "supabase";
   auth_configured: boolean;

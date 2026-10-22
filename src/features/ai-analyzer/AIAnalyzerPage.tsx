@@ -178,11 +178,16 @@ export function AIAnalyzerPage() {
             "Review evidence-backed findings from your financial, working capital, and credit snapshots.",
           )}
         </p>
-        <button className="bf-button" onClick={run} disabled={isAnalyzing}>
-          {isAnalyzing ? t("Analyzing…") : t("Analyze Business")}
-        </button>
         <p className="text-xs text-muted-foreground">
           {t("Current import version:")} {business.source_version}
+        </p>
+        <button className="bf-button" onClick={() => run(true)} disabled={isAnalyzing}>
+          {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
+        </button>
+        <p className="max-w-2xl text-xs text-muted-foreground">
+          {t(
+            "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.",
+          )}
         </p>
       </header>
       {(isLoading || isAnalyzing) && (
@@ -195,7 +200,7 @@ export function AIAnalyzerPage() {
       )}
       {!isLoading && !report && (
         <section className="bf-card">
-          <p>{t("No analysis yet. Import business records, then select Analyze Business.")}</p>
+          <p>{t("No analysis yet. Import business records, then select Analyze with AI.")}</p>
           <Link to="/data-source" className="mt-3 inline-block text-primary underline">
             {t("Open Data Source")}
           </Link>
@@ -206,17 +211,16 @@ export function AIAnalyzerPage() {
           {isOutdated && (
             <p role="status" className="bf-card border border-destructive text-destructive">
               {t(
-                "This report uses an older import. Analyze Business again for the current version.",
+                "This report uses an older import. Select Analyze with AI again for the current version.",
               )}
             </p>
           )}
-          <NextSteps insights={report.insights} />
           <section className="bf-card space-y-2 text-sm">
             <p className="font-semibold">
               {report.status === "completed"
                 ? t("AI-assisted analysis")
                 : report.status === "rules_only"
-                  ? t("Rules-based analysis (AI unavailable)")
+                  ? t("AI was not used — verified findings shown")
                   : t("Insufficient data for analysis")}
             </p>
             <p>
@@ -239,6 +243,7 @@ export function AIAnalyzerPage() {
               </Link>
             )}
           </section>
+          <NextSteps insights={report.insights} />
           <p className="text-xs text-muted-foreground">{report.disclaimer}</p>
         </>
       )}

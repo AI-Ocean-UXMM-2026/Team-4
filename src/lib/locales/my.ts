@@ -163,6 +163,35 @@ export const my: Record<string, string> = {
     "နောက်ဆုံးအခြေအနေ ဖြစ်နေပါပြီ။ ထပ်တူမှတ်တမ်း မထည့်ထားပါ။",
   "Amount still needed": "လိုအပ်နေသေးသော ပမာဏ",
   "Analyze Business": "လုပ်ငန်းကို သုံးသပ်ရန်",
+  "Analyze with AI": "AI ဖြင့် သုံးသပ်ရန်",
+  "No analysis yet. Import business records, then select Analyze with AI.":
+    "သုံးသပ်ချက် မရှိသေးပါ။ လုပ်ငန်းမှတ်တမ်းများကို တင်ပြီး AI ဖြင့် သုံးသပ်ရန်ကို ရွေးပါ။",
+  "This report uses an older import. Select Analyze with AI again for the current version.":
+    "ဤအစီရင်ခံစာသည် ယခင်ဗားရှင်းကို အသုံးပြုထားပါသည်။ နောက်ဆုံးဗားရှင်းအတွက် AI ဖြင့် သုံးသပ်ရန်ကို ထပ်မံရွေးပါ။",
+  "AI was not used — verified findings shown":
+    "AI ကို အသုံးမပြုနိုင်ခဲ့ပါ — စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားသည်",
+  "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.":
+    "AI ဖြင့် သုံးသပ်ရန်ကို နှိပ်ပါက ဤဖိုင်မှ စုစည်းထားသော ငွေကြေးပမာဏများနှင့် တွေ့ရှိချက်များကို ပြင်ပ AI ဝန်ဆောင်မှုသို့ ပို့ရန် သဘောတူပါသည်။ Excel ဖိုင်၊ အမည်များနှင့် ငွေလွှဲတစ်ကြောင်းချင်း၏ မှတ်တမ်းများကို မပို့ပါ။",
+  "AI provider is not configured; rules-based findings are shown.":
+    "AI ဝန်ဆောင်မှုကို မသတ်မှတ်ရသေးသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI wording was unavailable or failed evidence validation; rules-based findings are shown.":
+    "AI ဖြင့် သုံးသပ်၍ မရခဲ့သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI hourly call limit reached; rules-based findings are shown.":
+    "AI ကို တစ်နာရီအတွင်း ခေါ်ဆိုနိုင်သည့် အကြိမ်ရေ ပြည့်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "AI response was incomplete; verified findings are shown. Try Analyze with AI again.":
+    "AI အဖြေ မပြည့်စုံခဲ့ပါ။ စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။ AI ဖြင့် ထပ်မံသုံးသပ်ပါ။",
+  "AI wording failed evidence validation; verified findings are shown. Try Analyze with AI again.":
+    "AI အဖြေသည် အထောက်အထားစစ်ဆေးမှု မအောင်မြင်ခဲ့ပါ။ စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။ AI ဖြင့် ထပ်မံသုံးသပ်ပါ။",
+  "OpenAI API credits are exhausted; rules-based findings are shown.":
+    "OpenAI API လက်ကျန်ငွေ ကုန်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenRouter API credits are exhausted; rules-based findings are shown.":
+    "OpenRouter API လက်ကျန်ငွေ ကုန်သွားသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenAI account has insufficient credits; rules-based findings are shown.":
+    "OpenAI အကောင့်တွင် လက်ကျန်ငွေ မလုံလောက်သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "OpenRouter account has insufficient credits; rules-based findings are shown.":
+    "OpenRouter အကောင့်တွင် လက်ကျန်ငွေ မလုံလောက်သဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
+  "External AI analysis was not selected; rules-based findings are shown.":
+    "ပြင်ပ AI သုံးသပ်ချက်ကို မရွေးချယ်ထားသဖြင့် စည်းမျဉ်းအခြေခံ တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "Analyzing…": "သုံးသပ်နေသည်…",
   "Appears covered from recorded cash": "မှတ်တမ်းပါ ငွေသားဖြင့် လုံလောက်နိုင်ပါသည်",
   "Associated cost of goods": "ဆက်စပ်ကုန်ပစ္စည်း ကုန်ကျစရိတ်",
@@ -337,6 +366,11 @@ export const my: Record<string, string> = {
     "ဝယ်ယူရန် မစီစဉ်မီ ကုန်လက်ကျန်နှင့် လတ်တလောအရောင်းကို စစ်ဆေးပါ။",
   Risk: "အန္တရာယ်အခြေအနေ",
   "Rules-based analysis (AI unavailable)": "စည်းမျဉ်းအခြေခံ သုံးသပ်ချက် (AI မရရှိနိုင်ပါ)",
+  "Rules-based analysis": "စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်",
+  "AI wording was skipped because this upload is not configured as a demo workbook. Rules-based findings are still available. Ask an administrator to configure this exact demo file. Real business records require separate consent before AI provider use.":
+    "ဤဖိုင်ကို နမူနာဖိုင်အဖြစ် မသတ်မှတ်ရသေးသဖြင့် AI စာသားဖော်ပြမှုကို ချန်ထားပါသည်။ စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်များကို ဆက်လက်ကြည့်နိုင်ပါသည်။ ဤနမူနာဖိုင်ကို စနစ်တာဝန်ခံအား သတ်မှတ်ခိုင်းပါ။ အမှန်တကယ်လုပ်ငန်းအချက်အလက်များကို AI ဝန်ဆောင်မှုသို့ မပို့မီ သီးခြားသဘောတူညီချက် လိုအပ်ပါသည်။",
+  "AI provider was not called because this snapshot is not marked synthetic.":
+    "ဤဖိုင်ကို နမူနာအချက်အလက်ဟု အတည်မပြုနိုင်သဖြင့် AI ဝန်ဆောင်မှုသို့ မပို့ထားပါ။ စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်များကို ဆက်လက်ကြည့်နိုင်ပါသည်။",
   "Scheduled obligations are estimates. They are kept separate from actual imported payments.":
     "အစီအစဉ်ပါ ပေးရန်ရှိငွေများသည် ခန့်မှန်းချက်များသာ ဖြစ်ပြီး အမှန်တကယ်ပေးချေမှု မှတ်တမ်းများနှင့် ခွဲခြားထားပါသည်။",
   "Schedules are model estimates and may differ from lender statements because of fees, grace periods, day-count rules or variable rates.":

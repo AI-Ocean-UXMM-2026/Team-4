@@ -2,14 +2,16 @@ from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from copy import copy
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
 from openpyxl import load_workbook
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ...core.dependencies import authorize_business
+from ...core.demo_data import is_synthetic_seed_workbook
 from ...core.errors import APIError
 from ...db.models import Business, ImportBatch, PROJECTIONS, WorkbookSource
 from .graph_client import GraphClient
@@ -17,19 +19,20 @@ from .import_audit import batch_response, iso_timestamp
 from .import_service import import_validated_snapshot, lock_business
 from .onedrive_auth import access_token, require_graph
 from .sync_service import sync_now
+from .schemas import SCHEMA
 
 router = APIRouter(prefix="/api/v1/data", tags=["data sources"])
 ROOT = Path(__file__).resolve().parents[4]
 
 
 @router.post("/upload")
-def upload(request: Request, business_id: str, file: UploadFile = File(...), user_id: str = Depends(authorize_business)):
+def upload(request: Request, business_id: str, file: UploadFile = File(...), replace_omitted: bool = Query(False), user_id: str = Depends(authorize_business)):
     if not file.filename or not file.filename.lower().endswith(".xlsx"):
         raise APIError(400, "FILE_TYPE_INVALID", "Choose an .xlsx workbook.")
     content = file.file.read(request.app.state.settings.max_upload_bytes + 1)
     if len(content) > request.app.state.settings.max_upload_bytes:
         raise APIError(400, "FILE_TOO_LARGE", "Workbook exceeds the upload size limit.")
-    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content)
+    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=replace_omitted)
 
 
 @router.post("/sync-now")
@@ -73,11 +76,15 @@ def snapshot(request: Request, business_id: str, _user_id: str = Depends(authori
             # sqlite's legacy driver otherwise starts transactions only on writes.
             session.connection().exec_driver_sql("BEGIN")
         business = session.scalar(select(Business).where(Business.id == business_id).with_for_update(read=True))
+        batch = session.scalar(select(ImportBatch).where(
+            ImportBatch.business_id == business_id, ImportBatch.status == "success"
+        ).order_by(ImportBatch.created_at.desc(), ImportBatch.id.desc()).limit(1))
         tables = {}
         for name, table in PROJECTIONS.items():
             tables[name] = [{key: serialize(value) for key, value in row.items() if key not in ("source_id", "batch_id")}
                             for row in session.execute(select(table).where(table.c.business_id == business_id)).mappings()]
-        return {"business_id": business_id, "source_version": business.version, "tables": tables}
+        return {"business_id": business_id, "source_version": business.version, "tables": tables,
+                "synthetic": is_synthetic_seed_workbook(business_id, batch.content_hash if batch else None)}
 
 
 @router.get("/template")
@@ -87,6 +94,21 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
         raise APIError(503, "TEMPLATE_UNAVAILABLE", "Workbook template has not been generated.")
     workbook = load_workbook(path)
     try:
+        for sheet_name, spec in SCHEMA.items():
+            if sheet_name not in workbook.sheetnames:
+                continue
+            sheet = workbook[sheet_name]
+            headers = {cell.value for cell in sheet[1] if cell.value is not None}
+            for field in spec.get("optional_fields", []):
+                if field in headers:
+                    continue
+                column = sheet.max_column + 1
+                cell = sheet.cell(1, column, field)
+                if column > 1:
+                    cell._style = copy(sheet.cell(1, column - 1)._style)
+                sheet.column_dimensions[cell.column_letter].width = max(
+                    sheet.column_dimensions[cell.column_letter].width or 0, 20
+                )
         with request.app.state.sessions() as session:
             business = session.get(Business, business_id)
             workbook["Settings"]["A2"], workbook["Settings"]["B2"] = business_id, business.name
