@@ -1,15 +1,23 @@
 import { useTranslation } from "@/lib/i18n";
-import type { CreditSummary } from "../types";
+import type { CreditSummary, Loan } from "../types";
+import { importedApplication } from "../importedApplication";
+import { applicationProductName, applicationRequirements } from "./BankLoanGuide";
 
-export function CreditPrintReport({ data }: { data: CreditSummary }) {
-  const { t } = useTranslation();
+export function CreditPrintReport({ data, loan }: { data: CreditSummary; loan?: Loan | undefined }) {
+  const { t, language } = useTranslation();
   const report = data.preparation_report;
+  const application = importedApplication(loan);
+  const requirements = application ? applicationRequirements(application) : [];
   return (
     <article className="credit-print-report">
       <header>
         <p className="report-brand">ရှေ့ဆက် — Shay Sett</p>
         <h1>{t("Borrower preparation summary")}</h1>
-        <p>{t("Generic preparation checklist · not lender-specific")}</p>
+        <p>
+          {application
+            ? `${loan?.lender} · ${applicationProductName(application)}`
+            : t("Imported business records")}
+        </p>
       </header>
       <dl className="report-details">
         <div>
@@ -40,6 +48,27 @@ export function CreditPrintReport({ data }: { data: CreditSummary }) {
         </div>
       </dl>
       <section>
+        <h2>{t("Application requirements")}</h2>
+        {application ? (
+          <>
+            <p>
+              {t("Loan ID:")} {loan?.loan_id} · {applicationProductName(application)}
+            </p>
+            <ul>
+              {requirements.map((item) => (
+                <li key={item[0]}>{item[language === "my" ? 1 : 0]}</li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p>
+            {t(
+              "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.",
+            )}
+          </p>
+        )}
+      </section>
+      <section>
         <h2>1. {t("Record preparation progress")}</h2>
         <p>
           {t("{0} of {1} record categories already added", {
@@ -60,7 +89,13 @@ export function CreditPrintReport({ data }: { data: CreditSummary }) {
             {data.readiness.map((item) => (
               <tr key={item.category}>
                 <td>{t(item.title)}</td>
-                <td>{t(item.status.replaceAll("_", " "))}</td>
+                <td>
+                  {t(
+                    item.status === "uploaded_unverified"
+                      ? "uploaded"
+                      : item.status.replaceAll("_", " "),
+                  )}
+                </td>
                 <td>{item.record_count}</td>
                 <td>
                   {item.period_start || "—"}
@@ -130,6 +165,19 @@ export function CreditPrintReport({ data }: { data: CreditSummary }) {
             <li key={note}>{t(note)}</li>
           ))}
         </ul>
+      </section>
+      <section>
+        <h2>{t("Repayment planning")}</h2>
+        <p>{t(data.repayment_capacity.explanation)}</p>
+        {data.repayment_capacity.projected_cash_available_before_loan_mmk !== null && (
+          <p>
+            {t("Cash available")}:{" "}
+            {Number(
+              data.repayment_capacity.projected_cash_available_before_loan_mmk,
+            ).toLocaleString("en-US")}{" "}
+            MMK
+          </p>
+        )}
       </section>
       <p className="report-disclaimer">
         {t("Record presence only. Preparation progress is not a credit score or loan approval.")}

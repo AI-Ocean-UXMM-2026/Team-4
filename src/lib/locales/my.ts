@@ -24,6 +24,37 @@ export const my: Record<string, string> = {
     "ဤကိုယ်ရေးအချက်အလက်နှင့် ချိတ်ဆက်ထားသော လုပ်ငန်း မရှိသေးပါ။",
   "You have unsaved changes.": "မသိမ်းရသေးသော ပြင်ဆင်ချက်များ ရှိပါသည်။",
   "All changes saved.": "ပြင်ဆင်ချက်အားလုံးကို သိမ်းပြီးပါပြီ။",
+  "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.":
+    "သက်ဆိုင်ရာ လျှောက်လွှာလိုအပ်ချက်များကို ကြည့်ရန် Loans စာရွက်တွင် ပံ့ပိုးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ဖြည့်ပြီး တင်သွင်းပါ။",
+  "Imported records and uploaded supporting files remain unverified by lenders.":
+    "တင်သွင်းထားသောစာရင်းနှင့် အထောက်အထားဖိုင်များကို ဘဏ်က စစ်ဆေးအတည်ပြုထားခြင်း မရှိသေးပါ။",
+  "As of": "စာရင်းရက်စွဲ",
+  "Next scheduled payment": "နောက်အရစ်ကျ ပေးရမည့်ပမာဏ",
+  "{0} days remaining": "{0} ရက် ကျန်ပါသည်",
+  "{0} days past scheduled date": "သတ်မှတ်ရက်မှ {0} ရက် ကျော်ပါပြီ",
+  "Due today": "ယနေ့ ပေးရမည့်ရက်",
+  "Estimated installment. Payment status not linked to schedule.":
+    "ခန့်မှန်းအရစ်ကျ ဖြစ်ပါသည်။ ပေးချေပြီးမှုကို အစီအစဉ်နှင့် မချိတ်ဆက်ရသေးပါ။",
+  "No future installment scheduled": "နောက်လာမည့် အရစ်ကျ မရှိပါ",
+  "Complete loan terms to see the next payment": "နောက်အရစ်ကျကြည့်ရန် ချေးငွေအချက်အလက်များ ဖြည့်ပါ",
+  "Import an existing bank loan": "ရှိပြီးသား ဘဏ်ချေးငွေ တင်သွင်းရန်",
+  "In Loans, supply bank_id, loan_product_id, loan_product, annual_rate_pct, term_months, first_payment_date and payment_frequency together. Use the signed agreement rate: enter 12 for 12% annually.":
+    "Loans တွင် bank_id၊ loan_product_id၊ loan_product၊ annual_rate_pct၊ term_months၊ first_payment_date နှင့် payment_frequency တို့ကို အတူဖြည့်ပါ။ စာချုပ်ပါ နှစ်စဉ်အတိုး ၁၂% အတွက် 12 ဟု ထည့်ပါ။",
+  "Monthly reducing-balance estimates require the first payment one month after disbursement. Other repayment arrangements need the lender schedule.":
+    "လစဉ် လက်ကျန်အရင်းပေါ် အတိုးတွက်ရန် ပထမအရစ်ကျရက်သည် ငွေထုတ်ရက်၏ တစ်လအကြာ ဖြစ်ရပါမည်။ အခြားပြန်ဆပ်ပုံများအတွက် ဘဏ်၏အစီအစဉ် လိုပါသည်။",
+  "Only monthly repayments are supported. No schedule is estimated for this frequency.":
+    "လစဉ်ပြန်ဆပ်မှုကိုသာ တွက်နိုင်ပါသည်။ ဤအကြိမ်နှုန်းအတွက် အစီအစဉ် မခန့်မှန်းပါ။",
+  "The first payment creates an irregular interest period. Import the lender schedule; no schedule is estimated.":
+    "ပထမအရစ်ကျရက်ကြောင့် အတိုးတွက်ကာလ မမှန်ပါ။ ဘဏ်၏အစီအစဉ် လိုအပ်ပြီး လက်ရှိစနစ်က မခန့်မှန်းပါ။",
+  "First payment date": "ပထမအရစ်ကျ ပေးရမည့်ရက်",
+  "Payment frequency": "ပေးချေမှုအကြိမ်နှုန်း",
+  monthly: "လစဉ်",
+  weekly: "အပတ်စဉ်",
+  quarterly: "သုံးလတစ်ကြိမ်",
+  "Supply the bank, loan product, agreed annual interest rate, term, first payment date and payment frequency to estimate repayments.":
+    "ပြန်ဆပ်ရမည့်အစီအစဉ်တွက်ရန် ဘဏ်၊ ချေးငွေအမျိုးအစား၊ စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း၊ သက်တမ်း၊ ပထမပေးရမည့်ရက်နှင့် ပေးချေမှုအကြိမ်နှုန်းကို ဖြည့်ပါ။",
+  "Some imported loans need complete bank, product and repayment terms before a schedule can be estimated.":
+    "ချေးငွေအချို့အတွက် ဘဏ်၊ ချေးငွေအမျိုးအစားနှင့် ပြန်ဆပ်မှုအချက်အလက်များ ပြည့်စုံရန်လိုပါသည်။",
   "Workbook rejected. No business records were changed.":
     "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
   "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",
@@ -39,6 +70,11 @@ export const my: Record<string, string> = {
     "အပေါ်ရှိ လုပ်ငန်း ID ကို ရွေးချယ်ပြီး ကိုယ်တိုင် ကူးယူပါ။",
   "Starting a new workbook? Download the template above. It already contains your business ID in Settings.":
     "ဖိုင်အသစ် စတင်လိုပါက အပေါ်ရှိ ပုံစံဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပါ။ Settings တွင် သင့်လုပ်ငန်း ID ထည့်ထားပြီးဖြစ်ပါသည်။",
+  "Loan product": "ချေးငွေအမျိုးအစား",
+  "Agreed annual interest rate": "စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း",
+  "Term (months)": "သက်တမ်း (လ)",
+  "Some imported loans are missing the agreed annual interest rate or term; their repayment schedules are unavailable.":
+    "တင်သွင်းထားသော ချေးငွေအချို့တွင် စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း သို့မဟုတ် သက်တမ်း မပါသဖြင့် ပြန်ဆပ်ရမည့်အစီအစဉ်ကို မတွက်နိုင်ပါ။",
   "Bank loan guide": "ဘဏ်ချေးငွေလမ်းညွှန်",
   "Report date": "အစီရင်ခံရက်",
   Industry: "လုပ်ငန်းအမျိုးအစား",
@@ -59,7 +95,7 @@ export const my: Record<string, string> = {
     "ဖောက်သည်များထံမှ ရရန်ငွေနှင့် ကုန်ပေးသွင်းသူများကို ပေးရန်ငွေ",
   "Existing debt and repayment records": "ရှိပြီးသားချေးငွေနှင့် ပြန်ဆပ်မှုမှတ်တမ်း",
   "Other lender-requested documents": "ငွေချေးပေးသူ တောင်းဆိုသော အခြားစာရွက်စာတမ်းများ",
-  "uploaded unverified": "ထည့်သွင်းထားပြီး · အတည်မပြုရသေး",
+  uploaded: "ထည့်သွင်းထားပြီး",
   "excel imported": "Excel မှ ထည့်သွင်းထားသည်",
   "not applicable": "မသက်ဆိုင်ပါ",
   none: "မရှိသေးပါ",

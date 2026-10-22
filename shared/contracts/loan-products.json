@@ -1,0 +1,14 @@
+{
+  "banks": [
+    {"id": "kbz", "name": "KBZ Bank", "aliases": ["kbz", "kbz bank"], "products": [
+      {"id": "kbz-term", "name": "SME Term Loan"},
+      {"id": "kbz-od", "name": "SME Overdraft (OD)"},
+      {"id": "kbz-jica", "name": "JICA Two Steps Loan"},
+      {"id": "kbz-contract", "name": "Contract Financing"}
+    ]},
+    {"id": "yoma", "name": "Yoma Bank", "aliases": ["yoma", "yoma bank"], "products": [
+      {"id": "yoma-sme", "name": "SME Business Loan"},
+      {"id": "yoma-od", "name": "Business Overdraft"}
+    ]}
+  ]
+}

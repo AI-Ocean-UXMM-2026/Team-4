@@ -97,11 +97,20 @@ export function WorkingCapitalPage() {
         </p>
         <h2 className="mt-1 text-2xl font-bold">{t("Explore what could change")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          {t("Example inputs below are not your imported business figures.")}
+          {t(
+            "Unlock hidden cash uses imported amounts; sliders are what-if assumptions. Other scenario inputs may be illustrative.",
+          )}
         </p>
       </div>
-      <UnlockCashSimulator simulate={simulate} />
-      <CashGapSimulator simulate={simulate} />
+      <UnlockCashSimulator
+        key={`${business.id}:${business.source_version}`}
+        inputs={snapshot?.unlock_cash}
+      />
+      <CashGapSimulator
+        key={`${business.id}:${business.source_version}`}
+        simulate={simulate}
+        inputs={snapshot?.unlock_cash}
+      />
       <ReservePlanner planReserve={planReserve} />
     </main>
   );

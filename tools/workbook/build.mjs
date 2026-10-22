@@ -75,8 +75,9 @@ for (const persona of [
     const sheet = workbook.worksheets.add(name);
     sheet.showGridLines = false;
     sheet.freezePanes.freezeRows(1);
-    const headers = Object.keys(spec.fields);
-    const rows = persona.template && name !== "Settings" ? [] : data[name];
+    const fields = { ...spec.fields, ...spec.payload_fields };
+    const headers = Object.keys(fields);
+    const rows = (persona.template && name !== "Settings" ? [] : data[name]).map(row => headers.map((_, index) => row[index] ?? null));
     const body = [headers, ...rows];
     const range = sheet.getRangeByIndexes(0, 0, body.length, headers.length);
     range.values = body;
@@ -89,7 +90,7 @@ for (const persona of [
       font: { name: "Arial", size: 10, bold: true, color: "#FFFFFF" },
       rowHeight: 30,
     };
-    for (const [index, [field, kind]] of Object.entries(spec.fields).entries()) {
+    for (const [index, [field, kind]] of Object.entries(fields).entries()) {
       const column = sheet.getRangeByIndexes(0, index, Math.max(2, body.length), 1);
       column.format.columnWidth =
         field === "business_name"

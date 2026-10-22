@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import (JSON, Column, Date, DateTime, ForeignKey, Integer, MetaData,
-                        Numeric, String, Table, Text, UniqueConstraint)
+                        Numeric, String, Table, Text, UniqueConstraint, LargeBinary)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from ..integrations.excel.schemas import SCHEMA
@@ -21,6 +21,19 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention={"ix": "ix_%(column_0_label)s", "uq": "uq_%(table_name)s_%(column_0_name)s",
                                           "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
                                           "pk": "pk_%(table_name)s"})
+
+
+class CreditDocument(Base):
+    __tablename__ = "credit_documents"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), index=True)
+    bank_id: Mapped[str] = mapped_column(String(40))
+    product_id: Mapped[str] = mapped_column(String(80))
+    requirement_key: Mapped[str] = mapped_column(String(80))
+    filename: Mapped[str] = mapped_column(String(200))
+    media_type: Mapped[str] = mapped_column(String(80))
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class User(Base):

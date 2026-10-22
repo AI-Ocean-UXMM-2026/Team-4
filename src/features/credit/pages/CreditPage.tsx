@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditPreparationReport } from "../components/CreditPreparationReport";
 import { LoanSummary } from "../components/LoanSummary";
-import { ReadinessChecklist } from "../components/ReadinessChecklist";
+
 import { RepaymentCapacity } from "../components/RepaymentCapacity";
 import { RepaymentSchedule } from "../components/RepaymentSchedule";
 import { useCredit } from "../hooks/useCredit";
 import { BankLoanGuide } from "../components/BankLoanGuide";
+import { importedApplication } from "../importedApplication";
 
 export function CreditPage() {
   const { t } = useTranslation();
@@ -27,9 +28,10 @@ export function CreditPage() {
     );
   const data = query.data;
   const selected = data.loans.find((loan) => loan.loan_id === loanId) || data.loans[0];
+  const selection = importedApplication(selected);
   return (
     <div className="credit-page space-y-5">
-      <CreditPrintReport data={data} />
+      <CreditPrintReport data={data} loan={selected} />
       <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
         <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Credit Hub")}</p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
@@ -60,6 +62,22 @@ export function CreditPage() {
           <TabsTrigger value="readiness">{t("Prepare for credit")}</TabsTrigger>
           <TabsTrigger value="guide">{t("Bank loan guide")}</TabsTrigger>
         </TabsList>
+        {data.loans.length > 1 && (
+          <label className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-muted-foreground">{t("Select loan")}</span>
+            <select
+              value={selected?.loan_id}
+              onChange={(event) => setLoanId(event.target.value)}
+              className="min-h-11 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {data.loans.map((loan) => (
+                <option key={loan.loan_id} value={loan.loan_id}>
+                  {loan.lender} · {loan.loan_id}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <TabsContent value="loans" className="space-y-4">
           {!data.loans.length ? (
             <Card>
@@ -74,25 +92,9 @@ export function CreditPage() {
             </Card>
           ) : (
             <>
-              {data.loans.length > 1 && (
-                <label className="flex flex-wrap items-center gap-3 text-sm">
-                  <span className="text-muted-foreground">{t("Select loan")}</span>
-                  <select
-                    value={selected?.loan_id}
-                    onChange={(event) => setLoanId(event.target.value)}
-                    className="min-h-11 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground outline-none transition-colors hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {data.loans.map((loan) => (
-                      <option key={loan.loan_id} value={loan.loan_id}>
-                        {loan.lender} · {loan.loan_id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
               {selected && (
                 <>
-                  <LoanSummary loan={selected} />
+                  <LoanSummary loan={selected} asOf={data.as_of} />
                   <RepaymentCapacity data={data.repayment_capacity} />
                   <RepaymentSchedule loan={selected} />
                   <Card>
@@ -147,29 +149,25 @@ export function CreditPage() {
           )}
         </TabsContent>
         <TabsContent value="readiness" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t(data.readiness_progress.label)}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">
-                {t("{0} of {1} record categories already added", {
-                  "0": data.readiness_progress.prepared_categories,
-                  "1": data.readiness_progress.total_categories,
-                })}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t(
-                  "Record presence only. Preparation progress is not a credit score or loan approval.",
-                )}
-              </p>
-            </CardContent>
-          </Card>
-          <ReadinessChecklist items={data.readiness} />
-          <CreditPreparationReport report={data.preparation_report} />
+          {selection ? (
+            <BankLoanGuide
+              businessId={data.business_id}
+              selection={selection}
+              records={data.readiness}
+              preparationOnly
+              onViewRecords={() => setTab("readiness")}
+            />
+          ) : (
+            <p className="bf-card text-sm text-muted-foreground">
+              {t(
+                "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.",
+              )}
+            </p>
+          )}
+          <CreditPreparationReport report={data.preparation_report} loan={selected} />
         </TabsContent>
         <TabsContent value="guide">
-          <BankLoanGuide onViewRecords={() => setTab("readiness")} />
+          <BankLoanGuide businessId={data.business_id} onViewRecords={() => setTab("readiness")} />
         </TabsContent>
       </Tabs>
       <p className="text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ from collections import defaultdict
 from decimal import Decimal
 
 from .schemas import SCHEMA, ParsedWorkbook, issue
+from .loan_products import loan_identity_errors
 
 D = Decimal
 
@@ -71,6 +72,17 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
                     err("amount_paid_mmk", "A partially paid expense must record a positive amount below the full expense")
             if name == "LoanPayments" and D(value["principal_mmk"]) + D(value["interest_mmk"]) == 0:
                 err("principal_mmk", "Loan payment must contain principal or interest")
+            if name == "Loans":
+                terms = ("bank_id", "loan_product_id", "loan_product", "annual_rate_pct", "term_months", "first_payment_date", "payment_frequency")
+                if any(value.get(key) is not None for key in terms):
+                    for key in terms:
+                        if value.get(key) is None:
+                            err(key, "Supply bank, product, agreed annual rate, term, first payment date and frequency together")
+                    if all(value.get(key) is not None for key in terms):
+                        for key, message in loan_identity_errors(value):
+                            err(key, message)
+                        if value["first_payment_date"] <= value["date"]:
+                            err("first_payment_date", "First payment must be after disbursement")
     if errors:
         return errors
     for child, parent, fk, base, initial in [
@@ -86,6 +98,20 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
             limit = D(original[base]) if initial is None else D(original["quantity"]) * D(original[base]) - D(original[initial])
             if running[value[fk]] > limit:
                 errors.append(issue(child, row.excel_row, "principal_mmk" if initial is None else "amount_mmk", "Cumulative payments exceed the outstanding amount"))
+    # Product rule: historical settled loans may belong to other banks, but
+    # outstanding loans must all belong to one lender. Also runs on merged imports.
+    repaid = defaultdict(lambda: D(0))
+    for row in parsed.sheets.get("LoanPayments", []):
+        repaid[row.values["loan_id"]] += D(row.values["principal_mmk"])
+    active_banks = set()
+    for row in parsed.sheets.get("Loans", []):
+        value = row.values
+        if D(value["principal_mmk"]) > repaid[value["loan_id"]]:
+            bank = " ".join(value["lender"].casefold().split())
+            bank = {"kbz": "kbz bank", "yoma": "yoma bank"}.get(bank, bank)
+            active_banks.add(bank)
+    if len(active_banks) > 1:
+        errors.append(issue("Loans", 0, "lender", "This app supports outstanding loans from one bank at a time. Review the lender and repayment records; existing loans were not changed."))
     stock = {key: D(row.values["opening_stock"]) for key, row in index.get("Products", {}).items()}
     events = [(row.values["date"], 0, "Purchases", row) for row in parsed.sheets.get("Purchases", [])]
     events += [(row.values["date"], 1, "Sales", row) for row in parsed.sheets.get("Sales", [])]

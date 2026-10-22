@@ -1,12 +1,17 @@
 import { useTranslation } from "@/lib/i18n";
-import type { CreditSummary } from "../types";
+import type { CreditSummary, Loan } from "../types";
+import { importedApplication } from "../importedApplication";
+import { applicationProductName } from "./BankLoanGuide";
 
 export function CreditPreparationReport({
   report,
+  loan,
 }: {
   report: CreditSummary["preparation_report"];
+  loan?: Loan | undefined;
 }) {
   const { t } = useTranslation();
+  const application = importedApplication(loan);
 
   return (
     <section className="rounded-xl border bg-card p-5 print:border-0 print:p-0">
@@ -14,7 +19,9 @@ export function CreditPreparationReport({
         <div>
           <h2 className="text-xl font-semibold">{t("Borrower preparation summary")}</h2>
           <p className="text-sm text-muted-foreground">
-            {t("Generic preparation checklist · not lender-specific")}
+            {application
+              ? `${loan?.lender} · ${applicationProductName(application)}`
+              : t("Imported business records")}
           </p>
         </div>
         <button type="button" className="bf-button print:hidden" onClick={() => window.print()}>
