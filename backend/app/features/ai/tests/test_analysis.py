@@ -188,6 +188,7 @@ async def test_real_data_is_never_sent_to_provider():
     result = await AnalysisService(Provider(bundle(synthetic=False)), client).analyze("biz-a")
     assert result.status == "rules_only"
     assert client.calls == 0
+    assert "not configured as a demo workbook" in result.warnings[-1]
 
 
 @pytest.mark.anyio
