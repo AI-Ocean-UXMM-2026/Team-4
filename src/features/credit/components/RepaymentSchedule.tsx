@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Loan } from "../types";
 
 const money = (value: string) => `${Number(value).toLocaleString("en-US")} MMK`;
-const date = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString();
+const date = (value: string) => {
+  const [year, month, day] = value.split("-");
+  return `${month}/${day}/${year}`;
+};
 
 export function RepaymentSchedule({ loan }: { loan: Loan }) {
   const { t } = useTranslation();
@@ -31,7 +34,7 @@ export function RepaymentSchedule({ loan }: { loan: Loan }) {
         <table className="w-full min-w-[620px] text-left text-sm">
           <thead>
             <tr className="border-b text-muted-foreground">
-              <th className="p-2">{t("Due")}</th>
+              <th className="p-2">{t("Due")} (MM/DD/YYYY)</th>
               <th className="p-2">{t("Instalment · scheduled")}</th>
               <th className="p-2">{t("Principal")}</th>
               <th className="p-2">{t("Interest")}</th>

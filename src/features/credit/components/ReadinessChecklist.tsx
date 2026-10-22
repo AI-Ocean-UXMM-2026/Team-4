@@ -33,7 +33,7 @@ export function ReadinessChecklist({ items }: { items: ReadinessCategory[] }) {
                 {t(item.title)}
               </h3>
               <span className="shrink-0 rounded-md bg-secondary/60 px-2 py-0.5 text-[11px] leading-6 text-muted-foreground">
-                {t(item.status.replaceAll("_", " "))}
+                {t(item.status === "uploaded_unverified" ? "uploaded" : item.status.replaceAll("_", " "))}
               </span>
             </div>
             <div aria-hidden="true" className="mb-4 h-0.5 w-6 rounded-full bg-primary/60" />

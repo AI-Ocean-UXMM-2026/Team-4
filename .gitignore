@@ -49,3 +49,5 @@ dist-ssr
 
 # Temporary test files
 .vitest-temp/
+.test-temp/
+outputs/

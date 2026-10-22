@@ -7,7 +7,7 @@ def repayment_capacity(p1_cash_context: dict | None, next_payment_due_mmk: str |
             "status": "insufficient_data",
             "projected_cash_available_before_loan_mmk": None,
             "repayment_gap_mmk": None,
-            "explanation": "Cash balances and operating payments from Financial Health are not available yet. Repayment planning uses cash, not profit.",
+            "explanation": "Repayment planning needs recorded cash and operating payments from Financial Health, plus supported loan schedules. Repayment planning uses cash, not profit.",
         }
     # Receipt rows must be explicitly marked confirmed by the upstream owner.
     from decimal import Decimal
@@ -23,5 +23,5 @@ def repayment_capacity(p1_cash_context: dict | None, next_payment_due_mmk: str |
         "status": "appears_covered_from_recorded_cash" if gap >= 0 else "potential_shortfall",
         "projected_cash_available_before_loan_mmk": str(available),
         "repayment_gap_mmk": str(gap),
-        "explanation": "Planning estimate from recorded cash and confirmed items; it is not an approval or affordability assessment.",
+        "explanation": "Planning estimate using Financial Health cash after reserving outstanding supplier balances and recorded unpaid expenses, with no future receipts assumed. No protected reserve is recorded. This is not an approval or affordability assessment.",
     }

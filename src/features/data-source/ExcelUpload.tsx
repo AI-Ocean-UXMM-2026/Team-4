@@ -6,6 +6,7 @@ import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
 import { WorkbookBusinessHelp } from "./WorkbookBusinessHelp";
+import loanCatalog from "../../../shared/contracts/loan-products.json";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
@@ -42,6 +43,21 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once. Rows omitted from an upload are kept unless you choose full replacement.",
         )}
       </p>
+      <details className="mb-5 rounded-xl border p-4 text-sm">
+        <summary className="cursor-pointer font-semibold">{t("Import an existing bank loan")}</summary>
+        <p className="mt-3 text-muted-foreground">{t("In Loans, supply bank_id, loan_product_id, loan_product, annual_rate_pct, term_months, first_payment_date and payment_frequency together. Use the signed agreement rate: enter 12 for 12% annually.")}</p>
+        <p className="mt-2 text-muted-foreground">{t("Monthly reducing-balance estimates require the first payment one month after disbursement. Other repayment arrangements need the lender schedule.")}</p>
+        <ul className="mt-3 space-y-2">
+          {loanCatalog.banks.map(bank => (
+            <li key={bank.id}>
+              <strong>{bank.name} ({bank.id})</strong>
+              <ul className="ml-5 list-disc">
+                {bank.products.map(product => <li key={product.id}>{product.name} — {product.id}</li>)}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </details>
       <label className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6">
         <span className="mb-3 block text-sm font-semibold">
           {t("Choose .xlsx file · up to")} {Math.round(maxBytes / 1024 / 1024)} {t("MB")}

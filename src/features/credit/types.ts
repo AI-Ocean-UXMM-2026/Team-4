@@ -16,6 +16,11 @@ export type ActualPayment = {
 export type Loan = {
   loan_id: string;
   lender: string;
+  loan_product?: string | null;
+  bank_id?: string | null;
+  loan_product_id?: string | null;
+  first_payment_date?: string | null;
+  payment_frequency?: string | null;
   repayment_model: string;
   principal_mmk: Money;
   disbursement_date: string;

@@ -46,7 +46,16 @@ def amortization_schedule(
     term_months: int,
     disbursement_date: date,
     repayment_model: str = "reducing_balance",
+    first_payment_date: date | None = None,
+    payment_frequency: str = "monthly",
 ) -> list[Installment]:
+    if payment_frequency != "monthly":
+        raise UnsupportedLoanModel("Only monthly repayments are supported. No schedule is estimated for this frequency.")
+    first_due = first_payment_date or add_months(disbursement_date, 1)
+    if first_due <= disbursement_date:
+        raise ValueError("First payment must be after disbursement.")
+    if first_due != add_months(disbursement_date, 1):
+        raise UnsupportedLoanModel("The first payment creates an irregular interest period. Import the lender schedule; no schedule is estimated.")
     if repayment_model != "reducing_balance":
         raise UnsupportedLoanModel(f"Unsupported repayment model: {repayment_model}")
     if principal_mmk <= ZERO:
@@ -79,7 +88,7 @@ def amortization_schedule(
         rows.append(
             Installment(
                 period=period,
-                due_date=add_months(disbursement_date, period),
+                due_date=add_months(first_due, period - 1) if first_payment_date else add_months(disbursement_date, period),
                 scheduled_installment_mmk=round_mmk(principal_due + interest),
                 principal_due_mmk=principal_due,
                 interest_due_mmk=interest,
