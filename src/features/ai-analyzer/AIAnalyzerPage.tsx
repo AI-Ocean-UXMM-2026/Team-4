@@ -19,6 +19,19 @@ const destinations: Record<
   credit: "/credit",
   data_quality: "/data-source",
 };
+const nextStepDestinations: Record<
+  string,
+  { to: "/working-capital" | "/credit" | "/data-source"; label: string }
+> = {
+  "supplier-shortfall": { to: "/data-source", label: "Open Data Source" },
+  "receivables-followup": { to: "/data-source", label: "Open Data Source" },
+  "supplier-balances": { to: "/data-source", label: "Open Data Source" },
+  "slow-stock-review": { to: "/working-capital", label: "Open Working Capital" },
+  "stockout-review": { to: "/working-capital", label: "Open Working Capital" },
+  "repayment-review": { to: "/credit", label: "Open Credit Hub" },
+  "loan-terms-review": { to: "/credit", label: "Open Credit Hub" },
+  "data-quality": { to: "/data-source", label: "Open Data Source" },
+};
 const metricLabels: Record<string, string> = {
   cash_balance_mmk: "Recorded cash",
   supplier_due_30d_mmk: "Dated supplier payments within a month",
@@ -30,13 +43,67 @@ const metricLabels: Record<string, string> = {
   repayment_available_cash_mmk: "Cash available for repayment",
   repayment_due_mmk: "Upcoming repayment",
   repayment_difference_mmk: "Repayment cash difference",
+  slow_moving_stock_count: "Stock items with no recent sales",
+  outstanding_principal_mmk: "Outstanding loan principal",
+  missing_schedule_terms_count: "Loans without schedule terms",
 };
 
 function formatValue(metric: string, value: string) {
   const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value);
   if (!match) return value;
-  const text = `${match[1]}${match[2]!.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${match[3] ? `.${match[3]}` : ""}`;
+  const fraction = match[3]?.replace(/0+$/, "");
+  const text = `${match[1]}${match[2]!.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${fraction ? `.${fraction}` : ""}`;
   return metric.endsWith("_mmk") ? `${text} MMK` : text;
+}
+
+function NextSteps({ insights }: { insights: Insight[] }) {
+  const { t } = useTranslation();
+
+  if (insights.length === 0) return null;
+
+  return (
+    <section aria-labelledby="ai-next-steps" className="bf-card space-y-4">
+      <div>
+        <h2 id="ai-next-steps" className="text-2xl font-bold">
+          {t("What to do next")}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t(
+            "Start with these actions, then check the evidence below. Verify source records before making a decision.",
+          )}
+        </p>
+      </div>
+      <ol className="space-y-3">
+        {insights.map((insight, index) => {
+          const destination = nextStepDestinations[insight.id] ?? {
+            to: destinations[insight.category],
+            label: "View supporting metrics",
+          };
+          return (
+            <li key={insight.id} className="rounded-xl border border-border bg-background p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                    {index + 1}. {t(insight.priority)} {t("priority")} ·{" "}
+                    {t(labels[insight.category])}
+                  </p>
+                  <h3 className="font-semibold">{t(insight.title)}</h3>
+                  {insight.suggested_actions.map((action, actionIndex) => (
+                    <p key={actionIndex} className="text-sm">
+                      {t(action)}
+                    </p>
+                  ))}
+                </div>
+                <Link to={destination.to} className="bf-button shrink-0 text-center">
+                  {t(destination.label)}
+                </Link>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
 }
 
 function InsightCard({ insight }: { insight: Insight }) {
@@ -50,8 +117,8 @@ function InsightCard({ insight }: { insight: Insight }) {
           {t(insight.priority)} {t("priority")}
         </span>
       </div>
-      <h2 className="text-xl font-bold">{insight.title}</h2>
-      <p>{insight.explanation}</p>
+      <h2 className="text-xl font-bold">{t(insight.title)}</h2>
+      <p>{t(insight.explanation)}</p>
       <div>
         <h3 className="text-sm font-semibold">{t("Supporting evidence")}</h3>
         <ul className="mt-1 list-inside list-disc text-sm text-muted-foreground">
@@ -62,13 +129,9 @@ function InsightCard({ insight }: { insight: Insight }) {
           ))}
         </ul>
       </div>
-      <div>
-        <h3 className="text-sm font-semibold">{t("Possible next step")}</h3>
-        <p className="text-sm">{insight.suggested_actions.join(" ")}</p>
-      </div>
       {insight.assumptions.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          {t("Assumptions:")} {insight.assumptions.join(" ")}
+          {t("Assumptions:")} {insight.assumptions.map((assumption) => t(assumption)).join(" ")}
         </p>
       )}
       <Link
@@ -130,6 +193,7 @@ export function AIAnalyzerPage() {
               )}
             </p>
           )}
+          <NextSteps insights={report.insights} />
           <section className="bf-card space-y-2 text-sm">
             <p className="font-semibold">
               {report.status === "completed"
