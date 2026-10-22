@@ -2,6 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from copy import copy
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
@@ -18,6 +19,7 @@ from .import_audit import batch_response, iso_timestamp
 from .import_service import import_validated_snapshot, lock_business
 from .onedrive_auth import access_token, require_graph
 from .sync_service import sync_now
+from .schemas import SCHEMA
 
 router = APIRouter(prefix="/api/v1/data", tags=["data sources"])
 ROOT = Path(__file__).resolve().parents[4]
@@ -92,6 +94,21 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
         raise APIError(503, "TEMPLATE_UNAVAILABLE", "Workbook template has not been generated.")
     workbook = load_workbook(path)
     try:
+        for sheet_name, spec in SCHEMA.items():
+            if sheet_name not in workbook.sheetnames:
+                continue
+            sheet = workbook[sheet_name]
+            headers = {cell.value for cell in sheet[1] if cell.value is not None}
+            for field in spec.get("optional_fields", []):
+                if field in headers:
+                    continue
+                column = sheet.max_column + 1
+                cell = sheet.cell(1, column, field)
+                if column > 1:
+                    cell._style = copy(sheet.cell(1, column - 1)._style)
+                sheet.column_dimensions[cell.column_letter].width = max(
+                    sheet.column_dimensions[cell.column_letter].width or 0, 20
+                )
         with request.app.state.sessions() as session:
             business = session.get(Business, business_id)
             workbook["Settings"]["A2"], workbook["Settings"]["B2"] = business_id, business.name

@@ -49,6 +49,7 @@
     },
     "Purchases": {
       "id": "purchase_id",
+      "optional_fields": ["due_date"],
       "fields": {
         "purchase_id": "id",
         "business_id": "id",
@@ -57,7 +58,8 @@
         "quantity": "positive_quantity",
         "unit_cost_mmk": "money",
         "payment_type": "enum:cash,credit,partial",
-        "cash_paid_mmk": "money"
+        "cash_paid_mmk": "money",
+        "due_date": "date"
       }
     },
     "SupplierPayments": {

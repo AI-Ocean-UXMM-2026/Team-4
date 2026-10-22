@@ -39,6 +39,19 @@ def test_partial_payment_is_normalized_to_credit(workbook_bytes):
     assert parsed.sheets["Sales"][0].values["payment_type"] == "credit"
 
 
+def test_optional_supplier_due_date_is_validated_and_older_workbooks_remain_valid(workbook_bytes):
+    assert validate_workbook(parse_workbook(workbook_bytes), "tea-shop") == []
+
+    def add_invalid_due_date(workbook):
+        sheet = workbook["Purchases"]
+        column = sheet.max_column + 1
+        sheet.cell(1, column, "due_date")
+        sheet.cell(2, column, "2026-01-01")
+
+    errors = validate_workbook(parse_workbook(edit_workbook(workbook_bytes, add_invalid_due_date)), "tea-shop")
+    assert any(issue["sheet"] == "Purchases" and issue["field"] == "due_date" for issue in errors)
+
+
 def test_zip_expansion_limit(monkeypatch, workbook_bytes):
     monkeypatch.setattr("app.integrations.excel.workbook_parser.MAX_EXPANDED_BYTES", 10)
     assert parse_workbook(workbook_bytes).errors

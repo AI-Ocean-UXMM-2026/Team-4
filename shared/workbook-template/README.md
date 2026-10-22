@@ -1,6 +1,6 @@
 # Workbook assets
 
-`bizflow-template.xlsx` is the blank v1 input workbook; GET `/api/v1/data/template?business_id=...` personalizes Settings for the signed-in business. Add rows under unchanged headers and enter the same business_id on each row. Review [SHARED_CONTRACTS.md](../../SHARED_CONTRACTS.md) before changing fields.
+`bizflow-template.xlsx` is the blank input workbook; GET `/api/v1/data/template?business_id=...` personalizes Settings for the signed-in business and appends optional columns from the current workbook contract when missing. Supplier `due_date` is optional on Purchases; older workbooks without it remain supported. Add rows under the downloaded headers and enter the same business_id on each row. Review [SHARED_CONTRACTS.md](../../SHARED_CONTRACTS.md) before changing fields.
 
 Three synthetic populated workbooks are in `database/seed`: tea-shop (no credit), grocery (credit retail), workshop (credit service/parts). The October 2026 demo intentionally uses `Expenses.E001.amount_mmk = 50000` in each fixture. Change it to `80000` while retaining E001 to demonstrate one controlled update. Generated fixtures have no input formulas.
 

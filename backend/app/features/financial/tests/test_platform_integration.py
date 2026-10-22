@@ -46,6 +46,32 @@ def test_real_import_summary_and_idempotency(client, workbook_bytes):
     assert october["revenue_record_count"] == len(sales) == 3
     assert october["operating_expense_record_count"] == 2
     assert october["period"] == {"start": "2026-10-01", "end": "2026-10-20"}
+    selected = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-01&end=2026-10-20&granularity=weekly")
+    assert selected.status_code == 200, selected.text
+    payload = selected.json()
+    assert payload["granularity"] == "weekly"
+    assert [point["period"] for point in payload["points"]] == [
+        {"start": "2026-10-01", "end": "2026-10-07"},
+        {"start": "2026-10-08", "end": "2026-10-14"},
+        {"start": "2026-10-15", "end": "2026-10-20"},
+    ]
+    assert [point["is_partial"] for point in payload["points"]] == [False, False, True]
+    assert sum(Decimal(point["revenue_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["revenue_mmk"])
+    assert sum(Decimal(point["operating_expenses_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["operating_expenses_mmk"])
+    assert sum(point["revenue_record_count"] for point in payload["points"]) == len(sales)
+    assert client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-20&end=2026-10-01&granularity=weekly").status_code == 400
+    monthly = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-08-22&end=2026-10-20&granularity=monthly")
+    assert monthly.status_code == 200, monthly.text
+    monthly_points = monthly.json()["points"]
+    assert [point["period"] for point in monthly_points] == [
+        {"start": "2026-08-22", "end": "2026-08-31"},
+        {"start": "2026-09-01", "end": "2026-09-30"},
+        {"start": "2026-10-01", "end": "2026-10-20"},
+    ]
+    assert [point["is_partial"] for point in monthly_points] == [True, False, True]
+    range_summary = client.get("/api/v1/financial/summary?business_id=tea-shop&start=2026-08-22&end=2026-10-20").json()
+    assert sum(Decimal(point["revenue_mmk"]) for point in monthly_points) == Decimal(range_summary["actual"]["revenue_mmk"])
+    assert sum(Decimal(point["operating_expenses_mmk"]) for point in monthly_points) == Decimal(range_summary["actual"]["operating_expenses_mmk"])
     assert upload(client, workbook_bytes).status_code == 200
     assert client.get(URL).json() == summary
 
@@ -80,6 +106,10 @@ def test_wholesale_october_workbook_import_and_financial_availability(client):
             column = headers.index("business_id") + 1
             for row in range(2, sheet.max_row + 1):
                 sheet.cell(row, column).value = "tea-shop"
+    purchases = workbook["Purchases"]
+    due_column = purchases.max_column + 1
+    purchases.cell(1, due_column).value = "due_date"
+    purchases.cell(2, due_column).value = date(2026, 10, 25)  # PUR-001
     content = BytesIO()
     workbook.save(content)
     workbook.close()
@@ -100,6 +130,16 @@ def test_wholesale_october_workbook_import_and_financial_availability(client):
     assert Decimal(actual["interest_expenses_mmk"]) == Decimal("180000")
     assert Decimal(actual["receivables_mmk"]) == Decimal("2912900")
     assert Decimal(actual["payables_mmk"]) == Decimal("5051200")
+    supplier = next(item for item in summary["upcoming_obligations"] if item["reference_id"] == "PUR-001")
+    assert supplier["due_date"] == "2026-10-25"
+    assert Decimal(supplier["original_amount_mmk"]) == Decimal("2184000")
+    assert Decimal(supplier["amount_paid_mmk"]) == Decimal("765000")
+    assert Decimal(supplier["amount_mmk"]) == Decimal("1419000")
+    assert Decimal(summary["loan_principal_outstanding_mmk"]) == Decimal("16600000")
+    assert summary["loan_schedule_available"] is False
+    historical = client.get("/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-31").json()
+    assert all(item["reference_id"] != "PUR-001" for item in historical["upcoming_obligations"])
+    assert Decimal(historical["loan_principal_outstanding_mmk"]) == Decimal("16050000")
 
     # The imported v1 sheets do not state expense settlement or cost at sale.
     # Keep the opening cash, product costs and purchase costs without presenting
