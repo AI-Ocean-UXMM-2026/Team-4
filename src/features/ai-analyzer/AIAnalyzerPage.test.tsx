@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { AIAnalyzerPage } from "./AIAnalyzerPage";
 
@@ -43,12 +43,19 @@ vi.mock("./useBusinessAnalysis", () => ({
 
 afterEach(cleanup);
 
-it("puts a specific next action and destination ahead of report detail", () => {
+it("shows each finding once with its action and expandable evidence", () => {
   render(<AIAnalyzerPage />);
   const plan = screen.getByRole("region", { name: "What to do next" });
-  expect(within(plan).getByText("Check customer receipts and confirm payment dates.")).toBeTruthy();
+  expect(within(plan).getAllByText("Review outstanding receivables")).toHaveLength(1);
+  expect(
+    within(plan).getByText(
+      "Check unpaid sales and customer receipts in your workbook, confirm expected payment dates with customers, then import updated receipts after collection.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByText("Check customer receipts and confirm payment dates.")).toBeNull();
   expect(within(plan).getByRole("link", { name: "Open Data Source" }).getAttribute("href")).toBe(
     "/data-source",
   );
+  fireEvent.click(within(plan).getByText("Why this recommendation?"));
   expect(screen.getByText("Receivables: 2,940,000 MMK")).toBeTruthy();
 });
