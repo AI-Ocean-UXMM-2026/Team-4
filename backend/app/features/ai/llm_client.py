@@ -50,17 +50,24 @@ class AIWordingClient:
     async def explain(self, flags: list, context: dict) -> dict:
         if not self.api_key:
             raise RuntimeError("AI provider is not configured")
+        instructions = (
+            "You write concise business-analysis wording, not a chatbot. "
+            "Use only the supplied flags and metrics. Return one item per flag ID. "
+            "Do not include digits, spelled-out quantities, dates, percentages, guarantees, "
+            "lending approval claims, customer intentions, or facts not present in the flags. "
+            "Avoid the words will, overdue, eligible, insolvent, and bankrupt. "
+            "Explain uncertainty. Do not recommend borrowing as a default fix."
+        )
+        if context.get("wording_retry"):
+            instructions += (
+                " This is a validation retry. Stay close to each supplied explanation and action. "
+                "Use cautious wording and omit every numeric or guaranteed claim."
+            )
         payload = {
             "model": self.model,
             "store": False,
             "max_output_tokens": 2000,
-            "instructions": (
-                "You write concise business-analysis wording, not a chatbot. "
-                "Use only the supplied flags and metrics. Return one item per flag ID. "
-                "Do not include digits, dates, percentages, guarantees, lending approval "
-                "claims, customer intentions, or facts not present in the flags. "
-                "Explain uncertainty. Do not recommend borrowing as a default fix."
-            ),
+            "instructions": instructions,
             "input": json.dumps({
                 "metrics": {key: str(value) for key, value in context["metrics"].items()},
                 "flags": [

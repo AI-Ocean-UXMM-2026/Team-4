@@ -108,7 +108,7 @@ def test_openrouter_request_uses_responses_endpoint_and_schema(monkeypatch):
         lambda **kwargs: original_client(transport=httpx.MockTransport(respond), **kwargs),
     )
     client = AIWordingClient(api_key="router-key", provider="openrouter")
-    result = asyncio.run(client.explain([], {"metrics": {"cash_balance_mmk": 100}}))
+    result = asyncio.run(client.explain([], {"metrics": {"cash_balance_mmk": 100}, "wording_retry": True}))
     assert result == {"items": []}
     assert len(sent) == 1
     assert str(sent[0].url) == "https://openrouter.ai/api/v1/responses"
@@ -118,6 +118,8 @@ def test_openrouter_request_uses_responses_endpoint_and_schema(monkeypatch):
     assert body["provider"] == {"require_parameters": True}
     assert body["reasoning"] == {"effort": "minimal"}
     assert body["max_output_tokens"] == 2000
+    assert "validation retry" in body["instructions"]
+    assert "wording_retry" not in body["input"]
     assert body["text"]["format"]["type"] == "json_schema"
     assert body["store"] is False
 
@@ -195,9 +197,32 @@ async def test_invented_model_numbers_revert_to_rules():
             result = await super().explain(insights, context)
             result["items"][0]["explanation"] = "Cash will rise by 900000 MMK."
             return result
-    result = await AnalysisService(Provider(bundle()), InventingClient()).analyze("biz-a")
+    client = InventingClient()
+    service = AnalysisService(Provider(bundle()), client)
+    result = await service.analyze("biz-a")
     assert result.status == "rules_only"
     assert all("900000" not in item.explanation for item in result.insights)
+    assert "evidence validation" in result.warnings[-1]
+    assert client.calls == 2
+    await service.analyze("biz-a")
+    assert client.calls == 4  # A failed provider result must not be cached.
+
+
+@pytest.mark.anyio
+async def test_invalid_wording_retries_once_with_stricter_context():
+    class RecoveringClient(Client):
+        async def explain(self, insights, context):
+            result = await super().explain(insights, context)
+            if self.calls == 1:
+                result["items"][0]["explanation"] = "Cash will rise by 900000 MMK."
+            else:
+                assert context["wording_retry"] is True
+            return result
+
+    client = RecoveringClient()
+    result = await AnalysisService(Provider(bundle()), client).analyze("biz-a")
+    assert result.status == "completed"
+    assert client.calls == 2
 
 
 @pytest.mark.anyio

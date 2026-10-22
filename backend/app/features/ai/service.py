@@ -22,6 +22,12 @@ _call_times: dict[str, list[float]] = {}
 
 
 def provider_failure_warning(error: Exception, provider_name: str = "OpenAI") -> str:
+    if isinstance(error, httpx.TimeoutException):
+        return f"{provider_name} timed out; rules-based findings are shown. Try Analyze Business again."
+    if isinstance(error, ValueError):
+        if str(error) == "AI response was not completed":
+            return "AI response was incomplete; rules-based findings are shown. Try Analyze Business again."
+        return "AI wording failed evidence validation; rules-based findings are shown. Try Analyze Business again."
     if isinstance(error, httpx.HTTPStatusError):
         try:
             code = (error.response.json().get("error") or {}).get("code")
@@ -84,14 +90,24 @@ class AnalysisService:
         now = time.monotonic()
         calls = [stamp for stamp in _call_times.get(business_id, []) if now - stamp < 3600]
         _call_times[business_id] = calls
+        provider_failed = False
         if eligible_for_model and len(calls) >= MAX_MODEL_CALLS_PER_HOUR:
             warnings.append("AI hourly call limit reached; rules-based findings are shown.")
         elif eligible_for_model:
             calls.append(now)
             try:
-                selected = grounded_insights(await self.client.explain(selected, context), selected)
+                wording = await self.client.explain(selected, context)
+                try:
+                    selected = grounded_insights(wording, selected)
+                except ValueError:
+                    if len(calls) >= MAX_MODEL_CALLS_PER_HOUR:
+                        raise
+                    calls.append(time.monotonic())
+                    wording = await self.client.explain(selected, {**context, "wording_retry": True})
+                    selected = grounded_insights(wording, selected)
                 status = "completed"
             except Exception as error:
+                provider_failed = True
                 # No provider payload, key, or financial details are logged.
                 provider_name = "OpenRouter" if getattr(self.client, "provider", "openai") == "openrouter" else "OpenAI"
                 warnings.append(provider_failure_warning(error, provider_name))
@@ -107,6 +123,7 @@ class AnalysisService:
                        else "Decision support only; verify source records before acting.",
             outdated=self.provider.version(business_id) != bundle.source_version,
         )
-        _cache[cache_key] = (time.monotonic(), result)
+        if not provider_failed:
+            _cache[cache_key] = (time.monotonic(), result)
         _latest[business_id] = result
         return result
