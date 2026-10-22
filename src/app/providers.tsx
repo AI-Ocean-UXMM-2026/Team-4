@@ -6,6 +6,7 @@ import { Navigate } from "@tanstack/react-router";
 import { api } from "@/lib/apiClient";
 import type { Business, PlatformConfig, Snapshot } from "@/lib/contracts";
 import { useAccount, useAuth, useConfig } from "./session";
+import { WorkingCapitalManualProvider } from "@/features/working-capital/manualInputs";
 
 type Platform = {
   business: Business;
@@ -106,7 +107,12 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
-      {children}
+      <WorkingCapitalManualProvider
+        key={`${session?.user.id}:${business.id}:${business.source_version}`}
+        storageKey={`bizflow-working-capital:${session?.user.id}:${business.id}:${business.source_version}`}
+      >
+        {children}
+      </WorkingCapitalManualProvider>
     </PlatformContext.Provider>
   );
 }

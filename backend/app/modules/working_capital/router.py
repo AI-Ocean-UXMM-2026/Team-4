@@ -51,4 +51,7 @@ def simulate(payload: ScenarioRequest):
 
 @router.post("/reserve-plan")
 def create_reserve_plan(payload: ReservePlanRequest):
-    return {"result": reserve_plan(payload.monthly_essential_costs_mmk, payload.dedicated_reserve_mmk, payload.target_months, payload.monthly_contribution_mmk), "read_only": True, "records_changed": False}
+    return {"result": reserve_plan(payload.monthly_essential_costs_mmk, payload.dedicated_reserve_mmk,
+                                    payload.target_months, payload.monthly_contribution_mmk,
+                                    payload.protected_reserve_target_mmk),
+            "read_only": True, "records_changed": False}

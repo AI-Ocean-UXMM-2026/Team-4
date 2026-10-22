@@ -30,6 +30,11 @@ class ActualPayment(BaseModel):
 class LoanSummary(BaseModel):
     loan_id: str
     lender: str
+    loan_product: str | None = None
+    bank_id: str | None = None
+    loan_product_id: str | None = None
+    first_payment_date: date | None = None
+    payment_frequency: str | None = None
     repayment_model: str
     principal_mmk: Decimal
     disbursement_date: date

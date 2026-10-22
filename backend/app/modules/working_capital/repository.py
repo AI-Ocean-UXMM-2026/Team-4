@@ -42,6 +42,7 @@ class WorkingCapitalRepository:
             risk = inventory_risk(stock, average_30, None, safety_buffer_days)
             result.append({
                 "product_id": product_id, "name": product["name"], "current_stock_qty": stock,
+                "unit_cost_mmk": product.get("unit_cost_mmk"),
                 "average_units_sold_per_day_7": average_7, "average_units_sold_per_day_30": average_30,
                 "supplier_lead_days": None, "slow_moving": sales_30[product_id] == 0,
                 "slow_moving_rule": "No sales in the 30-day window ending at the latest inventory activity date.", **risk,
@@ -75,6 +76,7 @@ class WorkingCapitalRepository:
         receivables = None
         expense_candidates = []
         weekly_cost = None
+        available_cash = None
         if batch is not None and report_date is not None:
             products_by_id = {row["product_id"]: row for row in tables["Products"]}
             if inventory and all(
@@ -92,6 +94,7 @@ class WorkingCapitalRepository:
                 Period(start=report_date, end=report_date),
             )
             receivables = financial.actual.receivables_mmk
+            available_cash = financial.actual.cash_balance_mmk
             window_start = report_date - timedelta(days=29)
             recent_expenses = [
                 row for row in tables["Expenses"] if window_start <= row["date"] <= report_date
@@ -107,6 +110,7 @@ class WorkingCapitalRepository:
             "business_id": business_id, "source_version": business.version if business else None, "as_of": as_of,
             "status": "observed" if inventory else "insufficient_data", "inventory": inventory,
             "purchasing_budget": purchasing_budget(None, None, None),
+            "available_cash_mmk": available_cash,
             "unlock_cash": {
                 "as_of": report_date if batch is not None else None,
                 "stock_value_mmk": stock_value,

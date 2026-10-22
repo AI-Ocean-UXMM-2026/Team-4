@@ -2,9 +2,18 @@ import { useTranslation } from "@/lib/i18n";
 import type { Loan } from "../types";
 
 const mmk = (amount: string) => `${Number(amount).toLocaleString("en-US")} MMK`;
+const calendarDay = (value: string) => Date.parse(`${value}T00:00:00Z`);
+const displayDate = (value: string) => {
+  const [year, month, day] = value.split("-");
+  return `${month}/${day}/${year}`;
+};
 
-export function LoanSummary({ loan }: { loan: Loan }) {
+export function LoanSummary({ loan, asOf }: { loan: Loan; asOf: string }) {
   const { t } = useTranslation();
+  const hasNextPayment = loan.schedule_status === "available" && loan.next_payment_due_mmk !== null && loan.next_due_date !== null;
+  const daysRemaining = hasNextPayment
+    ? Math.round((calendarDay(loan.next_due_date!) - calendarDay(asOf)) / 86400000)
+    : null;
   const principal = Number(loan.principal_mmk);
   const paid = Number(loan.actual_principal_paid_mmk);
   const percent =
@@ -25,14 +34,45 @@ export function LoanSummary({ loan }: { loan: Loan }) {
           {t(loan.repayment_model.replaceAll("_", " "))}
         </span>
       </header>
-      <div className="my-6 grid items-center gap-5 lg:grid-cols-[1.5fr_1fr]">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{t("Outstanding principal")}</p>
-          <p className="mt-2 break-words text-3xl font-bold tracking-tight sm:text-4xl">
-            {mmk(loan.outstanding_principal_mmk)}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="mt-5">
+        <section aria-label={t("Next scheduled payment")} className="min-w-0 rounded-xl border border-primary/25 bg-primary/5 p-5 sm:p-6">
+          <h3 className="text-sm font-semibold text-primary">{t("Next scheduled payment")}</h3>
+          {hasNextPayment ? (
+            <>
+              <p className="mt-2 break-words text-3xl font-bold tracking-tight sm:text-4xl">{mmk(loan.next_payment_due_mmk!)}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <p className="text-sm">
+                  {t("Due")} (MM/DD/YYYY): <time dateTime={loan.next_due_date!} className="font-semibold">{displayDate(loan.next_due_date!)}</time>
+                </p>
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+                  {daysRemaining === 0 ? t("Due today") : daysRemaining! > 0
+                    ? t("{0} days remaining", { "0": daysRemaining! })
+                    : t("{0} days past scheduled date", { "0": Math.abs(daysRemaining!) })}
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">{t("Estimated installment. Payment status not linked to schedule.")}</p>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">{t(loan.schedule_status === "available" ? "No future installment scheduled" : "Complete loan terms to see the next payment")}</p>
+          )}
+          <p className="mt-2 text-xs text-muted-foreground">{t("As of")}: {displayDate(asOf)}</p>
+        </section>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <p>{t("Loan product")}: <strong>{loan.loan_product || t("Not recorded")}</strong></p>
+        <p>{t("Agreed annual interest rate")}: <strong>{loan.annual_rate_pct !== null ? `${Number(loan.annual_rate_pct)}%` : t("Not recorded")}</strong></p>
+        <p>{t("Term (months)")}: <strong>{loan.term_months ?? t("Not recorded")}</strong></p>
+        <p>{t("First payment date")}: <strong>{loan.first_payment_date || t("Not recorded")}</strong></p>
+        <p>{t("Payment frequency")}: <strong>{loan.payment_frequency ? t(loan.payment_frequency) : t("Not recorded")}</strong></p>
+      </div>
+      <div className="my-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="min-w-0 border-l pl-4">
+            <p className="text-xs text-muted-foreground">{t("Outstanding principal")}</p>
+            <p className="mt-1 break-words text-lg font-semibold sm:text-xl">
+              {mmk(loan.outstanding_principal_mmk)}
+            </p>
+          </div>
           <div className="min-w-0 border-l pl-4">
             <p className="text-xs text-muted-foreground">{t("Original principal")}</p>
             <p className="mt-1 break-words text-lg font-semibold sm:text-xl">
@@ -70,17 +110,6 @@ export function LoanSummary({ loan }: { loan: Loan }) {
           {mmk(loan.actual_interest_paid_mmk)}
         </span>
       </p>
-      {loan.schedule_status === "available" && loan.next_payment_due_mmk !== null && (
-        <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t pt-4 text-sm">
-          <p>
-            {t("Next scheduled payment:")} <strong>{mmk(loan.next_payment_due_mmk)}</strong>
-          </p>
-          <p>
-            {t("Due:")} <strong>{loan.next_due_date}</strong>
-          </p>
-          <p>{t("Payment status not linked to schedule")}</p>
-        </div>
-      )}
     </section>
   );
 }

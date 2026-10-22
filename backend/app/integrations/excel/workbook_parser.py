@@ -17,6 +17,11 @@ MAX_EXPANDED_BYTES = 40 * 1024 * 1024
 def _value(value, kind):
     if value is None or isinstance(value, bool):
         raise ValueError("A value is required")
+    if kind == "positive_months":
+        result = Decimal(str(value).strip())
+        if not result.is_finite() or result != result.to_integral_value() or not 1 <= result <= 1200:
+            raise ValueError("Enter a whole number of months between 1 and 1200")
+        return int(result)
     if kind == "date":
         if isinstance(value, datetime):
             if value.time().isoformat() != "00:00:00":
@@ -111,6 +116,18 @@ def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
                                 value = "partial"
                             values[key] = value
                         except (ValueError, TypeError, OverflowError) as exc:
+                            parsed.errors.append(issue(name, number, key, str(exc)))
+                    for key, kind in spec.get("payload_fields", {}).items():
+                        if key not in header:
+                            continue
+                        cell = cells[header.index(key)]
+                        if cell.value is None:
+                            continue
+                        try:
+                            if cell.data_type == "f":
+                                raise ValueError("Formula inputs are unsupported; paste the calculated value")
+                            values[key] = _value(cell.value, kind)
+                        except (ValueError, TypeError, OverflowError, InvalidOperation) as exc:
                             parsed.errors.append(issue(name, number, key, str(exc)))
                     parsed.sheets[name].append(WorkbookRow(number, values))
                     if len(parsed.errors) >= 200:

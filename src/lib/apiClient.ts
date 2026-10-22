@@ -56,12 +56,12 @@ export async function api<T>(path: string, options: RequestInit = {}, retried = 
     throw new ApiError(
       response.status,
       error?.code || "REQUEST_FAILED",
-      error?.message || "Request failed. Try again.",
+      error?.message || (typeof data.detail === "string" ? data.detail : "Request failed. Try again."),
       error?.details || [],
       retryAfterSeconds(response.headers.get("Retry-After")),
     );
   }
-  if (response.headers.get("content-type")?.includes("spreadsheetml"))
+  if (response.headers.get("content-type")?.includes("spreadsheetml") || response.headers.get("content-type")?.includes("application/octet-stream"))
     return (await response.blob()) as T;
   return (await response.json()) as T;
 }
