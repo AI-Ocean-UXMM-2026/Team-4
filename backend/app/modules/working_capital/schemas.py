@@ -28,6 +28,7 @@ class WorkingCapitalSnapshot(BaseModel):
     status: Literal["observed", "insufficient_data"]
     inventory: list[dict[str, Any]] = Field(default_factory=list)
     purchasing_budget: dict[str, Any]
+    available_cash_mmk: Decimal | None = None
     unlock_cash: UnlockCashInputs
     warnings: list[str] = Field(default_factory=list)
 
@@ -40,6 +41,7 @@ class ScenarioRequest(BaseModel):
 class ReservePlanRequest(BaseModel):
     monthly_essential_costs_mmk: Decimal = Field(ge=0)
     dedicated_reserve_mmk: Decimal = Field(ge=0)
+    protected_reserve_target_mmk: Decimal | None = Field(default=None, ge=0)
     target_months: int = Field(ge=1, le=6)
     monthly_contribution_mmk: Decimal = Field(ge=0)
 

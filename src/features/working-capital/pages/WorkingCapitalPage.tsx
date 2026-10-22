@@ -7,11 +7,15 @@ import { UnlockCashSimulator } from "../components/UnlockCashSimulator";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
 import { usePlatform } from "@/app/providers";
 import { Link } from "@tanstack/react-router";
+import { useWorkingCapitalManualInputs } from "../manualInputs";
+import { applyManualInputs, needsWorkingCapitalInput } from "../applyManualInputs";
+import { WorkingCapitalInputChoices } from "../components/WorkingCapitalInputChoices";
 
 export function WorkingCapitalPage() {
   const { t } = useTranslation();
 
   const { business } = usePlatform();
+  const { inputs: manualInputs } = useWorkingCapitalManualInputs();
   const { snapshot, error, loading, simulate, planReserve } = useWorkingCapital(
     business.id,
     business.source_version,
@@ -23,6 +27,8 @@ export function WorkingCapitalPage() {
         {t(error)}
       </p>
     );
+  const display = snapshot ? applyManualInputs(snapshot, manualInputs) : null;
+  const needsInput = needsWorkingCapitalInput(display);
   return (
     <main className="space-y-6">
       <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
@@ -36,16 +42,27 @@ export function WorkingCapitalPage() {
           )}
         </p>
       </header>
-      {snapshot?.warnings.length ? (
+      <WorkingCapitalInputChoices
+        inventory={snapshot?.inventory ?? []}
+        recordedCashMmk={snapshot?.available_cash_mmk ?? null}
+        complete={!needsInput}
+      />
+      {needsInput && snapshot?.warnings.length ? (
         <section
           className="bf-card border-warning/50 bg-warning/10"
           aria-label={t("Data limitations")}
         >
           <h2 className="text-sm font-semibold">{t("Information still needed")}</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            {snapshot.warnings.map((warning) => (
-              <li key={warning}>{t(warning)}</li>
-            ))}
+            {manualInputs ? (
+              <li>
+                {t(
+                  "Some inventory or cash inputs are still missing. Manual planning values do not change imported records or other financial reports.",
+                )}
+              </li>
+            ) : (
+              snapshot.warnings.map((warning) => <li key={warning}>{t(warning)}</li>)
+            )}
           </ul>
         </section>
       ) : null}
@@ -61,7 +78,7 @@ export function WorkingCapitalPage() {
             </p>
           </div>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground">
-            {snapshot?.inventory.length ?? 0} {t("products")}
+            {display?.inventory.length ?? 0} {t("products")}
           </span>
         </div>
         <div className="rounded-xl border bg-background p-4">
@@ -69,19 +86,38 @@ export function WorkingCapitalPage() {
             {t("Purchasing budget")}
           </p>
           <p className="mt-1 text-xl font-bold">
-            {snapshot?.purchasing_budget.budget_mmk == null
+            {display?.purchasing_budget.budget_mmk == null
               ? t("Insufficient data")
               : t("{0} MMK", {
-                  "0": Number(snapshot.purchasing_budget.budget_mmk).toLocaleString("en-US"),
+                  "0": Number(display.purchasing_budget.budget_mmk).toLocaleString("en-US"),
                 })}
           </p>
-          {snapshot?.purchasing_budget.budget_mmk == null && (
+          {display?.manualBudget && (
+            <p className="mt-1 text-xs text-primary">
+              {t("Source: Manual Entry")} ·{" "}
+              {t(
+                display.manualCash
+                  ? "Cash and deductions are planning assumptions"
+                  : "Deductions are planning assumptions",
+              )}
+            </p>
+          )}
+          {display?.purchasing_budget.budget_mmk == null && (
             <p className="mt-1 text-sm text-muted-foreground">
-              {t("Required cash inputs are missing from workbook v1.")}
+              {t(
+                manualInputs
+                  ? "Cash balance is unavailable. Enter available cash manually or complete expense payment details in Excel."
+                  : "Required cash inputs are missing from workbook v1.",
+              )}
             </p>
           )}
         </div>
-        <InventoryRiskTable items={snapshot?.inventory ?? []} />
+        {snapshot?.as_of && (
+          <p className="text-sm text-muted-foreground">
+            {t("Sales window ends on the latest recorded sale: {0}.", { "0": snapshot.as_of })}
+          </p>
+        )}
+        <InventoryRiskTable items={display?.inventory ?? []} />
         {!snapshot?.inventory.length && (
           <Link
             to="/data-source"
@@ -104,14 +140,15 @@ export function WorkingCapitalPage() {
       </div>
       <UnlockCashSimulator
         key={`${business.id}:${business.source_version}`}
-        inputs={snapshot?.unlock_cash}
+        inputs={display?.unlock_cash}
+        manualStock={!!manualInputs && Object.keys(manualInputs.stockLevels).length > 0}
       />
       <CashGapSimulator
         key={`${business.id}:${business.source_version}`}
         simulate={simulate}
         inputs={snapshot?.unlock_cash}
       />
-      <ReservePlanner planReserve={planReserve} />
+      <ReservePlanner planReserve={planReserve} inputs={manualInputs} />
     </main>
   );
 }

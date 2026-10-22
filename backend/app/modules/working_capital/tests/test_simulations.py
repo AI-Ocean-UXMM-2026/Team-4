@@ -39,3 +39,11 @@ def test_reserve_plan_matches_example_without_promising_readiness():
     assert result["target_mmk"] == Decimal("1500000.00")
     assert result["shortfall_mmk"] == Decimal("1200000.00")
     assert result["months_to_target"] == 12
+
+
+def test_manual_protected_target_overrides_lower_coverage_target():
+    result = reserve_plan(500_000, 300_000, 3, 100_000, 3_000_000)
+    assert result["target_mmk"] == Decimal("3000000.00")
+    assert result["shortfall_mmk"] == Decimal("2700000.00")
+    assert result["months_to_target"] == 27
+    assert reserve_plan(700_000, 300_000, 6, 100_000, 3_000_000)["target_mmk"] == Decimal("4200000.00")

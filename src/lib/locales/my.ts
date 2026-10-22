@@ -1,4 +1,8 @@
 export const my: Record<string, string> = {
+  Safe: "လက်ကျန်ကုန်ပစ္စည်း လုံလောက်သည်",
+  "Order Soon": "မကြာမီ မှာယူပါ",
+  "High Risk": "ကုန်ပြတ်နိုင်ခြေ မြင့်သည်",
+  "Source: Excel": "ရင်းမြစ်: Excel",
   "Workbook rejected. No business records were changed.":
     "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
   "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",
@@ -71,6 +75,9 @@ export const my: Record<string, string> = {
   ". Financial pages refresh after each successful import.":
     "။ ဖိုင်ထည့်သွင်းမှု အောင်မြင်တိုင်း ငွေကြေးစာမျက်နှာများ ပြန်လည်မွမ်းမံပါသည်။",
   "7 / 30-day sales": "၇ / ၃၀ ရက်အတွင်း အရောင်း",
+  "Average daily sales (last 30 days)": "တစ်နေ့ပျမ်းမျှရောင်းရသော အရေအတွက် (နောက်ဆုံး ၃၀ ရက်)",
+  "Sales window ends on the latest recorded sale: {0}.":
+    "ရောင်းအားတွက်ချက်သည့်ကာလ၏ နောက်ဆုံးရက်မှာ မှတ်တမ်းရှိ နောက်ဆုံးရောင်းချသည့်ရက် {0} ဖြစ်သည်။",
   "Action needed": "လုပ်ဆောင်ရန် လိုအပ်သည်",
   "Business insights": "လုပ်ငန်းဆိုင်ရာ သုံးသပ်ချက်များ",
   "Business settings": "လုပ်ငန်းဆိုင်ရာ သတ်မှတ်ချက်များ",
