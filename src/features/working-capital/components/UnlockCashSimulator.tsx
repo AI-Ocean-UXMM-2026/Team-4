@@ -27,7 +27,13 @@ function formatExactMmk(amount: bigint | null): string | undefined {
   return formatMmk(`${amount / MMK_SCALE}${fraction ? `.${fraction}` : ""}`);
 }
 
-export function UnlockCashSimulator({ inputs }: { inputs: Inputs | undefined }) {
+export function UnlockCashSimulator({
+  inputs,
+  manualStock = false,
+}: {
+  inputs: Inputs | undefined;
+  manualStock?: boolean;
+}) {
   const { t } = useTranslation();
   const [slowMovingPct, setSlowMovingPct] = useState(30);
   const [discountPct, setDiscountPct] = useState(20);
@@ -80,6 +86,11 @@ export function UnlockCashSimulator({ inputs }: { inputs: Inputs | undefined }) 
           <div>
             <h3 className="font-semibold">{t("Discount slow stock")}</h3>
             <p className="mt-2 text-xs text-muted-foreground">{t("Stock at recorded unit cost")}</p>
+            {manualStock && (
+              <p className="text-xs text-primary">
+                {t("Source: Manual Entry")} · {t("Planning stock level")}
+              </p>
+            )}
             <p className="mt-1 break-words text-base font-semibold tabular-nums">
               {formatMmk(inputs?.stock_value_mmk ?? null)}
             </p>

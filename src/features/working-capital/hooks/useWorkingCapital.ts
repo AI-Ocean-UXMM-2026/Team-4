@@ -6,9 +6,12 @@ export type InventoryRisk = {
   product_id: string;
   name: string;
   current_stock_qty: DecimalString;
+  unit_cost_mmk?: DecimalString | null;
   average_units_sold_per_day_7: DecimalString | null;
   average_units_sold_per_day_30: DecimalString | null;
   coverage_days: DecimalString | null;
+  supplier_lead_days?: number | null;
+  risk_threshold_days?: DecimalString | null;
   stockout_risk: boolean | null;
   status: "observed" | "insufficient_data" | "no_recent_sales";
   slow_moving: boolean;
@@ -21,6 +24,7 @@ export type WorkingCapitalSnapshot = {
   source_version: number | null;
   inventory: InventoryRisk[];
   purchasing_budget: { status: string; budget_mmk: DecimalString | null };
+  available_cash_mmk: DecimalString | null;
   unlock_cash: {
     as_of: string | null;
     stock_value_mmk: DecimalString | null;

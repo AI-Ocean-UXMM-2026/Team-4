@@ -80,7 +80,7 @@ def test_unlock_cash_inputs_use_only_selected_business_records(tmp_path):
             session.execute(PROJECTIONS["Settings"].insert().values(
                 source_id=f"source-{business_id}", business_id=business_id,
                 business_name=business_id, currency="MMK", opening_date=date(2026, 10, 1),
-                opening_cash_mmk=0, batch_id=f"batch-{business_id}",
+                opening_cash_mmk=1000 if business_id == "biz-a" else 0, batch_id=f"batch-{business_id}",
             ))
         session.execute(PROJECTIONS["Products"].insert().values(
             source_id="source-biz-a", business_id="biz-a", product_id="P1", name="Product",
@@ -100,7 +100,9 @@ def test_unlock_cash_inputs_use_only_selected_business_records(tmp_path):
             session.execute(PROJECTIONS["Expenses"].insert().values(
                 source_id=f"source-{business_id}", business_id=business_id,
                 expense_id=expense_id, date=date(2026, 10, 16), category="Marketing",
-                description=expense_id, amount_mmk=amount, batch_id=f"batch-{business_id}",
+                description=expense_id, amount_mmk=amount, payment_status="paid",
+                paid_date=date(2026, 10, 16), amount_paid_mmk=amount,
+                batch_id=f"batch-{business_id}",
             ))
     with sessions() as session:
         summary = WorkingCapitalRepository(session).summary("biz-a")
@@ -109,6 +111,8 @@ def test_unlock_cash_inputs_use_only_selected_business_records(tmp_path):
     assert inputs["stock_value_mmk"] == Decimal("800.00")
     assert inputs["receivables_mmk"] == Decimal("250.00")
     assert inputs["average_weekly_running_cost_mmk"] == Decimal("210.00")
+    assert summary["inventory"][0]["unit_cost_mmk"] == Decimal("100.00000")
+    assert summary["available_cash_mmk"] == Decimal("150.00")
     assert {item["expense_id"] for item in inputs["expense_candidates"]} == {"E1", "E2"}
     payload = WorkingCapitalSnapshot.model_validate(summary).model_dump(mode="json")
     assert payload["unlock_cash"]["receivables_mmk"] == "250.00000"

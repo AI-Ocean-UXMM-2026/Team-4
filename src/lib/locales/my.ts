@@ -28,6 +28,10 @@ export const my: Record<string, string> = {
     "သက်ဆိုင်ရာ လျှောက်လွှာလိုအပ်ချက်များကို ကြည့်ရန် Loans စာရွက်တွင် ပံ့ပိုးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ဖြည့်ပြီး တင်သွင်းပါ။",
   "Imported records and uploaded supporting files remain unverified by lenders.":
     "တင်သွင်းထားသောစာရင်းနှင့် အထောက်အထားဖိုင်များကို ဘဏ်က စစ်ဆေးအတည်ပြုထားခြင်း မရှိသေးပါ။",
+  Safe: "လက်ကျန်ကုန်ပစ္စည်း လုံလောက်သည်",
+  "Order Soon": "မကြာမီ မှာယူပါ",
+  "High Risk": "ကုန်ပြတ်နိုင်ခြေ မြင့်သည်",
+  "Source: Excel": "ရင်းမြစ်: Excel",
   "As of": "စာရင်းရက်စွဲ",
   "Next scheduled payment": "နောက်အရစ်ကျ ပေးရမည့်ပမာဏ",
   "{0} days remaining": "{0} ရက် ကျန်ပါသည်",
@@ -132,6 +136,9 @@ export const my: Record<string, string> = {
   ". Financial pages refresh after each successful import.":
     "။ ဖိုင်ထည့်သွင်းမှု အောင်မြင်တိုင်း ငွေကြေးစာမျက်နှာများ ပြန်လည်မွမ်းမံပါသည်။",
   "7 / 30-day sales": "၇ / ၃၀ ရက်အတွင်း အရောင်း",
+  "Average daily sales (last 30 days)": "တစ်နေ့ပျမ်းမျှရောင်းရသော အရေအတွက် (နောက်ဆုံး ၃၀ ရက်)",
+  "Sales window ends on the latest recorded sale: {0}.":
+    "ရောင်းအားတွက်ချက်သည့်ကာလ၏ နောက်ဆုံးရက်မှာ မှတ်တမ်းရှိ နောက်ဆုံးရောင်းချသည့်ရက် {0} ဖြစ်သည်။",
   "Action needed": "လုပ်ဆောင်ရန် လိုအပ်သည်",
   "Business insights": "လုပ်ငန်းဆိုင်ရာ သုံးသပ်ချက်များ",
   "Business settings": "လုပ်ငန်းဆိုင်ရာ သတ်မှတ်ချက်များ",
