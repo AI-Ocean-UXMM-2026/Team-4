@@ -13,12 +13,14 @@ import type { BusinessDetails } from "@/lib/contracts";
 import type { PasswordPolicy } from "./validation";
 import { Brand } from "@/components/layout/Brand";
 import { DisplayPreferences } from "@/components/layout/DisplayPreferences";
+import { AuroraBackdrop } from "@/components/layout/AuroraBackdrop";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
 
   return (
     <main className="bf-auth min-h-screen px-5 py-6 sm:px-10">
+      <AuroraBackdrop />
       <header className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-4">
         <Brand href="/sign-in" />
         <DisplayPreferences />
@@ -57,7 +59,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
               ].map(({ Icon, label }) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-white/10 bg-white/10 px-2 py-4"
+                  className="bf-flow-tile rounded-xl border border-white/10 bg-white/10 px-2 py-4"
                 >
                   <Icon size={21} strokeWidth={1.5} className="mx-auto mb-2 text-white" />
                   {t(label)}
@@ -65,6 +67,34 @@ export function AuthShell({ children }: { children: ReactNode }) {
               ))}
             </div>
           </div>
+          <svg
+            className="bf-flow-path mt-6 h-10 w-full"
+            viewBox="0 0 440 40"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
+              stroke="white"
+              strokeOpacity=".2"
+            />
+            <path
+              className="bf-flow-trace"
+              d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
+              stroke="url(#shay-flow-light)"
+              strokeWidth="2"
+              pathLength="1"
+            />
+            <circle cx="8" cy="29" r="3" fill="#c4b5fd" />
+            <circle cx="220" cy="11" r="4" fill="#ddd6fe" />
+            <circle cx="432" cy="29" r="3" fill="#99f6e4" />
+            <defs>
+              <linearGradient id="shay-flow-light">
+                <stop stopColor="#c4b5fd" />
+                <stop offset="1" stopColor="#99f6e4" />
+              </linearGradient>
+            </defs>
+          </svg>
           <div className="mt-8 flex items-center gap-3 text-xs text-violet-200">
             <span className="h-px w-8 bg-white/30" />
             {t("Less guesswork. More confidence.")}

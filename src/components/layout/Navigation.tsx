@@ -26,7 +26,7 @@ export function Navigation({
   return (
     <nav
       aria-label={t("Main navigation")}
-      className={`flex w-full flex-col gap-2 ${collapsed ? "p-3" : "p-4"}`}
+      className={`bf-nav flex w-full flex-col gap-2 ${collapsed ? "p-3" : "p-4"}`}
     >
       {navigation.map(({ to, label, icon: Icon }) => (
         <Link
@@ -37,7 +37,7 @@ export function Navigation({
           title={t(label)}
           activeOptions={{ exact: true }}
           activeProps={{
-            className: "bg-secondary text-primary shadow-[inset_0_0_0_1px_#6d28d912]",
+            className: "bf-nav-active bg-secondary text-primary shadow-[inset_0_0_0_1px_#6d28d912]",
           }}
           inactiveProps={{
             className: "text-muted-foreground hover:bg-muted hover:text-foreground",

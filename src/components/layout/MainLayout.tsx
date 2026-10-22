@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { usePlatform } from "@/app/providers";
 import { Navigation } from "./Navigation";
 import { TopBar } from "./TopBar";
+import { AuroraBackdrop } from "./AuroraBackdrop";
 import { ArrowUpRight, Menu, PanelLeft } from "lucide-react";
 import {
   DropdownMenu,
@@ -14,7 +15,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 type SidebarMode = "expanded" | "collapsed" | "hover";
-export function MainLayout({ children }: { children: ReactNode }) {
+export function MainLayout({ children, path }: { children: ReactNode; path: string }) {
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -47,6 +48,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
   const { business } = usePlatform();
   return (
     <div className="bf-app min-h-screen">
+      <AuroraBackdrop />
       <a
         href="#main-content"
         className="sr-only fixed left-4 top-4 z-50 rounded-xl bg-primary px-4 py-3 font-semibold text-white focus:not-sr-only"
@@ -153,7 +155,9 @@ export function MainLayout({ children }: { children: ReactNode }) {
           key={business.id}
           className="mx-auto max-w-[1280px] px-4 py-7 outline-none sm:px-8 sm:py-9"
         >
-          {children}
+          <div key={path} className="bf-page-enter">
+            {children}
+          </div>
         </main>
         <footer className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 border-t px-4 py-6 text-xs text-muted-foreground sm:px-8">
           <span className="font-semibold text-primary">{t("ရှေ့ဆက် — Shay Sett")}</span>

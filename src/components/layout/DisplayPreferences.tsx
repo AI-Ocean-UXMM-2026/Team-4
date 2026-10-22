@@ -21,12 +21,12 @@ export function DisplayPreferences() {
         type="button"
         aria-label={t(theme === "dark" ? "Switch to light mode" : "Switch to dark mode")}
         onClick={() => setPreferences({ theme: theme === "dark" ? "light" : "dark" })}
-        className="grid h-9 w-9 place-items-center rounded-full text-primary transition-colors hover:bg-secondary"
+        className="bf-theme-toggle grid h-9 w-9 place-items-center rounded-full text-primary transition-colors hover:bg-secondary"
       >
         {theme === "dark" ? (
-          <Sun size={17} aria-hidden="true" />
+          <Sun key="sun" size={17} aria-hidden="true" />
         ) : (
-          <Moon size={17} aria-hidden="true" />
+          <Moon key="moon" size={17} aria-hidden="true" />
         )}
       </button>
     </div>

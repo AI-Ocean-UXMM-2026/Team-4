@@ -41,17 +41,25 @@ function MetricCard({
       className={`bf-metric-card ${featured ? "bf-metric-featured" : ""} ${prominent ? "min-h-40" : ""}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">{t(label)}</p>
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${palette}`}>
+        <p className={`text-sm font-medium ${featured ? "text-white" : "text-muted-foreground"}`}>
+          {t(label)}
+        </p>
+        <span
+          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 ${featured ? "bg-white/15 text-white ring-white/25" : palette}`}
+        >
           <Icon size={17} aria-hidden="true" />
         </span>
       </div>
       <p
-        className={`mt-4 break-words font-semibold tracking-tight text-foreground ${prominent ? "text-2xl sm:text-[1.7rem]" : "text-xl"}`}
+        className={`mt-4 break-words font-semibold tracking-tight ${featured ? "text-white" : "text-foreground"} ${prominent ? "text-2xl sm:text-[1.7rem]" : "text-xl"}`}
       >
         {formatMmk(value)}
       </p>
-      <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{t(note)}</p>
+      <p
+        className={`mt-1.5 text-xs leading-5 ${featured ? "text-violet-100" : "text-muted-foreground"}`}
+      >
+        {t(note)}
+      </p>
     </article>
   );
 }
