@@ -6,6 +6,21 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
 
+class ExpenseCandidate(BaseModel):
+    expense_id: str
+    category: str
+    description: str | None = None
+    amount_mmk: Decimal = Field(ge=0)
+
+
+class UnlockCashInputs(BaseModel):
+    as_of: date | None = None
+    stock_value_mmk: Decimal | None = None
+    receivables_mmk: Decimal | None = None
+    expense_candidates: list[ExpenseCandidate] = Field(default_factory=list)
+    average_weekly_running_cost_mmk: Decimal | None = None
+
+
 class WorkingCapitalSnapshot(BaseModel):
     business_id: str
     source_version: int | None = None
@@ -13,6 +28,7 @@ class WorkingCapitalSnapshot(BaseModel):
     status: Literal["observed", "insufficient_data"]
     inventory: list[dict[str, Any]] = Field(default_factory=list)
     purchasing_budget: dict[str, Any]
+    unlock_cash: UnlockCashInputs
     warnings: list[str] = Field(default_factory=list)
 
 

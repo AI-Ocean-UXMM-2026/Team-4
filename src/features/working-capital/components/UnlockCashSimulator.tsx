@@ -1,36 +1,63 @@
-import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
-import { RangeField, ScenarioResult } from "./ScenarioUI";
+import { useTranslation } from "@/lib/i18n";
+import { formatMmk } from "@/features/financial/types";
+import type { WorkingCapitalSnapshot } from "../hooks/useWorkingCapital";
+import { RangeField } from "./ScenarioUI";
 
-type Response = { result: Record<string, unknown> };
+type Inputs = WorkingCapitalSnapshot["unlock_cash"];
+const MMK_SCALE = 10_000_000_000n;
 
-export function UnlockCashSimulator({
-  simulate,
-}: {
-  simulate: <T>(type: string, assumptions: Record<string, unknown>) => Promise<T>;
-}) {
+function scaledMmk(value: string | number | null | undefined): bigint | null {
+  if (value == null || !/^\d+(\.\d{1,10})?$/.test(String(value))) return null;
+  const [whole = "0", fraction = ""] = String(value).split(".");
+  return BigInt(whole) * MMK_SCALE + BigInt(fraction.padEnd(10, "0"));
+}
+
+function formatCashK(amount: bigint | null): string | null {
+  if (amount === null) return null;
+  if (amount > 0n && amount < 1_000n * MMK_SCALE) return `+ ${formatExactMmk(amount)}`;
+  const thousandMmk = 1_000n * MMK_SCALE;
+  const thousands = (amount + thousandMmk / 2n) / thousandMmk;
+  return `+ ${thousands.toLocaleString("en-US")} K`;
+}
+
+function formatExactMmk(amount: bigint | null): string | undefined {
+  if (amount === null) return undefined;
+  const fraction = (amount % MMK_SCALE).toString().padStart(10, "0").replace(/0+$/, "");
+  return formatMmk(`${amount / MMK_SCALE}${fraction ? `.${fraction}` : ""}`);
+}
+
+export function UnlockCashSimulator({ inputs }: { inputs: Inputs | undefined }) {
   const { t } = useTranslation();
-
-  const [discount, setDiscount] = useState(20);
-  const [sellThrough, setSellThrough] = useState(50);
+  const [slowMovingPct, setSlowMovingPct] = useState(30);
+  const [discountPct, setDiscountPct] = useState(20);
   const [collectionPct, setCollectionPct] = useState(50);
-  const [alreadyPaid, setAlreadyPaid] = useState(false);
-  const [result, setResult] = useState<Response | null>(null);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
+  const hasLongExpenseList = (inputs?.expense_candidates.length ?? 0) > 4;
 
-  async function run(type: string, assumptions: Record<string, unknown>) {
-    setPending(true);
-    setError(null);
-    setResult(null);
-    try {
-      setResult(await simulate<Response>(type, assumptions));
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not calculate this scenario.");
-    } finally {
-      setPending(false);
-    }
-  }
+  const stockValue = scaledMmk(inputs?.stock_value_mmk);
+  const receivables = scaledMmk(inputs?.receivables_mmk);
+  const weeklyCost = scaledMmk(inputs?.average_weekly_running_cost_mmk);
+  const stockCash =
+    stockValue === null
+      ? null
+      : (stockValue * BigInt(slowMovingPct) * BigInt(100 - discountPct) + 5_000n) / 10_000n;
+  const collectionCash =
+    receivables === null ? null : (receivables * BigInt(collectionPct) + 50n) / 100n;
+  const expenseCash = (inputs?.expense_candidates ?? []).reduce<bigint | null>((total, item) => {
+    if (!selectedExpenses.includes(item.expense_id)) return total;
+    const amount = scaledMmk(item.amount_mmk);
+    return total === null || amount === null ? null : total + amount;
+  }, 0n);
+  const totalCash =
+    stockCash === null || collectionCash === null || expenseCash === null
+      ? null
+      : stockCash + collectionCash + expenseCash;
+  const weeksTenths =
+    totalCash === null || weeklyCost === null || weeklyCost <= 0n
+      ? null
+      : (totalCash * 10n + weeklyCost / 2n) / weeklyCost;
+  const weeks = weeksTenths === null ? null : `${weeksTenths / 10n}.${weeksTenths % 10n}`;
 
   return (
     <section className="bf-card space-y-5">
@@ -39,55 +66,59 @@ export function UnlockCashSimulator({
         <h2 className="mt-1 text-xl font-bold">{t("Unlock hidden cash")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {t(
-            "Try example stock, collection, and expense choices. These numbers are illustrative, and projections do not change records.",
+            "Based on your imported records. Slider results are possible cash relief, not cash already received; your records do not change.",
           )}
         </p>
+        {inputs?.as_of && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("Recorded through")} {inputs.as_of}
+          </p>
+        )}
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+      <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4">
           <div>
             <h3 className="font-semibold">{t("Discount slow stock")}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("Example: 10 units · 100,000 MMK price · 90,000 MMK unit cost")}
+            <p className="mt-2 text-xs text-muted-foreground">{t("Stock at recorded unit cost")}</p>
+            <p className="mt-1 break-words text-base font-semibold tabular-nums">
+              {formatMmk(inputs?.stock_value_mmk ?? null)}
             </p>
           </div>
           <RangeField
-            label={t("Discount")}
-            value={discount}
-            min={0}
-            max={70}
-            unit="%"
-            onChange={setDiscount}
-          />
-          <RangeField
-            label={t("Expected sell-through")}
-            value={sellThrough}
+            label={t("Slow-moving share")}
+            value={slowMovingPct}
             min={0}
             max={100}
             unit="%"
-            onChange={setSellThrough}
+            onChange={setSlowMovingPct}
           />
-          <button
-            className="bf-button w-full"
-            disabled={pending}
-            onClick={() =>
-              void run("slow_stock", {
-                quantity: 10,
-                selling_price_mmk: 100000,
-                unit_cost_mmk: 90000,
-                discount_pct: discount,
-                sell_through_pct: sellThrough,
-              })
-            }
+          <RangeField
+            label={t("Discount")}
+            value={discountPct}
+            min={0}
+            max={70}
+            unit="%"
+            onChange={setDiscountPct}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t(
+              "Estimate applies the discount to recorded unit cost; an actual selling price may differ.",
+            )}
+          </p>
+          <p
+            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            title={formatExactMmk(stockCash)}
+            aria-label={stockCash === null ? t("Unavailable") : formatExactMmk(stockCash)}
           >
-            {t("Project stock sale")}
-          </button>
+            {formatCashK(stockCash) ?? t("Unavailable")}
+          </p>
         </div>
-        <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4">
           <div>
             <h3 className="font-semibold">{t("Collect receivables")}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("Example outstanding amount: 500,000 MMK")}
+            <p className="mt-2 text-xs text-muted-foreground">{t("Unpaid customer balances")}</p>
+            <p className="mt-1 break-words text-base font-semibold tabular-nums">
+              {formatMmk(inputs?.receivables_mmk ?? null)}
             </p>
           </div>
           <RangeField
@@ -98,65 +129,93 @@ export function UnlockCashSimulator({
             unit="%"
             onChange={setCollectionPct}
           />
-          <button
-            className="bf-button w-full"
-            disabled={pending}
-            onClick={() =>
-              void run("receivable_collection", {
-                outstanding_mmk: 500000,
-                collection_pct: collectionPct,
-              })
-            }
+          <p className="text-xs text-muted-foreground">
+            {t("Collection is a target, not a recorded receipt or a guarantee.")}
+          </p>
+          <p
+            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            title={formatExactMmk(collectionCash)}
+            aria-label={collectionCash === null ? t("Unavailable") : formatExactMmk(collectionCash)}
           >
-            {t("Project collection")}
-          </button>
+            {formatCashK(collectionCash) ?? t("Unavailable")}
+          </p>
         </div>
-        <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4 md:col-span-2 xl:col-span-1">
           <div>
             <h3 className="font-semibold">{t("Pause optional spending")}</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              {t("Example optional expense: 100,000 MMK")}
+              {t(
+                "Choose recent expenses you could avoid if they recur. Past bills remain payable.",
+              )}
             </p>
           </div>
-          <label className="flex min-h-12 items-center gap-3 rounded-xl border bg-background p-4 text-sm">
-            <input
-              type="checkbox"
-              checked={alreadyPaid}
-              onChange={(event) => setAlreadyPaid(event.target.checked)}
-              className="accent-primary"
-            />
-            {t("Expense already paid")}
-          </label>
-          <p className="text-xs text-muted-foreground">
-            {t("A paid expense cannot release future cash.")}
-          </p>
-          <button
-            className="bf-button w-full"
-            disabled={pending || alreadyPaid}
-            onClick={() =>
-              void run("expense_pause", {
-                amount_mmk: 100000,
-                is_paid: alreadyPaid,
-                is_immutable: false,
-                business_impact: "Pausing marketing may reduce future sales.",
-              })
-            }
+          <div
+            role="region"
+            aria-label={t("Optional expense items")}
+            tabIndex={0}
+            className={`overflow-y-auto overscroll-contain pr-1 touch-pan-y focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] ${hasLongExpenseList ? "h-60 md:h-72 xl:h-80" : "max-h-60 md:max-h-72 xl:max-h-80"}`}
           >
-            {t("Project spending avoided")}
-          </button>
+            <div className="space-y-2">
+              {inputs?.expense_candidates.length ? (
+                inputs.expense_candidates.map((item) => (
+                  <label
+                    key={item.expense_id}
+                    className="flex min-h-12 min-w-0 flex-wrap items-center gap-3 rounded-xl border bg-background p-3 text-sm sm:p-4"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedExpenses.includes(item.expense_id)}
+                      onChange={() =>
+                        setSelectedExpenses((current) =>
+                          current.includes(item.expense_id)
+                            ? current.filter((id) => id !== item.expense_id)
+                            : [...current, item.expense_id],
+                        )
+                      }
+                      className="accent-primary"
+                    />
+                    <span className="min-w-0 flex-1 break-words">
+                      {item.description || item.category}
+                    </span>
+                    <span className="max-w-full break-all text-xs text-muted-foreground">
+                      {formatMmk(item.amount_mmk)}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t("No recent expense records are available to review.")}
+                </p>
+              )}
+            </div>
+          </div>
+          <p
+            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            title={formatExactMmk(expenseCash)}
+            aria-label={expenseCash === null ? t("Unavailable") : formatExactMmk(expenseCash)}
+          >
+            {formatCashK(expenseCash) ?? t("Unavailable")}
+          </p>
         </div>
       </div>
-      {pending && (
-        <p role="status" className="text-sm text-muted-foreground">
-          {t("Calculating scenario…")}
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {t(error)}
-        </p>
-      )}
-      <ScenarioResult response={result} />
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary p-5 text-primary-foreground">
+        <div>
+          <p className="text-sm opacity-90">{t("Total cash unlocked")}</p>
+          <p className="font-display text-3xl font-bold" title={formatExactMmk(totalCash)}>
+            {formatCashK(totalCash) ?? t("Unavailable")}
+          </p>
+        </div>
+        <div className="text-sm">
+          <p>
+            {weeks === null
+              ? t("Running-cost coverage unavailable")
+              : t("≈ {0} extra weeks of running costs covered", { "0": weeks })}
+          </p>
+          <p className="mt-1 text-xs opacity-90">
+            {t("Based on average weekly recorded operating expenses in the latest 30-day window.")}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
