@@ -137,6 +137,11 @@ def test_concurrent_same_file_import_is_serialized(client, workbook_bytes):
 def test_template_is_personalized_and_public_reset_removed(client, workbook_bytes):
     template = client.get("/api/v1/data/template?business_id=tea-shop")
     assert template.status_code == 200
+    from openpyxl import load_workbook
+    from io import BytesIO
+    workbook = load_workbook(BytesIO(template.content), read_only=True)
+    assert "due_date" in [cell.value for cell in workbook["Purchases"][1]]
+    workbook.close()
     from app.integrations.excel.workbook_parser import parse_workbook
     assert parse_workbook(template.content).sheets["Settings"][0].values["business_id"] == "tea-shop"
     changed = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["E2"], "value", 80000))

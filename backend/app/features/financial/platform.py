@@ -51,7 +51,7 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
     warnings = [
         "Simplified operational report; taxes and depreciation excluded.",
         "Interest uses cash-paid amounts, not accrued interest.",
-        "Workbook v1 has no supplier due dates or loan schedules; obligations have unknown due dates.",
+        "Supplier due dates are optional in the workbook. Loan principal is not shown as due unless an installment schedule is recorded.",
         *ledger.warnings,
     ]
     revenue = sum((value(row, "unit_price_mmk") for row in period_sales), ZERO)
@@ -127,12 +127,30 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
         warnings.append("Cash adjustments are unavailable; cash balance cannot be established.")
     obligations = []
     for purchase in purchases:
-        outstanding = value(purchase, "unit_cost_mmk") - amount(purchase, "cash_paid_mmk") - total(
+        original = value(purchase, "unit_cost_mmk")
+        paid = amount(purchase, "cash_paid_mmk") + total(
             [row for row in payments if row["purchase_id"] == purchase["purchase_id"]], "amount_mmk")
+        outstanding = original - paid
         if outstanding > 0:
-            obligations.append(Obligation(kind="supplier", reference_id=purchase["purchase_id"], due_date=None, amount_mmk=outstanding))
+            obligations.append(Obligation(
+                kind="supplier",
+                reference_id=purchase["purchase_id"],
+                due_date=purchase.get("due_date"),
+                amount_mmk=outstanding,
+                original_amount_mmk=original,
+                amount_paid_mmk=paid,
+            ))
+    loan_principal = sum(
+        (amount(row, "principal_mmk") for row in tables["Loans"] if start <= row["date"] <= period.end), ZERO
+    ) - sum(
+        (amount(row, "principal_mmk") for row in tables["LoanPayments"] if start <= row["date"] <= period.end), ZERO
+    )
+    if loan_principal < 0:
+        raise ValueError("Principal payments exceed recorded loans")
+    if any(item.due_date is None for item in obligations):
+        warnings.append("Some supplier balances have no recorded due date and are excluded from dated payment categories.")
     if obligations_before:
-        warnings.append("Undated supplier balances are included for visibility, but are not classified as due before the cutoff.")
+        warnings.append("Only obligations with recorded due dates are classified against the requested cutoff.")
     gross = revenue - cogs if cogs is not None else None
     operating = gross - opex if gross is not None and opex is not None else None
     return FinancialSnapshot(
@@ -144,6 +162,8 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
         upcoming_obligations=obligations, data_quality=DataQuality(status="partial", missing_sheets=[], warnings=warnings),
         as_of=ledger.as_of, import_batch_id=ledger.import_batch_id, source_version=ledger.source_version,
         synthetic=ledger.synthetic,
+        loan_principal_outstanding_mmk=loan_principal,
+        loan_schedule_available=False,
     )
 
 
@@ -165,7 +185,11 @@ class PlatformFinancialService:
             raise ValueError("Cutoff precedes as_at")
         return calculate_platform_snapshot(self.ledger(business_id), Period(start=as_at, end=as_at), before)
 
-    def trends(self, business_id, end, months):
+    def trends(self, business_id, end, months=3, *, start=None, granularity=None):
+        if start is not None:
+            if start > end or granularity not in ("weekly", "monthly"):
+                raise ValueError("Invalid trend period")
+            return self._range_trends(business_id, start, end, granularity)
         if not 1 <= months <= 24:
             raise ValueError("months must be between 1 and 24")
         ledger = self.ledger(business_id)
@@ -190,5 +214,38 @@ class PlatformFinancialService:
                 operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
                 revenue_record_count=revenue_count,
                 operating_expense_record_count=expense_count,
+                is_partial=period.start.day != 1 or period.end.day != (date(period.end.year + (period.end.month == 12), period.end.month % 12 + 1, 1) - timedelta(days=1)).day,
             ))
-        return {"business_id": business_id, "points": points, "source_version": ledger.source_version, "as_of": ledger.as_of, "import_batch_id": ledger.import_batch_id, "synthetic": ledger.synthetic}
+        return {"business_id": business_id, "points": points, "granularity": "monthly", "source_version": ledger.source_version, "as_of": ledger.as_of, "import_batch_id": ledger.import_batch_id, "synthetic": ledger.synthetic}
+
+    def _range_trends(self, business_id, start, end, granularity):
+        ledger = self.ledger(business_id)
+        points = []
+        cursor = start
+        while cursor <= end:
+            if granularity == "weekly":
+                bucket_end = min(end, cursor + timedelta(days=6))
+                partial = (bucket_end - cursor).days < 6
+            else:
+                next_month = date(cursor.year + (cursor.month == 12), cursor.month % 12 + 1, 1)
+                bucket_end = min(end, next_month - timedelta(days=1))
+                partial = cursor.day != 1 or bucket_end.day != (next_month - timedelta(days=1)).day
+            period = Period(start=cursor, end=bucket_end)
+            snapshot = calculate_platform_snapshot(ledger, period)
+            settings = ledger.tables.get("Settings", [])
+            if not settings or not ledger.import_batch_id:
+                revenue_count = expense_count = None
+            else:
+                opening_date = settings[0]["opening_date"]
+                revenue_count = sum(1 for row in ledger.tables.get("Sales", []) if opening_date <= row["date"] and cursor <= row["date"] <= bucket_end)
+                expense_count = sum(1 for row in ledger.tables.get("Expenses", []) if opening_date <= row["date"] and cursor <= row["date"] <= bucket_end)
+            points.append(TrendPoint(
+                period=period,
+                revenue_mmk=snapshot.actual.revenue_mmk,
+                operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                revenue_record_count=revenue_count,
+                operating_expense_record_count=expense_count,
+                is_partial=partial,
+            ))
+            cursor = bucket_end + timedelta(days=1)
+        return {"business_id": business_id, "points": points, "granularity": granularity, "source_version": ledger.source_version, "as_of": ledger.as_of, "import_batch_id": ledger.import_batch_id, "synthetic": ledger.synthetic}

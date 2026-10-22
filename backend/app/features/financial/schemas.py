@@ -96,6 +96,9 @@ class Obligation(Record):
     due_date: date | None
     amount_mmk: Decimal = Field(ge=0)
     reference_id: str
+    original_amount_mmk: Decimal | None = Field(default=None, ge=0)
+    amount_paid_mmk: Decimal | None = Field(default=None, ge=0)
+    name: str | None = None
 
 
 class FinancialRecords(Record):
@@ -148,6 +151,8 @@ class FinancialSnapshot(Record):
     import_batch_id: str | None
     source_version: int | None = None
     synthetic: bool = False
+    loan_principal_outstanding_mmk: Decimal | None = None
+    loan_schedule_available: bool = False
 
 
 class TrendPoint(Record):
@@ -156,3 +161,4 @@ class TrendPoint(Record):
     operating_expenses_mmk: Decimal | None
     revenue_record_count: int | None
     operating_expense_record_count: int | None
+    is_partial: bool = False

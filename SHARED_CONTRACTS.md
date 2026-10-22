@@ -16,7 +16,7 @@ Every input row has one `business_id`, identical to Settings and the authorized 
 | Products | product_id | business_id, name, opening_stock, unit_cost_mmk |
 | Sales | sale_id | business_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk, unit_cost_at_sale_mmk (optional), cogs_mmk (optional) |
 | CustomerReceipts | receipt_id | business_id, date, sale_id, amount_mmk |
-| Purchases | purchase_id | business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk |
+| Purchases | purchase_id | business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk; optional due_date |
 | SupplierPayments | payment_id | business_id, date, purchase_id, amount_mmk |
 | Expenses | expense_id | business_id, date, category (free-text label), amount_mmk, description, payment_status (optional), paid_date (optional), amount_paid_mmk (optional) |
 | Loans | loan_id | business_id, date, lender, loan_type (source label), principal_mmk |
@@ -76,4 +76,4 @@ Read typed SQL tables via `app.db.models.PROJECTIONS` or business-scoped snapsho
 
 Frontend composition uses `src/app/routes.tsx` and `src/routes/`. All four feature pages use the active business provider. Import success invalidates snapshot/status/business, credit and AI query keys; Working Capital refetches when the business source version changes. AI analysis retains its source version and shows stale state until an explicit rerun. P4 upstream data access remains read-only.
 
-The P1–P4 branches were merged on the integration branch. The shared workbook v1 schema now accepts optional historical sale-cost and expense-settlement columns while remaining compatible with earlier workbooks. Missing loan terms, supplier due dates, stock lead times and historical cash inputs are reported as unavailable; no accounting profit or borrowing eligibility is inferred from incomplete records.
+The P1–P4 branches were merged on the integration branch. The shared workbook v1 schema accepts optional historical sale-cost and expense-settlement columns plus an optional supplier purchase due_date while remaining compatible with earlier workbooks. Loan installment schedules remain unavailable unless a reliable schedule is explicitly supplied; outstanding principal is reported separately and is not treated as due. Missing loan terms, supplier due dates, stock lead times and historical cash inputs are reported as unavailable; no accounting profit or borrowing eligibility is inferred from incomplete records.

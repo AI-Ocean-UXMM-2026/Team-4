@@ -67,10 +67,14 @@ supply source facts that the workbook lacks:
    the balance date, actual cash is null and unpaid-expense obligations cannot
    be established. Expenses are still reported as recognized costs on their
    recorded date. They are not silently treated as paid.
-3. Supplier due dates and loan schedules are absent. Outstanding supplier amounts
-   are shown with due_date=null and 'Due date unavailable'. They are not labeled
-   overdue or guaranteed due before a requested cutoff. Loan schedules and
-   expense due lists remain explicitly incomplete.
+3. Supplier due dates are optional. Existing workbooks remain valid; when a
+   recorded purchase due_date exists, its outstanding amount is classified using
+   the selected reporting end date. Missing dates remain unavailable and are not
+   guessed. Loan installment schedules are not part of the workbook-backed
+   platform contract, so loan principal is reported separately and never treated
+   as an installment due. The legacy calculation interface can consume validated
+   recorded schedules, but the authenticated workbook API does not currently
+   persist or supply them. Expense due lists also remain incomplete in that API.
 4. Interest is cash-paid interest, not accrued interest. Taxes and depreciation
    are excluded. This is a simplified operational report.
 5. Only an exact hash match for a bundled seed workbook and its matching seeded
@@ -78,9 +82,11 @@ supply source facts that the workbook lacks:
    mislabeled; the connected page displays the synthetic-data notice when this
    exact match is present.
 
-P5 and the feature owners can agree on a future schema extension to supply
-historical sold costs, expense settlement facts, supplier due dates and loan
-schedules. Shared files were not changed to force those extensions.
+The shared workbook contract now accepts an optional supplier purchase due_date.
+PostgreSQL deployments must apply `database/migrations/007_supplier_due_dates.sql`
+before importing that field. Local SQLite schema setup derives optional columns
+from the shared contract. A reliable loan schedule still needs an agreed source
+schema before it can appear in the authenticated workbook API.
 
 ## Validation
 
