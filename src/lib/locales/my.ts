@@ -600,8 +600,10 @@ export const my: Record<string, string> = {
   "Business records are changing. Refresh to continue.":
     "လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲနေပါသည်။ ဆက်ရန် ပြန်လည်မွမ်းမံပါ။",
   "What to do next": "နောက်တစ်ဆင့် လုပ်ဆောင်ရန်",
-  "Start with these actions, then check the evidence below. Verify source records before making a decision.":
-    "အောက်ပါအဆင့်များကို စတင်လုပ်ဆောင်ပြီး အထောက်အထားများကို စစ်ဆေးပါ။ ဆုံးဖြတ်ချက်မချမီ မူရင်းမှတ်တမ်းများကို အတည်ပြုပါ။",
+  "Next action": "လုပ်ဆောင်ရမည့်အဆင့်",
+  "Why this recommendation?": "ဤအကြံပြုချက်၏ အကြောင်းရင်းနှင့် အထောက်အထား",
+  "Start with these actions. Open each card for its evidence and limitations before making a decision.":
+    "အောက်ပါအဆင့်များကို စတင်လုပ်ဆောင်ပါ။ ဆုံးဖြတ်ချက်မချမီ အကြံပြုချက်တစ်ခုချင်းစီ၏ အထောက်အထားနှင့် ကန့်သတ်ချက်များကို ဖွင့်ကြည့်ပါ။",
   "Open Working Capital": "လုပ်ငန်းလည်ပတ်ငွေသို့ သွားရန်",
   "Open Credit Hub": "ချေးငွေစီမံမှုသို့ သွားရန်",
   "Stock items with no recent sales": "လတ်တလောအရောင်းမရှိသော ကုန်ပစ္စည်းအမျိုးအစား",
