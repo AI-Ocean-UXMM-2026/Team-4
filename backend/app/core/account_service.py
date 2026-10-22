@@ -2,6 +2,7 @@ from sqlalchemy import select, update
 
 from ..db.models import Business, Membership, User, uid
 from .account_schemas import BusinessInput
+from .errors import APIError
 
 
 def insert_if_absent(session, model, values, conflict):
@@ -32,6 +33,37 @@ def account_status(sessions, identity):
         return {"user": {"id": user.id, "email": identity.email, "full_name": user.full_name or suggested_name},
                 "onboarding_complete": bool(business and user.full_name and business.industry and business.city),
                 "pending_business": pending, "owned_business_id": business.id if business else None}
+
+
+def profile_result(user, business, identity):
+    name = identity.metadata.get("full_name")
+    suggested_name = name.strip()[:120] if isinstance(name, str) else ""
+    return {"user": {"id": user.id, "email": identity.email, "full_name": user.full_name or suggested_name},
+            "business": {"id": business.id, "name": business.name, "industry": business.industry or "",
+                         "city": business.city or "", "phone": business.phone or "", "address": business.address or "",
+                         "currency": business.currency} if business else None}
+
+
+def account_profile(sessions, identity):
+    with sessions.begin() as session:
+        user = profile(session, identity)
+        business = session.scalar(select(Business).where(Business.owner_id == identity.user_id))
+        return profile_result(user, business, identity)
+
+
+def update_profile(sessions, identity, data):
+    with sessions.begin() as session:
+        user = profile(session, identity)
+        # Membership alone does not authorize changes to another owner's profile.
+        business = session.scalar(select(Business).where(Business.owner_id == identity.user_id).with_for_update())
+        if data.business is not None and business is None:
+            raise APIError(409, "PROFILE_BUSINESS_MISSING", "Finish business setup before updating business details.")
+        user.full_name = data.full_name
+        if data.business is not None:
+            for field, value in data.business.model_dump().items():
+                setattr(business, field, (value or None) if field in ("phone", "address") else value)
+        session.flush()
+        return profile_result(user, business, identity)
 
 
 def complete_onboarding(sessions, identity, data):

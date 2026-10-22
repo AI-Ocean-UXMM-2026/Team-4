@@ -114,3 +114,11 @@ export type AccountStatus = {
   pending_business: BusinessDetails | null;
   owned_business_id: string | null;
 };
+export type UserProfile = {
+  user: AccountStatus["user"];
+  business: (BusinessDetails & { id: string }) | null;
+};
+export type ProfileUpdate = {
+  full_name: string;
+  business?: BusinessDetails;
+};

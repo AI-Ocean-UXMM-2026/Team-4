@@ -68,6 +68,16 @@ class Onboarding(BusinessInput):
         return value.strip() if isinstance(value, str) else value
 
 
+class ProfileUpdate(StrictInput):
+    full_name: str = Field(min_length=1, max_length=120)
+    business: BusinessInput | None = None
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def clean_name(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
 def check_password(password, settings):
     from .errors import APIError
     checks = {"lower": r"[a-z]", "upper": r"[A-Z]", "number": r"[0-9]", "symbol": r"[^A-Za-z0-9\s]"}

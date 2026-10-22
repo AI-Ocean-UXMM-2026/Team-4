@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   Database,
   Sparkles,
+  UserRound,
 } from "lucide-react";
 export const navigation = [
   { to: "/", label: "Financial Health", icon: ChartNoAxesCombined },
@@ -13,6 +14,7 @@ export const navigation = [
   { to: "/credit", label: "Credit Hub", icon: ClipboardCheck },
   { to: "/ai", label: "AI Analyzer", icon: Sparkles },
   { to: "/data-source", label: "Data Source", icon: Database },
+  { to: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 export function Navigation({
   onNavigate,

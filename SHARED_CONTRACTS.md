@@ -45,6 +45,8 @@ Business-scoped endpoints require `Authorization: Bearer <Supabase JWT>` and que
 | POST | /api/v1/auth/resend-verification | Provider resend (`type=signup`); neutral accepted result, explicit 429/503 failures |
 | POST | /api/v1/auth/forgot-password | Generic provider email recovery with fixed trusted callback |
 | GET | /api/v1/auth/me | Server-verified profile, onboarding state and validated business draft |
+| GET | /api/v1/auth/profile | Authenticated user's editable profile and owned business, as `{user,business}` |
+| POST | /api/v1/auth/profile | Save `{full_name,business?:BusinessInput}` and return `{user,business}` |
 | POST | /api/v1/auth/onboarding | Atomic idempotent empty-workspace creation for verified identity |
 | GET | /api/v1/config | Public feature/auth capabilities, no secrets |
 | GET | /api/v1/businesses | Current user's business memberships |
@@ -57,6 +59,8 @@ Business-scoped endpoints require `Authorization: Bearer <Supabase JWT>` and que
 | GET | /api/v1/data/files | Authorized OneDrive folders and .xlsx files (`folder_id` optional) |
 | POST / DELETE | /api/v1/data/link | Link `{drive_id,item_id}` / erase saved authorization and unlink |
 | POST | /api/v1/data/sync-now | Cloud eTag check and shared importer |
+
+Profile endpoints require a server-verified Supabase identity. The server derives the user's owned business from `owner_id`; a client-supplied business ID cannot select another business. Email addresses and user/business IDs are read-only. `BusinessInput` uses the existing business details accepted at onboarding. A user without an owned business may save their name alone; profile editing does not create a business. Updating profile or business contact details does not change imported workbook settings, ledger records, or the workbook `source_version`.
 
 Import result: `{import_batch_id,status,source_version,row_counts:{inserted,updated,unchanged},errors,warnings,created_at}`. Status is `success`, `up_to_date` or `failed`. Validation errors return HTTP 400 with the failed import result in `error.details[0]`. Each issue has `{sheet,row,field,reason}`; row 0 refers to workbook-level or retained-history issues. eTag no-op responses may omit batch ID/timestamp. Monetary/quantity snapshot values are exact decimal **strings**, dates ISO strings, timestamps UTC with offsets.
 

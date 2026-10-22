@@ -1,4 +1,29 @@
 export const my: Record<string, string> = {
+  "Your profile": "သင့်ကိုယ်ရေးအချက်အလက်",
+  "Manage your personal details and business information.":
+    "သင့်ကိုယ်ရေးအချက်အလက်နှင့် လုပ်ငန်းအချက်အလက်များကို စီမံပါ။",
+  Profile: "ကိုယ်ရေးအချက်အလက်",
+  "Personal details": "ကိုယ်ရေးအချက်အလက်များ",
+  "Business owner": "လုပ်ငန်းပိုင်ရှင်",
+  Account: "အကောင့်",
+  "Used to sign in to your account.": "သင့်အကောင့်သို့ ဝင်ရောက်ရန် အသုံးပြုသော အီးမေးလ်ဖြစ်သည်။",
+  "Keep your business information up to date.":
+    "သင့်လုပ်ငန်းအချက်အလက်များကို နောက်ဆုံးအခြေအနေနှင့်အညီ ပြင်ဆင်ထားပါ။",
+  "Save changes": "ပြင်ဆင်ချက်များကို သိမ်းရန်",
+  "Cancel changes": "ပြင်ဆင်ချက်များကို ပယ်ဖျက်ရန်",
+  "Profile saved.": "ကိုယ်ရေးအချက်အလက်ကို သိမ်းပြီးပါပြီ။",
+  "Saving profile…": "ကိုယ်ရေးအချက်အလက် သိမ်းနေသည်…",
+  "Loading your profile…": "သင့်ကိုယ်ရေးအချက်အလက်ကို ရယူနေသည်…",
+  "Unable to load your profile.": "သင့်ကိုယ်ရေးအချက်အလက်ကို မရယူနိုင်ပါ။",
+  "Your changes have not been saved. Try again.":
+    "သင့်ပြင်ဆင်ချက်များကို မသိမ်းနိုင်ပါ။ ထပ်မံကြိုးစားပါ။",
+  "Finish business setup before updating business details.":
+    "လုပ်ငန်းအချက်အလက်များကို မပြင်ဆင်မီ လုပ်ငန်းစတင်သတ်မှတ်ခြင်းကို အပြီးသတ်ပါ။",
+  "Profile initials": "အမည်အတိုကောက်",
+  "No business is linked to this profile yet.":
+    "ဤကိုယ်ရေးအချက်အလက်နှင့် ချိတ်ဆက်ထားသော လုပ်ငန်း မရှိသေးပါ။",
+  "You have unsaved changes.": "မသိမ်းရသေးသော ပြင်ဆင်ချက်များ ရှိပါသည်။",
+  "All changes saved.": "ပြင်ဆင်ချက်အားလုံးကို သိမ်းပြီးပါပြီ။",
   "Workbook rejected. No business records were changed.":
     "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
   "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",

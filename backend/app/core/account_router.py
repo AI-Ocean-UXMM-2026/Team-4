@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
-from .account_schemas import EmailInput, Onboarding, Registration, check_password
-from .account_service import account_status, complete_onboarding
+from .account_schemas import EmailInput, Onboarding, ProfileUpdate, Registration, check_password
+from .account_service import account_profile, account_status, complete_onboarding, update_profile
 from .auth_rate_limit import reserve_email_request, remember_provider_retry
 from .dependencies import current_identity
 from .errors import APIError
@@ -95,6 +95,16 @@ def forgot(body: EmailInput, request: Request):
 @router.get("/me")
 def me(request: Request, identity: Identity = Depends(current_identity)):
     return account_status(request.app.state.sessions, identity)
+
+
+@router.get("/profile")
+def get_profile(request: Request, identity: Identity = Depends(current_identity)):
+    return account_profile(request.app.state.sessions, identity)
+
+
+@router.post("/profile")
+def save_profile(body: ProfileUpdate, request: Request, identity: Identity = Depends(current_identity)):
+    return update_profile(request.app.state.sessions, identity, body)
 
 
 @router.post("/onboarding")
