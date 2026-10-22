@@ -60,6 +60,9 @@ def build_context(bundle: SnapshotBundle) -> dict:
     if working and working.get("business_id") != bundle.business_id:
         raise PermissionError("Cross-business working-capital snapshot")
     if working:
+        slow_stock = number(working.get("slow_moving_stock_count"))
+        if slow_stock is not None and slow_stock >= 0:
+            metrics["slow_moving_stock_count"] = slow_stock
         risks = working.get("inventory_risks") or []
         count = sum(
             1 for item in risks
@@ -78,6 +81,12 @@ def build_context(bundle: SnapshotBundle) -> dict:
     if credit:
         loans = credit.get("loans") or []
         metrics["loan_count"] = Decimal(len(loans))
+        outstanding = number(credit.get("outstanding_principal_mmk"))
+        missing_terms = number(credit.get("missing_schedule_terms_count"))
+        if outstanding is not None and outstanding >= 0:
+            metrics["outstanding_principal_mmk"] = outstanding
+        if missing_terms is not None and missing_terms >= 0:
+            metrics["missing_schedule_terms_count"] = missing_terms
         repayment = credit.get("repayment") or {}
         if loans and repayment.get("assessment") and repayment.get("assessment") != "unavailable":
             for source, target in (("available_cash_mmk", "repayment_available_cash_mmk"),

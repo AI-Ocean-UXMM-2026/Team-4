@@ -24,4 +24,8 @@ def get_ai_snapshot(business_id: str, sessions) -> dict:
             }
             for item in summary["inventory"]
         ],
+        "slow_moving_stock_count": sum(
+            1 for item in summary["inventory"]
+            if item.get("slow_moving") and item.get("current_stock_qty", 0) > 0
+        ),
     }

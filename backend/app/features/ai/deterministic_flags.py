@@ -34,6 +34,24 @@ def flags(context: dict) -> list[Insight]:
             "Check invoice terms and confirm expected collection dates.",
             "The workbook does not establish whether these balances are overdue.")
 
+    payables = values.get("payables_mmk")
+    if payables is not None and payables > 0:
+        add("supplier-balances", "working_capital", "medium",
+            "Review outstanding supplier balances",
+            "The financial snapshot records unpaid purchase balances.",
+            ["payables_mmk"],
+            "Confirm supplier payment terms before planning purchases or cash needs.",
+            "The workbook does not contain supplier due dates.")
+
+    slow_stock = values.get("slow_moving_stock_count")
+    if slow_stock is not None and slow_stock > 0:
+        add("slow-stock-review", "working_capital", "medium",
+            "Review stock with no recent sales",
+            "The inventory module found stock on hand with no sales in its observed thirty-day window.",
+            ["slow_moving_stock_count"],
+            "Check demand and consider a small, reversible sales promotion.",
+            "No recent sales does not establish that the stock is unsellable.")
+
     stock = values.get("stockout_review_count")
     if stock is not None and stock > 0:
         add("stockout-review", "working_capital", "medium",
@@ -52,6 +70,16 @@ def flags(context: dict) -> list[Insight]:
             ["repayment_available_cash_mmk", "repayment_due_mmk", "repayment_difference_mmk"],
             "Verify the repayment schedule and review cash plans with the lender.",
             "This is a planning indicator, not a default or eligibility finding.")
+
+    outstanding = values.get("outstanding_principal_mmk")
+    missing_terms = values.get("missing_schedule_terms_count")
+    if outstanding is not None and outstanding > 0 and missing_terms is not None and missing_terms > 0:
+        add("loan-terms-review", "credit", "medium",
+            "Complete the loan terms for repayment planning",
+            "Recorded principal remains outstanding, but the credit module lacks terms for a repayment schedule.",
+            ["outstanding_principal_mmk", "missing_schedule_terms_count"],
+            "Review the loan agreement for its rate and term before estimating future payments.",
+            "Recorded payments do not establish the future schedule or lender eligibility.")
 
     if context["warnings"] and values:
         metric = next(iter(values))
