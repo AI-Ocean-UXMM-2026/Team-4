@@ -1,6 +1,9 @@
-"""Recognize only the exact synthetic workbooks shipped with this repository."""
+"""Recognize bundled synthetic workbooks or one explicitly pinned local demo import."""
 
 import hashlib
+import os
+import re
+import secrets
 from functools import lru_cache
 from pathlib import Path
 
@@ -21,4 +24,13 @@ def _seed_hash(business_id: str) -> str | None:
 
 def is_synthetic_seed_workbook(business_id: str, content_hash: str | None) -> bool:
     expected = _seed_hash(business_id)
-    return bool(expected and content_hash and content_hash == expected)
+    if expected and content_hash and secrets.compare_digest(content_hash, expected):
+        return True
+    pinned_business = os.getenv("AI_SYNTHETIC_DEMO_BUSINESS_ID", "")
+    pinned_hash = os.getenv("AI_SYNTHETIC_DEMO_IMPORT_SHA256", "").lower()
+    return bool(
+        pinned_business == business_id
+        and re.fullmatch(r"[0-9a-f]{64}", pinned_hash)
+        and content_hash
+        and secrets.compare_digest(content_hash.lower(), pinned_hash)
+    )
