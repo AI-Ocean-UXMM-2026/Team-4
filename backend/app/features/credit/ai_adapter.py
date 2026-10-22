@@ -1,5 +1,7 @@
 """Versioned credit aggregates for P4; no lender or borrower identifiers."""
 
+from decimal import Decimal
+
 from sqlalchemy import select
 
 from ...db.models import Business
@@ -24,6 +26,13 @@ def get_ai_snapshot(business_id: str, sessions) -> dict:
         "as_of": snapshot["as_of"],
         "synthetic": False,
         "loans": [{} for _ in snapshot["loans"]],
+        "outstanding_principal_mmk": str(sum(
+            (loan["outstanding_principal_mmk"] for loan in snapshot["loans"]), Decimal(0)
+        )),
+        "missing_schedule_terms_count": sum(
+            loan["schedule_status"] == "missing_terms" and loan["outstanding_principal_mmk"] > 0
+            for loan in snapshot["loans"]
+        ),
         "repayment": {
             "assessment": "unavailable" if available is None or due is None else capacity["status"],
             "available_cash_mmk": available,

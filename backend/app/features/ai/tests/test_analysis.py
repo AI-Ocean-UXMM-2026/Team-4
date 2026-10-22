@@ -286,6 +286,28 @@ def test_optional_adapter_requires_matching_business_and_import(monkeypatch):
 
 
 @pytest.mark.anyio
+async def test_showcase_insights_cover_supplier_stock_and_loan_records():
+    snapshot = bundle(loan=True)
+    snapshot.working_capital = {
+        "business_id": "biz-a", "source_version": 2, "synthetic": True,
+        "slow_moving_stock_count": 1, "inventory_risks": [],
+    }
+    snapshot.credit["outstanding_principal_mmk"] = "1400000"
+    snapshot.credit["missing_schedule_terms_count"] = 1
+    snapshot.credit["repayment"]["assessment"] = "unavailable"
+    result = await AnalysisService(Provider(snapshot), Client()).analyze("biz-a")
+    assert result.status == "completed"
+    assert [item.id for item in result.insights] == [
+        "receivables-followup", "supplier-balances", "slow-stock-review",
+        "loan-terms-review", "data-quality",
+    ]
+    assert [(item.metric, item.value) for item in result.insights[3].evidence] == [
+        ("outstanding_principal_mmk", 1400000),
+        ("missing_schedule_terms_count", 1),
+    ]
+
+
+@pytest.mark.anyio
 async def test_unverified_overdue_claim_reverts_to_rules():
     class InventingClient(Client):
         async def explain(self, insights, context):
