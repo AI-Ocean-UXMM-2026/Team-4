@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, expect, it, vi } from "vitest";
 import { AIAnalyzerPage } from "./AIAnalyzerPage";
 
+const { run } = vi.hoisted(() => ({ run: vi.fn() }));
 vi.mock("@/lib/i18n", () => ({ useTranslation: () => ({ t: (text: string) => text }) }));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, children, ...props }: { to: string; children: React.ReactNode }) => (
@@ -12,7 +13,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 vi.mock("./useBusinessAnalysis", () => ({
   useBusinessAnalysis: () => ({
-    business: { source_version: 2 },
+    business: { id: "biz-a", source_version: 2 },
     report: {
       status: "rules_only",
       source_version: 2,
@@ -37,11 +38,27 @@ vi.mock("./useBusinessAnalysis", () => ({
     isLoading: false,
     error: null,
     isAnalyzing: false,
-    run: vi.fn(),
+    run,
   }),
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  run.mockClear();
+});
+
+it("requires explicit consent for AI and allows rules-only analysis", () => {
+  render(<AIAnalyzerPage />);
+  const aiButton = screen.getByRole("button", { name: "Analyze with AI" });
+  expect((aiButton as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Use rules only" }));
+  expect(run).toHaveBeenCalledWith(false);
+  expect(run).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("checkbox"));
+  expect((aiButton as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.click(aiButton);
+  expect(run).toHaveBeenCalledWith(true);
+});
 
 it("shows each finding once with its action and expandable evidence", () => {
   render(<AIAnalyzerPage />);

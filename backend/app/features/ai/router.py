@@ -1,10 +1,10 @@
 """P5 main.py discovers this authenticated router automatically."""
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Body, Depends, Query, Request
 
 from ...core.dependencies import authorize_business
 from ...core.errors import APIError
-from .schemas import AIAnalysis
-from .service import AnalysisService
+from .schemas import AIAnalysis, AnalyzeRequest
+from .service import AnalysisService, SourceVersionChanged
 from .snapshot_provider import SnapshotProvider
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
@@ -21,9 +21,17 @@ def analysis_service(request: Request):
 
 @router.post("/analyze", response_model=AIAnalysis)
 async def analyze(business_id: str = Depends(authorized_business),
+                  body: AnalyzeRequest | None = Body(default=None),
                   service: AnalysisService = Depends(analysis_service)):
     try:
-        return await service.analyze(business_id)
+        request_data = body or AnalyzeRequest()
+        return await service.analyze(
+            business_id,
+            expected_source_version=request_data.source_version,
+            provider_consent=request_data.provider_consent,
+        )
+    except SourceVersionChanged:
+        raise APIError(409, "SOURCE_CHANGED", "Business data changed. Reload and analyze the current import.") from None
     except PermissionError:
         raise APIError(403, "BUSINESS_FORBIDDEN", "Snapshot is outside this business.") from None
     except LookupError:

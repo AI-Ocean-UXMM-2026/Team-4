@@ -4,7 +4,7 @@ The backend exports `app.features.ai.router.router`. P5's `app/main.py` discover
 
 ## Endpoints
 
-- `POST /api/v1/ai/analyze?business_id=...` builds a new analysis, reusing an identical snapshot for 10 minutes.
+- `POST /api/v1/ai/analyze?business_id=...` builds a new analysis, reusing an identical snapshot and consent choice for 10 minutes. Send JSON `{ "source_version": 2, "provider_consent": true }` after the user explicitly opts in to external AI for the current import. Send `provider_consent: false` for rules-only analysis. A version mismatch returns 409.
 - `GET /api/v1/ai/insights/latest?business_id=...` returns the last report for the business or JSON `null`. `outdated` becomes true when the business import version changes.
 
 Both require authenticated business membership. The backend reads P1, P2, and P3 service snapshots and does not write workbook or financial tables.
@@ -13,7 +13,7 @@ Both require authenticated business membership. The backend reads P1, P2, and P3
 
 P1 is read through `PlatformFinancialService.financial_snapshot`. P2 and P3 export `app.features.<module>.ai_adapter.get_ai_snapshot(business_id, sessions)`. The adapters return business-scoped aggregates with the current `source_version`; P4 ignores an adapter result from another import version. Workbook v1 does not include supplier lead times or loan schedule terms, so those AI comparisons remain unavailable.
 
-P4 marks data synthetic only when the latest successful import has the exact SHA-256 hash of one of this repository's bundled seed workbooks for its matching demo business, or matches a local demo business ID and import hash explicitly pinned in backend environment variables. Other imported data remains rules-only by default.
+P4 marks data synthetic only when the latest successful import has the exact SHA-256 hash of one of this repository's bundled seed workbooks for its matching demo business, or matches a local demo business ID and import hash explicitly pinned in backend environment variables. Synthetic labeling affects the disclaimer, not eligibility for AI wording. Any uploaded business workbook can use AI wording after explicit consent for that import version.
 
 ## Environment and privacy
 
@@ -22,8 +22,9 @@ P4 marks data synthetic only when the latest successful import has the exact SHA
 - `OPENAI_MODEL`: optional; defaults to `gpt-5-mini`.
 - `OPENROUTER_API_KEY`: server-side OpenRouter key when using `openrouter`.
 - `OPENROUTER_MODEL`: optional; defaults to `openai/gpt-5-mini`. Choose a model/provider route that supports structured output.
-- `AI_ALLOW_REAL_DATA`: defaults to false. Enable only after the product discloses provider use and obtains the required consent. The server sends only allowlisted aggregate metrics and deterministic flags, never names, invoice rows, tokens, or workbook contents.
-- `AI_SYNTHETIC_DEMO_BUSINESS_ID` and `AI_SYNTHETIC_DEMO_IMPORT_SHA256`: optional local demo pin. Use the exact business ID and SHA-256 hash recorded for a successful synthetic workbook import. A new workbook import needs a new pin. This permits the selected AI provider for that one synthetic import without enabling real-data calls for other businesses.
+- `AI_SYNTHETIC_DEMO_BUSINESS_ID` and `AI_SYNTHETIC_DEMO_IMPORT_SHA256`: optional local demo pin. Use the exact business ID and SHA-256 hash recorded for a successful synthetic workbook import. A new workbook import needs a new pin only to display the synthetic demo disclaimer.
+
+The AI Analyzer page shows an unchecked consent checkbox for the current import. The server accepts an AI request only when the submitted import version still matches the loaded snapshot. It sends only allowlisted aggregate metrics and deterministic findings, never names, invoice rows, tokens, or workbook contents. The rules-only action does not call the external provider.
 
 The wording step uses the selected provider's Responses API with structured output and `store=false`. OpenRouter requests require a route that supports all parameters. It can change wording only. Category, priority, evidence, and values remain deterministic. Responses with digits or unsupported claims fall back to rules-only. Timeouts and missing keys also show rules-only results. Restart the backend after changing provider settings.
 
