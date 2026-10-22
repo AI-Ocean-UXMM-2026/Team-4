@@ -153,6 +153,20 @@ async def test_synthetic_report_uses_grounded_evidence_and_reuses_same_import():
 
 
 @pytest.mark.anyio
+async def test_model_wording_cannot_replace_specific_next_actions():
+    class VagueActionClient(Client):
+        async def explain(self, insights, context):
+            result = await super().explain(insights, context)
+            result["items"][0]["suggested_action"] = "Consider the situation carefully."
+            return result
+
+    result = await AnalysisService(Provider(bundle()), VagueActionClient()).analyze("biz-a")
+    assert result.status == "completed"
+    assert "customer receipts" in result.insights[0].suggested_actions[0]
+    assert "Consider the situation carefully" not in str(result.insights)
+
+
+@pytest.mark.anyio
 async def test_model_timeout_yields_honest_rules_only():
     result = await AnalysisService(Provider(bundle()), Client(error=TimeoutError())).analyze("biz-a")
     assert result.status == "rules_only"

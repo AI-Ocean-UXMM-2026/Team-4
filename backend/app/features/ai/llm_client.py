@@ -56,7 +56,8 @@ class AIWordingClient:
             "Do not include digits, spelled-out quantities, dates, percentages, guarantees, "
             "lending approval claims, customer intentions, or facts not present in the flags. "
             "Avoid the words will, overdue, eligible, insolvent, and bankrupt. "
-            "Explain uncertainty. Do not recommend borrowing as a default fix."
+            "Explain uncertainty. Copy each supplied suggested_action verbatim; it is kept "
+            "under server control. Do not recommend borrowing as a default fix."
         )
         if context.get("wording_retry"):
             instructions += (

@@ -36,9 +36,9 @@ def grounded_insights(result: dict, flags: list[Insight]) -> list[Insight]:
             raise ValueError("Invalid AI wording")
         if not (10 <= len(explanation) <= 280 and 10 <= len(action) <= 180):
             raise ValueError("AI wording length invalid")
-        if UNSUPPORTED.search(explanation) or UNSUPPORTED.search(action):
+        if UNSUPPORTED.search(explanation):
             raise ValueError("Unsupported numeric or guaranteed claim")
         accepted.append(by_id[identifier].model_copy(update={
-            "explanation": explanation.strip(), "suggested_actions": [action.strip()],
+            "explanation": explanation.strip(),
         }))
     return accepted

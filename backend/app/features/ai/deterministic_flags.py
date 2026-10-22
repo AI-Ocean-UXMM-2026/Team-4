@@ -22,7 +22,7 @@ def flags(context: dict) -> list[Insight]:
             "Review upcoming supplier payments",
             "Recorded cash is below dated supplier obligations within the next month.",
             ["cash_balance_mmk", "supplier_due_30d_mmk"],
-            "Confirm payment dates and discuss timing options with suppliers.",
+            "Check the dated supplier payments in Data Source, confirm each payment date, and discuss timing with suppliers before committing to new purchases.",
             "Other cash flows and undated obligations may change this comparison.")
 
     receivables = values.get("receivables_mmk")
@@ -31,7 +31,7 @@ def flags(context: dict) -> list[Insight]:
             "Review outstanding receivables",
             "The financial snapshot records unpaid customer balances.",
             ["receivables_mmk"],
-            "Check invoice terms and confirm expected collection dates.",
+            "Check unpaid sales and customer receipts in your workbook, confirm expected payment dates with customers, then import updated receipts after collection.",
             "The workbook does not establish whether these balances are overdue.")
 
     payables = values.get("payables_mmk")
@@ -40,7 +40,7 @@ def flags(context: dict) -> list[Insight]:
             "Review outstanding supplier balances",
             "The financial snapshot records unpaid purchase balances.",
             ["payables_mmk"],
-            "Confirm supplier payment terms before planning purchases or cash needs.",
+            "Check unpaid purchases and supplier payments in your workbook, confirm due dates with suppliers, then import updated payments when made.",
             "The workbook does not contain supplier due dates.")
 
     slow_stock = values.get("slow_moving_stock_count")
@@ -49,7 +49,7 @@ def flags(context: dict) -> list[Insight]:
             "Review stock with no recent sales",
             "The inventory module found stock on hand with no sales in its observed thirty-day window.",
             ["slow_moving_stock_count"],
-            "Check demand and consider a small, reversible sales promotion.",
+            "Open Working Capital to identify stock with no recent sales, check demand, and test a small promotion before buying more stock.",
             "No recent sales does not establish that the stock is unsellable.")
 
     stock = values.get("stockout_review_count")
@@ -58,7 +58,7 @@ def flags(context: dict) -> list[Insight]:
             "Review stock coverage",
             "Some products have recorded coverage below their supplied lead time.",
             ["stockout_review_count"],
-            "Check demand and supplier lead times before changing purchase plans.",
+            "Open Working Capital to review low stock coverage, then confirm demand and supplier lead times before placing an order.",
             "Coverage and lead-time estimates may change.")
 
     loan_count = values.get("loan_count")
@@ -68,7 +68,7 @@ def flags(context: dict) -> list[Insight]:
             "Review scheduled loan payment",
             "The credit module reports a negative cash comparison for a scheduled payment.",
             ["repayment_available_cash_mmk", "repayment_due_mmk", "repayment_difference_mmk"],
-            "Verify the repayment schedule and review cash plans with the lender.",
+            "Open Credit Hub, compare the recorded repayment with the lender statement, and discuss a cash plan with the lender.",
             "This is a planning indicator, not a default or eligibility finding.")
 
     outstanding = values.get("outstanding_principal_mmk")
@@ -78,7 +78,7 @@ def flags(context: dict) -> list[Insight]:
             "Complete the loan terms for repayment planning",
             "Recorded principal remains outstanding, but the credit module lacks terms for a repayment schedule.",
             ["outstanding_principal_mmk", "missing_schedule_terms_count"],
-            "Review the loan agreement for its rate and term before estimating future payments.",
+            "Open Credit Hub to review recorded repayments, then check the loan agreement for its rate and term before using a future payment estimate.",
             "Recorded payments do not establish the future schedule or lender eligibility.")
 
     if context["warnings"] and values:
@@ -86,6 +86,6 @@ def flags(context: dict) -> list[Insight]:
         add("data-quality", "data_quality", "low",
             "Check incomplete source data",
             "Some source information is missing or has quality warnings.",
-            [metric], "Review the source module before relying on this analysis.",
+            [metric], "Open Data Source to review import warnings, correct the source workbook where possible, and import it again before relying on missing figures.",
             "Insights use only fields that the source modules supplied.")
     return found[:5]

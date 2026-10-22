@@ -1,11 +1,11 @@
 export const my: Record<string, string> = {
   "Bank loan guide": "ဘဏ်ချေးငွေလမ်းညွှန်",
   "Report date": "အစီရင်ခံရက်",
-  "Industry": "လုပ်ငန်းအမျိုးအစား",
-  "City": "မြို့",
+  Industry: "လုပ်ငန်းအမျိုးအစား",
+  City: "မြို့",
   "Record category": "မှတ်တမ်းအမျိုးအစား",
-  "Records": "မှတ်တမ်းအရေအတွက်",
-  "Lender": "ငွေချေးပေးသူ",
+  Records: "မှတ်တမ်းအရေအတွက်",
+  Lender: "ငွေချေးပေးသူ",
   "Loan summary": "ချေးငွေအကျဉ်းချုပ်",
   "Principal repaid": "ပြန်ဆပ်ပြီးအရင်း",
   "Principal repayment progress": "အရင်းပြန်ဆပ်မှု အခြေအနေ",
@@ -340,8 +340,7 @@ export const my: Record<string, string> = {
   "Your first upload will appear here.": "ပထမဆုံး တင်ထားသောဖိုင်ကို ဤနေရာတွင် မြင်ရပါမည်။",
   "Your imported records": "သင်ထည့်သွင်းထားသော မှတ်တမ်းများ",
   "added ·": "အသစ်ထည့်သွင်း ·",
-  "{0} of {1} record categories already added":
-    "မှတ်တမ်း {0} / {1} မျိုး ထည့်ပြီး",
+  "{0} of {1} record categories already added": "မှတ်တမ်း {0} / {1} မျိုး ထည့်ပြီး",
   categories: "အမျိုးအစား",
   "months with records": "လစာ မှတ်တမ်း",
   priority: "ဦးစားပေး",
@@ -585,4 +584,37 @@ export const my: Record<string, string> = {
   "Insufficient data": "အချက်အလက် မလုံလောက်ပါ",
   "Business records are changing. Refresh to continue.":
     "လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲနေပါသည်။ ဆက်ရန် ပြန်လည်မွမ်းမံပါ။",
+  "What to do next": "နောက်တစ်ဆင့် လုပ်ဆောင်ရန်",
+  "Start with these actions, then check the evidence below. Verify source records before making a decision.":
+    "အောက်ပါအဆင့်များကို စတင်လုပ်ဆောင်ပြီး အထောက်အထားများကို စစ်ဆေးပါ။ ဆုံးဖြတ်ချက်မချမီ မူရင်းမှတ်တမ်းများကို အတည်ပြုပါ။",
+  "Open Working Capital": "လုပ်ငန်းလည်ပတ်ငွေသို့ သွားရန်",
+  "Open Credit Hub": "ချေးငွေစီမံမှုသို့ သွားရန်",
+  "Stock items with no recent sales": "လတ်တလောအရောင်းမရှိသော ကုန်ပစ္စည်းအမျိုးအစား",
+  "Outstanding loan principal": "ပြန်ဆပ်ရန်ကျန်သော ချေးငွေအရင်း",
+  "Loans without schedule terms": "ပြန်ဆပ်မှုအစီအစဉ်တွက်ရန် အချက်အလက်မပြည့်သော ချေးငွေများ",
+  "Review upcoming supplier payments": "မကြာမီ ပေးရမည့် ကုန်ပေးသွင်းသူငွေများကို စစ်ဆေးပါ",
+  "Review outstanding receivables": "ဖောက်သည်ထံမှ ရရန်ကျန်ငွေများကို စစ်ဆေးပါ",
+  "Review outstanding supplier balances": "ကုန်ပေးသွင်းသူထံ ပေးရန်ကျန်ငွေများကို စစ်ဆေးပါ",
+  "Review stock with no recent sales": "လတ်တလောအရောင်းမရှိသော ကုန်လက်ကျန်ကို စစ်ဆေးပါ",
+  "Review stock coverage": "ကုန်လက်ကျန် လုံလောက်မှုကို စစ်ဆေးပါ",
+  "Review scheduled loan payment": "စီစဉ်ထားသော ချေးငွေပြန်ဆပ်မှုကို စစ်ဆေးပါ",
+  "Complete the loan terms for repayment planning":
+    "ပြန်ဆပ်မှုစီစဉ်ရန် ချေးငွေသတ်မှတ်ချက်များကို စစ်ဆေးပါ",
+  "Check incomplete source data": "မပြည့်စုံသော ရင်းမြစ်အချက်အလက်များကို စစ်ဆေးပါ",
+  "Check the dated supplier payments in Data Source, confirm each payment date, and discuss timing with suppliers before committing to new purchases.":
+    "အချက်အလက်ရင်းမြစ်ရှိ ရက်စွဲပါသော ကုန်ပေးသွင်းသူငွေပေးချေမှုများကို စစ်ဆေးပါ။ ပေးချေရမည့်ရက်များကို အတည်ပြုပြီး ဝယ်ယူမှုအသစ်မလုပ်မီ ပေးသွင်းသူများနှင့် ညှိနှိုင်းပါ။",
+  "Check unpaid sales and customer receipts in your workbook, confirm expected payment dates with customers, then import updated receipts after collection.":
+    "Excel ဖိုင်ရှိ မရသေးသောအရောင်းငွေနှင့် ဖောက်သည်ငွေလက်ခံမှုများကို စစ်ဆေးပါ။ ဖောက်သည်များနှင့် ငွေရမည့်ရက်ကို အတည်ပြုပြီး ငွေရရှိပြီးပါက ပြင်ဆင်ထားသောဖိုင်ကို ပြန်တင်ပါ။",
+  "Check unpaid purchases and supplier payments in your workbook, confirm due dates with suppliers, then import updated payments when made.":
+    "Excel ဖိုင်ရှိ မပေးချေရသေးသော ဝယ်ယူမှုများနှင့် ပေးသွင်းသူငွေပေးချေမှုများကို စစ်ဆေးပါ။ ပေးရမည့်ရက်ကို အတည်ပြုပြီး ငွေပေးပြီးပါက ပြင်ဆင်ထားသောဖိုင်ကို ပြန်တင်ပါ။",
+  "Open Working Capital to identify stock with no recent sales, check demand, and test a small promotion before buying more stock.":
+    "လုပ်ငန်းလည်ပတ်ငွေစာမျက်နှာတွင် လတ်တလောအရောင်းမရှိသော ကုန်ပစ္စည်းကို ရှာပါ။ ဝယ်လိုအားကို စစ်ဆေးပြီး ကုန်ထပ်မဝယ်မီ ဈေးလျှော့ရောင်းမှုအသေးစားကို နမူနာဖြင့် စမ်းကြည့်ပါ။",
+  "Open Working Capital to review low stock coverage, then confirm demand and supplier lead times before placing an order.":
+    "လုပ်ငန်းလည်ပတ်ငွေစာမျက်နှာတွင် ကုန်လက်ကျန်လုံလောက်မှုကို စစ်ဆေးပါ။ အော်ဒါမတင်မီ ဝယ်လိုအားနှင့် ပေးသွင်းသူ၏ ပို့ဆောင်ချိန်ကို အတည်ပြုပါ။",
+  "Open Credit Hub, compare the recorded repayment with the lender statement, and discuss a cash plan with the lender.":
+    "ချေးငွေစီမံမှုစာမျက်နှာတွင် မှတ်တမ်းပါ ပြန်ဆပ်ငွေကို ချေးငွေပေးသူ၏စာရင်းနှင့် နှိုင်းယှဉ်ပြီး ငွေသားအစီအစဉ်ကို ချေးငွေပေးသူနှင့် ဆွေးနွေးပါ။",
+  "Open Credit Hub to review recorded repayments, then check the loan agreement for its rate and term before using a future payment estimate.":
+    "ချေးငွေစီမံမှုစာမျက်နှာတွင် မှတ်တမ်းပါ ပြန်ဆပ်မှုများကို စစ်ဆေးပါ။ နောင်ပေးချေရမည့်ငွေကို ခန့်မှန်းမီ ချေးငွေစာချုပ်ရှိ အတိုးနှုန်းနှင့် သက်တမ်းကို စစ်ဆေးပါ။",
+  "Open Data Source to review import warnings, correct the source workbook where possible, and import it again before relying on missing figures.":
+    "အချက်အလက်ရင်းမြစ်တွင် တင်သွင်းမှုသတိပေးချက်များကို စစ်ဆေးပါ။ မူရင်း Excel ဖိုင်တွင် ပြင်နိုင်သည့်အချက်များကို ပြင်ပြီး ပြန်တင်ပါ။ မရှိသေးသောကိန်းဂဏန်းများအပေါ် အခြေခံ၍ မဆုံးဖြတ်ပါနှင့်။",
 };
