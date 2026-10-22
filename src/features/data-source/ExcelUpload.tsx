@@ -1,21 +1,41 @@
 import { useTranslation } from "@/lib/i18n";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
 import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
 import { WorkbookBusinessHelp } from "./WorkbookBusinessHelp";
-import loanCatalog from "../../../shared/contracts/loan-products.json";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
   const { business, imported } = usePlatform();
   const [file, setFile] = useState<File | null>(null);
+  const [lastWorkbook, setLastWorkbook] = useState("");
+  useEffect(() => {
+    setFile(null);
+    setResult(null);
+    setError("");
+    setReplaceOmitted(false);
+    try {
+      setLastWorkbook(localStorage.getItem(`bizflow-last-workbook:${business.id}`) || "");
+    } catch {
+      setLastWorkbook("");
+    }
+  }, [business.id]);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [replaceOmitted, setReplaceOmitted] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
+  const chooseFile = (next: File | null) => {
+    if (busy) return;
+    setError(""); setResult(null);
+    if (next && (!next.name.toLowerCase().endsWith(".xlsx") || next.size > maxBytes)) {
+      setFile(null); setError("Choose an .xlsx file within the size limit."); return;
+    }
+    setFile(next);
+  };
   const businessMismatch = result?.errors.some(
     (issue) => issue.field === "business_id" && issue.reason === "Row belongs to another business",
   );
@@ -43,44 +63,51 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once. Rows omitted from an upload are kept unless you choose full replacement.",
         )}
       </p>
-      <details className="mb-5 rounded-xl border p-4 text-sm">
-        <summary className="cursor-pointer font-semibold">{t("Import an existing bank loan")}</summary>
-        <p className="mt-3 text-muted-foreground">{t("In Loans, supply bank_id, loan_product_id, loan_product, annual_rate_pct, term_months, first_payment_date and payment_frequency together. Use the signed agreement rate: enter 12 for 12% annually.")}</p>
-        <p className="mt-2 text-muted-foreground">{t("Monthly reducing-balance estimates require the first payment one month after disbursement. Other repayment arrangements need the lender schedule.")}</p>
-        <ul className="mt-3 space-y-2">
-          {loanCatalog.banks.map(bank => (
-            <li key={bank.id}>
-              <strong>{bank.name} ({bank.id})</strong>
-              <ul className="ml-5 list-disc">
-                {bank.products.map(product => <li key={product.id}>{product.name} — {product.id}</li>)}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      </details>
-      <label className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6">
+      <p className="mb-5 text-sm text-muted-foreground">
+        {t("Before importing, complete one Settings row: business_id, business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
+      </p>
+      <div role="group" aria-label={t("Paste Excel file here")} tabIndex={0}
+        className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onDragOver={event => event.preventDefault()}
+        onDrop={event => {
+          event.preventDefault();
+          const dropped = event.dataTransfer.files[0];
+          if (dropped) chooseFile(dropped);
+        }}
+        onPaste={event => {
+          if (busy) return;
+          event.preventDefault();
+          const pasted = event.clipboardData.files[0] || Array.from(event.clipboardData.items).find(item => item.kind === "file")?.getAsFile();
+          if (pasted) chooseFile(pasted);
+          else setError("Copy the .xlsx file itself, then paste here. Copied cells and file paths are not supported.");
+        }}>
+      <div className="block">
         <span className="mb-3 block text-sm font-semibold">
           {t("Choose .xlsx file · up to")} {Math.round(maxBytes / 1024 / 1024)} {t("MB")}
         </span>
         <input
+          ref={fileInput}
           aria-label={t("Excel workbook")}
           type="file"
           accept=".xlsx"
           disabled={busy}
-          className="bf-file-input block w-full text-sm"
+          className="hidden"
           onChange={(event) => {
-            setError("");
-            setResult(null);
-            const next = event.target.files?.[0] || null;
-            if (next && (!next.name.toLowerCase().endsWith(".xlsx") || next.size > maxBytes)) {
-              setFile(null);
-              setError("Choose an .xlsx file within the size limit.");
-              return;
-            }
-            setFile(next);
+            const selected = event.target.files?.[0];
+            if (selected) chooseFile(selected);
+            event.target.value = "";
           }}
         />
-      </label>
+        <button type="button" disabled={busy} className="bf-button-secondary" onClick={() => fileInput.current?.click()}>
+          {t(file ? "Change file" : "Browse files")}
+        </button>
+      </div>
+      <p className="mt-3 text-sm text-muted-foreground">{t("Copy an .xlsx file, click this area, then press Ctrl+V to paste.")}</p>
+      <p aria-live="polite" className="mt-2 break-all text-sm font-medium">
+        {file ? <>{t("Selected file:")} {file.name}</> : lastWorkbook ? <>{t("Last imported workbook:")} {lastWorkbook}</> : t("No workbook selected. Browse, paste or drop an .xlsx file here.")}
+      </p>
+      {!file && lastWorkbook && <p className="mt-2 text-sm text-muted-foreground">{t("Select the workbook again to import changes. Your previously imported data is saved.")}</p>}
+      </div>
       <label className="mt-4 flex items-start gap-3 rounded-xl border p-3 text-sm">
         <input
           type="checkbox"
@@ -110,15 +137,20 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
               const form = new FormData();
               form.append("file", file);
               const uploadPath = businessPath("upload", business.id);
-              setResult(
-                await api<ImportResult>(
+              const uploadResult = await api<ImportResult>(
                   replaceOmitted ? `${uploadPath}&replace_omitted=true` : uploadPath,
                   {
                     method: "POST",
                     body: form,
                   },
-                ),
-              );
+                );
+              setResult(uploadResult);
+              if (uploadResult.status !== "failed") {
+                setLastWorkbook(file.name);
+                try {
+                  localStorage.setItem(`bizflow-last-workbook:${business.id}`, file.name);
+                } catch { /* Import still succeeds when browser storage is unavailable. */ }
+              }
               await imported();
             } catch (failure) {
               setError(failure instanceof Error ? failure.message : "Import failed");

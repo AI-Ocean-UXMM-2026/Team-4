@@ -87,6 +87,13 @@ export type WorkbookTables = {
     principal_mmk: DecimalString;
     interest_mmk: DecimalString;
   })[];
+  CashBalances?: {
+    balance_id: string;
+    business_id: string;
+    as_of_date: string;
+    cash_on_hand_mmk: DecimalString;
+    bank_balance_mmk: DecimalString;
+  }[];
   CashAdjustments: (Dated & {
     adjustment_id: string;
     direction: "in" | "out";

@@ -1,9 +1,11 @@
 import { useTranslation } from "@/lib/i18n";
-import type { CreditSummary, Loan } from "../types";
+import type { ApplicationDocument, CreditSummary, Loan } from "../types";
 import { importedApplication } from "../importedApplication";
 import { applicationProductName, applicationRequirements } from "./BankLoanGuide";
 
-export function CreditPrintReport({ data, loan }: { data: CreditSummary; loan?: Loan | undefined }) {
+export function CreditPrintReport({ data, loan, files = [], filesStatus = "ready" }: {
+  data: CreditSummary; loan?: Loan | undefined; files?: ApplicationDocument[]; filesStatus?: "ready" | "loading" | "error";
+}) {
   const { t, language } = useTranslation();
   const report = data.preparation_report;
   const application = importedApplication(loan);
@@ -67,6 +69,29 @@ export function CreditPrintReport({ data, loan }: { data: CreditSummary; loan?: 
             )}
           </p>
         )}
+      </section>
+      <section>
+        <h2>{t("Uploaded application files")}</h2>
+        <p>{t("Files for the selected bank and product. Uploads are not lender verification.")}</p>
+        {filesStatus !== "ready" ? <p>{t(filesStatus === "error" ? "Application files could not be loaded. Refresh before printing." : "Loading the latest application files…")}</p> : files.length ? (
+          <>
+            <p>{t("Last file uploaded")}: {new Date(Math.max(...files.map(file => Date.parse(file.created_at)))).toLocaleString("en-US", {timeZone: "Asia/Yangon", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"})} (Myanmar)</p>
+            <table>
+              <thead><tr><th>{t("Requirement")}</th><th>{t("File name")}</th><th>{t("Uploaded at (Myanmar time)")}</th></tr></thead>
+              <tbody>{[...files].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).map(file => {
+                const index = /^doc-(\d+)$/.exec(file.requirement_key)?.[1];
+                const requirement = index !== undefined ? requirements[Number(index)] : undefined;
+                const category = data.readiness.find(item => item.category === file.requirement_key);
+                return <tr key={file.id}>
+                  <td>{requirement ? requirement[language === "my" ? 1 : 0] : category ? t(category.title) : file.requirement_key}</td>
+                  <td>{file.filename}<br />{Math.ceil(file.size / 1024)} KB · {t("Uploaded · not verified")}</td>
+                  <td>{new Date(file.created_at).toLocaleString("en-US", {timeZone: "Asia/Yangon", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"})}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+            <p className="report-note">{t("This report lists attachments; the original file contents are not embedded.")}</p>
+          </>
+        ) : <p>{t("No application files uploaded for this bank and product.")}</p>}
       </section>
       <section>
         <h2>1. {t("Record preparation progress")}</h2>

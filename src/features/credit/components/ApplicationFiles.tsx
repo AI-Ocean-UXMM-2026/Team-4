@@ -28,7 +28,7 @@ export function ApplicationFiles({ businessId, bank, productId, documents, recor
   const requirements = documents.map((label, index) => ({key: `doc-${index}`, label, category: records.length ? categoryFor(label[0]) : "lender_documents"}));
   const run = async (action: () => Promise<void>) => {
     setError(""); setBusy(true);
-    try { await action(); } catch (failure) { setError(failure instanceof Error ? failure.message : "Upload failed"); }
+    try { await action(); await queryClient.invalidateQueries({queryKey: ["saved-applications", businessId]}); } catch (failure) { setError(failure instanceof Error ? failure.message : "Upload failed"); }
     finally { setBusy(false); }
   };
   const fileRow = (key: string, label: string) => <div key={key} className="space-y-2 border-t pt-3">
@@ -47,7 +47,6 @@ export function ApplicationFiles({ businessId, bank, productId, documents, recor
     </label>
     {uploaded.filter(file => file.requirement_key === key).map(file => <div key={file.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-secondary/40 p-2 text-xs">
       <span className="min-w-0 break-all">{file.filename} · {Math.ceil(file.size / 1024)} KB</span>
-      <span className="text-muted-foreground">{copy(["Uploaded · not verified", "ဖိုင်တင်ပြီး · အတည်မပြုရသေး"])}</span>
       <button className="bf-button-link" disabled={busy} onClick={() => void run(async () => {
         const blob = await api<Blob>(`/api/v1/credit/documents/${file.id}/download?business_id=${encodeURIComponent(businessId)}`);
         const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = file.filename; link.click(); URL.revokeObjectURL(url);
@@ -58,7 +57,7 @@ export function ApplicationFiles({ businessId, bank, productId, documents, recor
       })}>{copy(["Remove", "ဖယ်ရှားရန်"])}</button>
     </div>)}
   </div>;
-  return <section aria-label={copy(["Application files", "လျှောက်လွှာစာရွက်စာတမ်းဖိုင်များ"])} className="space-y-4">
+  return <section aria-label={copy(["Application checklist", "လျှောက်လွှာစစ်ဆေးစာရင်း"])} className="space-y-4">
     <p className="text-sm text-muted-foreground">{copy(["Upload PDF, PNG or JPEG files, up to 4 MB each. Files are saved for this business, bank and product. Imported Excel records are shown separately within each folder. Neither records nor uploads are bank verification.", "PDF၊ PNG သို့မဟုတ် JPEG ဖိုင်များကို တစ်ဖိုင် 4 MB အထိ တင်နိုင်ပါသည်။ ဖိုင်များကို ဤလုပ်ငန်း၊ ဘဏ်နှင့် ချေးငွေအမျိုးအစားအတွက် သိမ်းထားပါသည်။ Folder တစ်ခုစီတွင် Excel စာရင်းဒေတာကို သီးခြားဖော်ပြထားပါသည်။ ဒေတာနှင့်တင်ထားသောဖိုင်များသည် ဘဏ်အတည်ပြုချက် မဟုတ်ပါ။"])}</p>
     {files.isPending && <p role="status">{copy(["Loading files…", "ဖိုင်များ ဖတ်နေပါသည်…"])}</p>}
     {files.isError && <p role="alert">{copy(["Could not load files. Try again.", "ဖိုင်များ မဖတ်နိုင်ပါ။ ထပ်စမ်းပါ။"])} <button className="bf-button-link" onClick={() => void files.refetch()}>{copy(["Retry", "ထပ်စမ်းရန်"])}</button></p>}

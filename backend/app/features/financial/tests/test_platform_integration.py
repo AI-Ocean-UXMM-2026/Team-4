@@ -28,15 +28,15 @@ def prepare_wholesale_sample(workbook, *, single_lender):
             for row in range(2, sheet.max_row + 1):
                 sheet.cell(row, column).value = "tea-shop"
     if single_lender:
-        # Adapt the synthetic financial fixture to the current one-bank import
-        # contract without changing loan amounts, payments or financial totals.
+        # Optionally normalize lenders without changing loan amounts, payments,
+        # or financial totals for tests that do not exercise multi-bank input.
         loans = workbook["Loans"]
         lender_column = [cell.value for cell in loans[1]].index("lender") + 1
         for row in range(2, loans.max_row + 1):
             loans.cell(row, lender_column).value = "KBZ Bank"
 
 
-def test_original_multilender_wholesale_sample_is_rejected_atomically(client):
+def test_original_multilender_wholesale_sample_is_accepted(client):
     path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
     prepare_wholesale_sample(workbook, single_lender=False)
@@ -44,12 +44,10 @@ def test_original_multilender_wholesale_sample_is_rejected_atomically(client):
     workbook.save(content)
     workbook.close()
     imported = upload(client, content.getvalue())
-    assert imported.status_code == 400
-    errors = imported.json()["error"]["details"][0]["errors"]
-    assert any(error["field"] == "lender" and "one bank" in error["reason"] for error in errors)
+    assert imported.status_code == 200, imported.text
     snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()
-    assert snapshot["source_version"] == 0
-    assert all(not rows for rows in snapshot["tables"].values())
+    assert snapshot["source_version"] == 1
+    assert {loan["lender"] for loan in snapshot["tables"]["Loans"]} == {"KBZ Bank", "Yoma Bank"}
 
 
 def test_real_import_summary_and_idempotency(client, workbook_bytes):

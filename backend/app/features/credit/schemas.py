@@ -66,6 +66,7 @@ class ReadinessCategory(BaseModel):
 
 
 class CreditSnapshot(BaseModel):
+    recorded_balances: list[dict] = Field(default_factory=list)
     business_id: str
     source_version: int
     as_of: date

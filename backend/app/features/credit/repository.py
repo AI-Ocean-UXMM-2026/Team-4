@@ -4,7 +4,7 @@ from datetime import date
 
 from sqlalchemy import select
 
-from ...db.models import Business, ImportedRow, PROJECTIONS
+from ...db.models import Business, ImportedRow, PROJECTIONS, RecordedLoanBalance
 
 
 def projection_rows(session, sheet: str, business_id: str) -> list[dict]:
@@ -32,6 +32,18 @@ def credit_inputs(session, business_id: str) -> dict:
         "source_version": business.version,
         "loans": tables["Loans"],
         "payments": tables["LoanPayments"],
+        "recorded_balances": [{"id": row.id, "lender_kind": row.lender_kind, "lender_name": row.lender_name,
+            "bank_id": row.bank_id, "loan_product_id": row.loan_product_id,
+            "next_payment_date": row.next_payment_date.isoformat() if row.next_payment_date else None,
+            "next_payment_mmk": str(row.next_payment_mmk) if row.next_payment_mmk is not None else None,
+            "payment_frequency": row.payment_frequency,
+            "annual_rate_pct": str(row.annual_rate_pct) if row.annual_rate_pct is not None else None,
+            "remaining_term_months": row.remaining_term_months,
+            "repayment_terms": row.repayment_terms,
+            "loan_start_date": row.loan_start_date.isoformat() if row.loan_start_date else None,
+            "loan_end_date": row.loan_end_date.isoformat() if row.loan_end_date else None,
+            "outstanding_principal_mmk": str(row.outstanding_principal_mmk), "as_of_date": row.as_of_date.isoformat()}
+            for row in session.scalars(select(RecordedLoanBalance).where(RecordedLoanBalance.business_id == business_id).order_by(RecordedLoanBalance.created_at.desc()))],
         "tables": tables,
         "as_of": date.today(),
     }

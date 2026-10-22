@@ -16,6 +16,8 @@ from ...integrations.excel.loan_products import loan_identity_errors
 router = APIRouter(prefix="/api/v1/credit", tags=["credit"])
 from .documents import router as documents_router
 router.include_router(documents_router)
+from .recorded_balances import router as balances_router
+router.include_router(balances_router)
 
 
 def _serialize_date(value):
@@ -119,20 +121,33 @@ def build_credit_snapshot(inputs: dict, business_id: str) -> dict:
     next_date = min((loan["next_due_date"] for loan in loans if loan["next_due_date"] is not None), default=None)
     due = sum((loan["next_payment_due_mmk"] for loan in loans if loan["next_due_date"] == next_date and loan["next_payment_due_mmk"] is not None), Decimal(0)) if next_date else None
     cash_context = inputs.get("cash_context")
+    recorded = inputs.get("recorded_balances", [])
+    obligations = [(loan["next_due_date"], loan["next_payment_due_mmk"]) for loan in loans if loan["next_due_date"] and loan["next_payment_due_mmk"] is not None]
+    for balance in recorded:
+        if balance.get("next_payment_date") and balance.get("next_payment_mmk") is not None:
+            obligations.append((_serialize_date(balance["next_payment_date"]), Decimal(str(balance["next_payment_mmk"]))))
+    if obligations:
+        next_date = min(item[0] for item in obligations)
+        due = sum((item[1] for item in obligations if item[0] == next_date), Decimal(0))
+    if any(not balance.get("next_payment_date") or balance.get("next_payment_mmk") is None for balance in recorded):
+        due = None
     limitations = ["Imported records and uploaded supporting files remain unverified by lenders."]
     missing_data = []
     if not cash_context or cash_context.get("current_cash_mmk") is None:
         limitations.append("Financial Health is connected, but recorded cash is unavailable. Complete the opening balance and cash payment records.")
         missing_data.append("p1_cash_snapshot")
     else:
-        limitations.append("Repayment planning uses Financial Health cash, reserves all outstanding supplier balances and recorded unpaid expenses, and assumes no future customer receipts. Supplier due dates and a protected cash reserve are not recorded.")
+        limitations.append("Repayment planning uses Financial Health cash and reserves all outstanding supplier balances and recorded unpaid expenses, regardless of supplier due dates. No future customer receipts or protected cash reserve are assumed.")
     if any(loan["schedule_status"] != "available" for loan in loans):
         limitations.append("Repayment planning is unavailable until every loan has a supported repayment schedule.")
         due = None
     if any(loan["schedule_status"] == "missing_terms" for loan in loans):
         limitations.append("Some imported loans need complete bank, product and repayment terms before a schedule can be estimated.")
         missing_data.append("loan_rate_and_term")
-    has_data = bool(inputs["loans"] or any(inputs["tables"].values()))
+    if any(not balance.get("next_payment_date") or balance.get("next_payment_mmk") is None for balance in recorded):
+        missing_data.append("recorded_next_payment")
+        limitations.append("Add the next payment date and total amount for every recorded balance to enable repayment planning.")
+    has_data = bool(recorded or inputs["loans"] or any(inputs["tables"].values()))
     return {
         "business_id": business_id,
         "source_version": inputs["source_version"],
@@ -140,6 +155,7 @@ def build_credit_snapshot(inputs: dict, business_id: str) -> dict:
         "lender_checklist_scope": "generic_not_lender_specific",
         "data_quality": {"status": "partial" if has_data else "missing", "missing": missing_data, "limitations": limitations},
         "loans": loans,
+        "recorded_balances": inputs.get("recorded_balances", []),
         "readiness": categories,
         "readiness_progress": preparation_progress(categories),
         "repayment_capacity": repayment_capacity(cash_context, str(due) if due is not None else None),

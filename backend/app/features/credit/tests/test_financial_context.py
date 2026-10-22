@@ -20,10 +20,16 @@ def ledger():
 def test_financial_cash_reserves_payables_and_unpaid_expenses():
     context = financial_cash_context(ledger(), date(2026, 10, 22))
     assert context["current_cash_mmk"] == Decimal("1000")
+    assert context["outstanding_supplier_balances_mmk"] == Decimal("200")
+    assert context["unpaid_expenses_mmk"] == Decimal("100")
     result = repayment_capacity(context, "800")
     assert result["status"] == "potential_shortfall"
     assert Decimal(result["projected_cash_available_before_loan_mmk"]) == 700
     assert Decimal(result["repayment_gap_mmk"]) == -100
+    assert Decimal(result["recorded_cash_mmk"]) == 1000
+    assert Decimal(result["outstanding_supplier_balances_mmk"]) == 200
+    assert Decimal(result["unpaid_expenses_mmk"]) == 100
+    assert Decimal(result["next_loan_payment_mmk"]) == 800
 
 
 def test_incomplete_cash_is_unavailable_instead_of_zero():

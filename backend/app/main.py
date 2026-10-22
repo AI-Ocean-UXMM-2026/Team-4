@@ -78,7 +78,7 @@ def create_app(settings=None, engine=None):
 
     app.add_middleware(UploadLimitMiddleware, limit=settings.max_upload_bytes)
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_credentials=True,
-                       allow_methods=["GET", "POST", "DELETE"], allow_headers=["Authorization", "Content-Type"], expose_headers=["Retry-After"])
+                       allow_methods=["GET", "POST", "PUT", "DELETE"], allow_headers=["Authorization", "Content-Type"], expose_headers=["Retry-After"])
     app.include_router(auth_router)
     app.include_router(microsoft_router)
     app.include_router(data_router)

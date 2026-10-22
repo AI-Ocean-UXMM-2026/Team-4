@@ -392,9 +392,9 @@
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    color: var(--feature-foreground);
-    background: var(--feature-background);
-    border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+    color: var(--foreground);
+    background: transparent;
+    border: 1px solid var(--border);
     box-shadow: var(--surface-shadow);
     & > * {
       position: relative;

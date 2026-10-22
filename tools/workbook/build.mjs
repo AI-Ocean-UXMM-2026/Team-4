@@ -66,18 +66,20 @@ for (const persona of [
     LoanPayments: persona.loan
       ? [["LP001", b, new Date("2026-10-18T00:00:00Z"), "L001", 10000 * f, 2000 * f]]
       : [],
+    CashBalances: [],
     CashAdjustments: [
       ["A001", b, new Date("2026-10-08T00:00:00Z"), "in", 10000 * f, "Owner contribution"],
     ],
   };
   const workbook = Workbook.create();
   for (const [name, spec] of Object.entries(schema)) {
+    if (persona.template && ["Loans", "LoanPayments"].includes(name)) continue;
     const sheet = workbook.worksheets.add(name);
     sheet.showGridLines = false;
     sheet.freezePanes.freezeRows(1);
     const fields = { ...spec.fields, ...spec.payload_fields };
     const headers = Object.keys(fields);
-    const rows = (persona.template && name !== "Settings" ? [] : data[name]).map(row => headers.map((_, index) => row[index] ?? null));
+    const rows = (persona.template ? [] : data[name]).map(row => headers.map((_, index) => row[index] ?? null));
     const body = [headers, ...rows];
     const range = sheet.getRangeByIndexes(0, 0, body.length, headers.length);
     range.values = body;
@@ -117,7 +119,7 @@ for (const persona of [
     [
       "Data source",
       persona.template
-        ? "Blank input template for October 2026. Enter your own values. Currency: MMK."
+        ? "Blank input template. No sample business data or transactions. Enter your own Settings and records. Currency: MMK."
         : "Synthetic examples for the October 2026 demo. Currency: MMK.",
     ],
     ["Business", "Use one authorized business_id in Settings and every transaction row."],
@@ -159,6 +161,7 @@ for (const persona of [
   });
   console.log(persona.id, check.ndjson);
   for (const name of [...Object.keys(schema), "ReadMe"]) {
+    if (persona.template && ["Loans", "LoanPayments"].includes(name)) continue;
     const preview = await workbook.render({
       sheetName: name,
       range:

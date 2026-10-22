@@ -1,6 +1,7 @@
 """Audit records plus typed SQL projections for module owners (no Excel JSON parsing)."""
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import (JSON, Column, Date, DateTime, ForeignKey, Integer, MetaData,
                         Numeric, String, Table, Text, UniqueConstraint, LargeBinary)
@@ -33,6 +34,27 @@ class CreditDocument(Base):
     filename: Mapped[str] = mapped_column(String(200))
     media_type: Mapped[str] = mapped_column(String(80))
     content: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class RecordedLoanBalance(Base):
+    __tablename__ = "recorded_loan_balances"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), index=True)
+    lender_kind: Mapped[str] = mapped_column(String(20))
+    lender_name: Mapped[str] = mapped_column(String(200))
+    bank_id: Mapped[str | None] = mapped_column(String(40))
+    loan_product_id: Mapped[str | None] = mapped_column(String(80))
+    next_payment_date: Mapped[date | None] = mapped_column(Date)
+    next_payment_mmk: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
+    payment_frequency: Mapped[str | None] = mapped_column(String(20))
+    annual_rate_pct: Mapped[Decimal | None] = mapped_column(Numeric(7, 3))
+    remaining_term_months: Mapped[int | None] = mapped_column(Integer)
+    repayment_terms: Mapped[dict | None] = mapped_column(JSON)
+    outstanding_principal_mmk: Mapped[Decimal] = mapped_column(Numeric(18, 2))
+    as_of_date: Mapped[date] = mapped_column(Date)
+    loan_start_date: Mapped[date | None] = mapped_column(Date)
+    loan_end_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
@@ -144,7 +166,7 @@ class OAuthState(Base):
 TABLE_NAMES = {"Settings": "business_settings", "Products": "products", "Sales": "sales",
                "CustomerReceipts": "customer_receipts", "Purchases": "purchases",
                "SupplierPayments": "supplier_payments", "Expenses": "expenses", "Loans": "loans",
-               "LoanPayments": "loan_payments", "CashAdjustments": "cash_adjustments"}
+               "LoanPayments": "loan_payments", "CashAdjustments": "cash_adjustments", "CashBalances": "cash_balances"}
 PROJECTIONS = {}
 for sheet_name, spec in SCHEMA.items():
     columns = [Column("source_id", String(80), ForeignKey("workbook_sources.id"), primary_key=True)]
