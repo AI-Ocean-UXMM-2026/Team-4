@@ -41,6 +41,7 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(80), primary_key=True)
     full_name: Mapped[str | None] = mapped_column(String(120))
     email: Mapped[str | None] = mapped_column(String(254))
+    avatar_data_url: Mapped[str | None] = mapped_column(Text)
 
 
 class Business(Base):

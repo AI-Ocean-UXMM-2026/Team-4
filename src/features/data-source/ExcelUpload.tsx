@@ -67,7 +67,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           type="file"
           accept=".xlsx"
           disabled={busy}
-          className="block w-full text-sm"
+          className="bf-file-input block w-full text-sm"
           onChange={(event) => {
             setError("");
             setResult(null);

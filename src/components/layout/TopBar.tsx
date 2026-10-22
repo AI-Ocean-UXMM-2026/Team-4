@@ -39,10 +39,7 @@ export function TopBar() {
         >
           <UserRound size={20} aria-hidden="true" />
         </Link>
-        <button
-          className="bf-button-secondary min-h-11 border-transparent bg-transparent px-3 text-muted-foreground"
-          onClick={signOut}
-        >
+        <button className="bf-button-secondary min-h-11 px-3" onClick={signOut}>
           <LogOut size={16} aria-hidden="true" />
           <span className="hidden sm:inline">{t("Sign out")}</span>
           <span className="sr-only sm:hidden">{t("Sign out")}</span>

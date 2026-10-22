@@ -747,10 +747,7 @@ function BusinessSetup({
           {busy ? t("Saving workspace…") : t("Create business workspace")}
         </button>
       </form>
-      <button
-        className="mt-5 w-full text-sm text-muted-foreground underline"
-        onClick={() => void signOut()}
-      >
+      <button className="bf-button-link mt-5 w-full text-sm" onClick={() => void signOut()}>
         {t("Sign out and finish later")}
       </button>
     </AuthShell>

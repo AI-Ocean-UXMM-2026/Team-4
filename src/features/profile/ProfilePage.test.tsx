@@ -28,6 +28,16 @@ const initialProfile = {
   },
 };
 
+const photoUrl =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=";
+
+function choosePhoto() {
+  const bytes = Uint8Array.from(atob(photoUrl.split(",")[1]!), (char) => char.charCodeAt(0));
+  fireEvent.change(screen.getByLabelText("Upload profile photo"), {
+    target: { files: [new File([bytes], "photo.png", { type: "image/png" })] },
+  });
+}
+
 let client: QueryClient;
 
 function fill(label: string, value: string) {
@@ -207,5 +217,81 @@ describe("User profile", () => {
     expect(screen.getByLabelText(translate("Email address"))).toHaveAttribute("readonly");
     expect(screen.getByRole("button", { name: translate("Save changes") })).toBeDisabled();
     expect(screen.getByRole("button", { name: translate("Cancel changes") })).toBeDisabled();
+  });
+
+  it("keeps initials by default and previews a selected photo without saving it", async () => {
+    await openProfile();
+    expect(screen.getByRole("button", { name: "Add profile photo" })).toHaveTextContent("SO");
+    expect(screen.queryByRole("img", { name: "Profile photo" })).not.toBeInTheDocument();
+    choosePhoto();
+    await waitFor(() =>
+      expect(screen.getByRole("img", { name: "Profile photo" })).toHaveAttribute("src", photoUrl),
+    );
+    expect(saveButton()).toBeEnabled();
+    expect(postCalls()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel changes" }));
+    expect(screen.queryByRole("img", { name: "Profile photo" })).not.toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
+  });
+
+  it("saves a photo with profile changes and displays it after remounting", async () => {
+    await openProfile();
+    const withPhoto = {
+      ...initialProfile,
+      user: { ...initialProfile.user, avatar_data_url: photoUrl },
+    };
+    mocks.api.mockResolvedValue(withPhoto);
+    choosePhoto();
+    await waitFor(() => expect(saveButton()).toBeEnabled());
+    fireEvent.click(saveButton());
+    await screen.findByText("Profile saved.");
+    expect(JSON.parse(postCalls()[0]![1].body).avatar_data_url).toBe(photoUrl);
+    expect(saveButton()).toBeDisabled();
+    cleanup();
+    await openProfile();
+    expect(screen.getByRole("img", { name: "Profile photo" })).toHaveAttribute("src", photoUrl);
+  });
+
+  it("can cancel removing a saved photo, or save removal to restore initials", async () => {
+    mocks.api.mockResolvedValue({
+      ...initialProfile,
+      user: { ...initialProfile.user, avatar_data_url: photoUrl },
+    });
+    await openProfile();
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+    expect(screen.queryByRole("img", { name: "Profile photo" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel changes" }));
+    expect(screen.getByRole("img", { name: "Profile photo" })).toHaveAttribute("src", photoUrl);
+    expect(postCalls()).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
+    mocks.api.mockResolvedValue(initialProfile);
+    fireEvent.click(saveButton());
+    await screen.findByText("Profile saved.");
+    expect(JSON.parse(postCalls()[0]![1].body).avatar_data_url).toBeNull();
+    expect(screen.getByRole("button", { name: "Add profile photo" })).toHaveTextContent("SO");
+  });
+
+  it("retains the selected photo if saving fails", async () => {
+    await openProfile();
+    choosePhoto();
+    await waitFor(() => expect(saveButton()).toBeEnabled());
+    mocks.api.mockRejectedValue(new Error("Photo could not be saved."));
+    fireEvent.click(saveButton());
+    expect(await screen.findByRole("alert")).toHaveTextContent("Photo could not be saved.");
+    expect(screen.getByRole("img", { name: "Profile photo" })).toHaveAttribute("src", photoUrl);
+    expect(saveButton()).toBeEnabled();
+  });
+
+  it.each([
+    new File(["not an image"], "image.svg", { type: "image/svg+xml" }),
+    new File([new Uint8Array(2 * 1024 * 1024 + 1)], "large.png", { type: "image/png" }),
+  ])("rejects unsupported or oversized photo selections", async (file) => {
+    await openProfile();
+    fireEvent.change(screen.getByLabelText("Upload profile photo"), { target: { files: [file] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Choose a valid JPG, PNG or WebP photo up to 2 MB.",
+    );
+    expect(saveButton()).toBeDisabled();
+    expect(postCalls()).toHaveLength(0);
   });
 });

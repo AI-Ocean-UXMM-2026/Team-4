@@ -3,6 +3,7 @@ from sqlalchemy import select, update
 from ..db.models import Business, Membership, User, uid
 from .account_schemas import BusinessInput
 from .errors import APIError
+from .profile_photos import normalize_photo
 
 
 def insert_if_absent(session, model, values, conflict):
@@ -38,7 +39,8 @@ def account_status(sessions, identity):
 def profile_result(user, business, identity):
     name = identity.metadata.get("full_name")
     suggested_name = name.strip()[:120] if isinstance(name, str) else ""
-    return {"user": {"id": user.id, "email": identity.email, "full_name": user.full_name or suggested_name},
+    return {"user": {"id": user.id, "email": identity.email, "full_name": user.full_name or suggested_name,
+                     "avatar_data_url": user.avatar_data_url},
             "business": {"id": business.id, "name": business.name, "industry": business.industry or "",
                          "city": business.city or "", "phone": business.phone or "", "address": business.address or "",
                          "currency": business.currency} if business else None}
@@ -52,6 +54,8 @@ def account_profile(sessions, identity):
 
 
 def update_profile(sessions, identity, data):
+    photo_changed = "avatar_data_url" in data.model_fields_set
+    photo = normalize_photo(data.avatar_data_url) if photo_changed else None
     with sessions.begin() as session:
         user = profile(session, identity)
         # Membership alone does not authorize changes to another owner's profile.
@@ -59,6 +63,8 @@ def update_profile(sessions, identity, data):
         if data.business is not None and business is None:
             raise APIError(409, "PROFILE_BUSINESS_MISSING", "Finish business setup before updating business details.")
         user.full_name = data.full_name
+        if photo_changed:
+            user.avatar_data_url = photo
         if data.business is not None:
             for field, value in data.business.model_dump().items():
                 setattr(business, field, (value or None) if field in ("phone", "address") else value)

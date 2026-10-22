@@ -16,15 +16,16 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 type SidebarMode = "expanded" | "collapsed" | "hover";
+const SIDEBAR_MODE_KEY = "shay-sett-sidebar-mode.v2";
 export function MainLayout({ children, path }: { children: ReactNode; path: string }) {
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [sidebarFocused, setSidebarFocused] = useState(false);
-  const [sidebarMode, setSidebarMode] = useState<SidebarMode>("hover");
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>("expanded");
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("shay-sett-sidebar-mode");
+      const saved = localStorage.getItem(SIDEBAR_MODE_KEY);
       if (saved === "expanded" || saved === "collapsed" || saved === "hover") setSidebarMode(saved);
     } catch {
       /* Use the default when browser storage is unavailable. */
@@ -40,7 +41,7 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
     setSidebarFocused(false);
     setSidebarHovered(false);
     try {
-      localStorage.setItem("shay-sett-sidebar-mode", value);
+      localStorage.setItem(SIDEBAR_MODE_KEY, value);
     } catch {
       /* Keep the selection for this session. */
     }
@@ -104,7 +105,7 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
                 type="button"
                 aria-label={"Sidebar control"}
                 title={"Sidebar control"}
-                className="flex h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-medium text-muted-foreground hover:bg-secondary hover:text-primary"
+                className="bf-button-quiet flex h-11 items-center gap-3 px-3 text-[13px] font-medium"
               >
                 <PanelLeft size={17} className="shrink-0" aria-hidden="true" />
                 <span className="whitespace-nowrap opacity-0 transition-opacity duration-300 group-data-[expanded=true]/sidebar:opacity-100">

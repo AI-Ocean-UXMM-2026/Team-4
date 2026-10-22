@@ -1,4 +1,18 @@
 export const my: Record<string, string> = {
+  "Upload profile photo": "ကိုယ်ရေးဓာတ်ပုံ တင်ရန်",
+  "Add profile photo": "ကိုယ်ရေးဓာတ်ပုံ ထည့်ရန်",
+  "Change profile photo": "ကိုယ်ရေးဓာတ်ပုံ ပြောင်းရန်",
+  "Profile photo": "ကိုယ်ရေးဓာတ်ပုံ",
+  "Add photo": "ဓာတ်ပုံထည့်ရန်",
+  "Change photo": "ဓာတ်ပုံပြောင်းရန်",
+  "Remove photo": "ဓာတ်ပုံဖယ်ရှားရန်",
+  "Reading photo…": "ဓာတ်ပုံဖတ်နေသည်…",
+  "JPG, PNG or WebP, up to 2 MB. Save changes to keep your photo.":
+    "JPG၊ PNG သို့မဟုတ် WebP၊ အများဆုံး 2 MB။ ဓာတ်ပုံကိုသိမ်းရန် ပြင်ဆင်ချက်များကို သိမ်းပါ။",
+  "Choose a valid JPG, PNG or WebP photo up to 2 MB.":
+    "2 MB ထက်မကြီးသော JPG၊ PNG သို့မဟုတ် WebP ဓာတ်ပုံကို ရွေးပါ။",
+  "Could not read this photo. Please choose another one.":
+    "ဓာတ်ပုံကိုဖတ်၍မရပါ။ အခြားဓာတ်ပုံတစ်ပုံ ရွေးပါ။",
   "Your profile": "သင့်ကိုယ်ရေးအချက်အလက်",
   "Manage your personal details and business information.":
     "သင့်ကိုယ်ရေးအချက်အလက်နှင့် လုပ်ငန်းအချက်အလက်များကို စီမံပါ။",

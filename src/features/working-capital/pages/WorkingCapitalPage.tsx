@@ -31,12 +31,14 @@ export function WorkingCapitalPage() {
   const needsInput = needsWorkingCapitalInput(display);
   return (
     <main className="space-y-6">
-      <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Working Capital")}</p>
+      <header>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          {t("Working Capital")}
+        </p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
           {t("Plan cash with clearer choices")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--feature-muted)] sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
           {t(
             "Explore inventory, collections, cash timing, and reserves. Simulations are read-only and do not change your records.",
           )}
@@ -47,25 +49,6 @@ export function WorkingCapitalPage() {
         recordedCashMmk={snapshot?.available_cash_mmk ?? null}
         complete={!needsInput}
       />
-      {needsInput && snapshot?.warnings.length ? (
-        <section
-          className="bf-card border-warning/50 bg-warning/10"
-          aria-label={t("Data limitations")}
-        >
-          <h2 className="text-sm font-semibold">{t("Information still needed")}</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            {manualInputs ? (
-              <li>
-                {t(
-                  "Some inventory or cash inputs are still missing. Manual planning values do not change imported records or other financial reports.",
-                )}
-              </li>
-            ) : (
-              snapshot.warnings.map((warning) => <li key={warning}>{t(warning)}</li>)
-            )}
-          </ul>
-        </section>
-      ) : null}
       <section className="bf-card space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

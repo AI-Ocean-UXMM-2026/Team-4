@@ -125,10 +125,11 @@ export type AccountStatus = {
   owned_business_id: string | null;
 };
 export type UserProfile = {
-  user: AccountStatus["user"];
+  user: AccountStatus["user"] & { avatar_data_url?: string | null };
   business: (BusinessDetails & { id: string }) | null;
 };
 export type ProfileUpdate = {
   full_name: string;
   business?: BusinessDetails;
+  avatar_data_url?: string | null;
 };

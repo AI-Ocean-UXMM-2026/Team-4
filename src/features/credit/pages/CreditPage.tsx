@@ -32,12 +32,14 @@ export function CreditPage() {
   return (
     <div className="credit-page space-y-5">
       <CreditPrintReport data={data} loan={selected} />
-      <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Credit Hub")}</p>
+      <header>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          {t("Credit Hub")}
+        </p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
           {t("Manage credit and prepare records")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--feature-muted)] sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
           {t(
             "Track actual repayments separately from estimated obligations, and organize records for a financing discussion.",
           )}

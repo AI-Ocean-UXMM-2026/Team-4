@@ -8,6 +8,7 @@ import { businessProblem } from "@/features/auth/validation";
 import { api } from "@/lib/apiClient";
 import type { BusinessDetails, ProfileUpdate, UserProfile } from "@/lib/contracts";
 import { useTranslation } from "@/lib/i18n";
+import { ProfilePhotoPicker } from "./ProfilePhotoPicker";
 
 function editableBusiness(business: UserProfile["business"]): BusinessDetails | null {
   return business
@@ -53,11 +54,14 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
   const [savedProfile, setSavedProfile] = useState(initial);
   const [fullName, setFullName] = useState(initial.user.full_name);
   const [business, setBusiness] = useState(() => editableBusiness(initial.business));
+  const [photo, setPhoto] = useState(initial.user.avatar_data_url ?? null);
+  const [readingPhoto, setReadingPhoto] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const dirty =
     fullName !== savedProfile.user.full_name ||
+    photo !== (savedProfile.user.avatar_data_url ?? null) ||
     JSON.stringify(business) !== JSON.stringify(editableBusiness(savedProfile.business));
   const initials =
     savedProfile.user.full_name
@@ -77,13 +81,14 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
   function cancel() {
     setFullName(savedProfile.user.full_name);
     setBusiness(editableBusiness(savedProfile.business));
+    setPhoto(savedProfile.user.avatar_data_url ?? null);
     setError("");
     setSaved(false);
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !dirty) return;
+    if (busy || readingPhoto || !dirty) return;
     setError("");
     setSaved(false);
     if (!fullName.trim() || fullName.trim().length > 120) {
@@ -98,6 +103,7 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
       }
     }
     const body: ProfileUpdate = { full_name: fullName.trim() };
+    if (photo !== (savedProfile.user.avatar_data_url ?? null)) body.avatar_data_url = photo;
     if (business)
       body.business = {
         name: business.name.trim(),
@@ -116,6 +122,7 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
       setSavedProfile(result);
       setFullName(result.user.full_name);
       setBusiness(editableBusiness(result.business));
+      setPhoto(result.user.avatar_data_url ?? null);
       queries.setQueryData(["profile", result.user.id], result);
       await Promise.all([
         queries.invalidateQueries({ queryKey: ["account", result.user.id] }),
@@ -136,7 +143,7 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
 
   return (
     <div className="space-y-6">
-      <header className="bf-page-hero">
+      <header>
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
           {t("Account")}
         </p>
@@ -149,16 +156,18 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
       <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="bf-card min-w-0 space-y-6">
           <div>
-            <div
-              aria-hidden="true"
-              className="mb-5 grid h-20 w-20 place-items-center rounded-3xl font-display text-2xl font-bold shadow-sm"
-              style={{
-                backgroundImage: "var(--brand-gradient)",
-                color: "var(--feature-foreground)",
+            <ProfilePhotoPicker
+              value={photo}
+              initials={initials}
+              disabled={busy}
+              onReadingChange={setReadingPhoto}
+              onError={setError}
+              onChange={(value) => {
+                setPhoto(value);
+                setSaved(false);
+                setError("");
               }}
-            >
-              {initials}
-            </div>
+            />
             <p className="break-words text-xl font-bold">{savedProfile.user.full_name}</p>
             <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-primary">
               <UserRound size={14} aria-hidden="true" />
@@ -194,7 +203,7 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
         </aside>
 
         <form noValidate onSubmit={(event) => void save(event)} className="min-w-0">
-          <fieldset disabled={busy} className="min-w-0 space-y-5">
+          <fieldset disabled={busy || readingPhoto} className="min-w-0 space-y-5">
             <section className="bf-card space-y-5">
               <h2 className="flex items-center gap-2.5 text-lg font-bold">
                 <UserRound size={20} className="text-primary" aria-hidden="true" />
@@ -313,12 +322,16 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
                 <button
                   type="button"
                   className="bf-button-secondary"
-                  disabled={!dirty || busy}
+                  disabled={!dirty || busy || readingPhoto}
                   onClick={cancel}
                 >
                   {t("Cancel changes")}
                 </button>
-                <button type="submit" className="bf-button" disabled={!dirty || busy}>
+                <button
+                  type="submit"
+                  className="bf-button"
+                  disabled={!dirty || busy || readingPhoto}
+                >
                   <Save size={16} aria-hidden="true" />
                   {t(busy ? "Saving profile…" : "Save changes")}
                 </button>

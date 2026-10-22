@@ -18,6 +18,7 @@ def test_additive_local_upgrade_preserves_legacy_rows(tmp_path):
         row = connection.execute(text("SELECT name, version, owner_id, currency FROM businesses WHERE id='legacy-shop'")).one()
         assert tuple(row) == ("Preserved shop", 17, None, "MMK")
         assert connection.scalar(text("SELECT count(*) FROM users WHERE id='legacy-user'")) == 1
+        assert connection.scalar(text("SELECT avatar_data_url FROM users WHERE id='legacy-user'")) is None
         sales = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(sales)")}
         expenses = {row[1] for row in connection.exec_driver_sql("PRAGMA table_info(expenses)")}
         assert {"unit_cost_at_sale_mmk", "cogs_mmk"} <= sales
