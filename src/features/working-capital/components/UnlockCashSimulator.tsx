@@ -39,7 +39,6 @@ export function UnlockCashSimulator({
   const [discountPct, setDiscountPct] = useState(20);
   const [collectionPct, setCollectionPct] = useState(50);
   const [selectedExpenses, setSelectedExpenses] = useState<string[]>([]);
-  const hasLongExpenseList = (inputs?.expense_candidates.length ?? 0) > 4;
 
   const stockValue = scaledMmk(inputs?.stock_value_mmk);
   const receivables = scaledMmk(inputs?.receivables_mmk);
@@ -68,7 +67,6 @@ export function UnlockCashSimulator({
   return (
     <section className="bf-card space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-primary">{t("Step 1")}</p>
         <h2 className="mt-1 text-xl font-bold">{t("Unlock hidden cash")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           {t(
@@ -82,10 +80,10 @@ export function UnlockCashSimulator({
         )}
       </div>
       <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4">
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-2.5 rounded-xl border bg-muted/30 p-4">
           <div>
             <h3 className="font-semibold">{t("Discount slow stock")}</h3>
-            <p className="mt-2 text-xs text-muted-foreground">{t("Stock at recorded unit cost")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("Stock at recorded unit cost")}</p>
             {manualStock && (
               <p className="text-xs text-primary">
                 {t("Source: Manual Entry")} · {t("Planning stock level")}
@@ -95,63 +93,67 @@ export function UnlockCashSimulator({
               {formatMmk(inputs?.stock_value_mmk ?? null)}
             </p>
           </div>
-          <RangeField
-            label={t("Slow-moving share")}
-            value={slowMovingPct}
-            min={0}
-            max={100}
-            unit="%"
-            onChange={setSlowMovingPct}
-          />
-          <RangeField
-            label={t("Discount")}
-            value={discountPct}
-            min={0}
-            max={70}
-            unit="%"
-            onChange={setDiscountPct}
-          />
-          <p className="text-xs text-muted-foreground">
-            {t(
-              "Estimate applies the discount to recorded unit cost; an actual selling price may differ.",
-            )}
-          </p>
+          <div className="space-y-2.5">
+            <RangeField
+              label={t("Slow-moving share")}
+              value={slowMovingPct}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={setSlowMovingPct}
+            />
+            <RangeField
+              label={t("Discount")}
+              value={discountPct}
+              min={0}
+              max={70}
+              unit="%"
+              onChange={setDiscountPct}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "Estimate applies the discount to recorded unit cost; an actual selling price may differ.",
+              )}
+            </p>
+          </div>
           <p
-            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            className="mt-auto rounded-lg bg-secondary p-2 text-sm font-bold text-success"
             title={formatExactMmk(stockCash)}
             aria-label={stockCash === null ? t("Unavailable") : formatExactMmk(stockCash)}
           >
             {formatCashK(stockCash) ?? t("Unavailable")}
           </p>
         </div>
-        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4">
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-2.5 rounded-xl border bg-muted/30 p-4">
           <div>
             <h3 className="font-semibold">{t("Collect receivables")}</h3>
-            <p className="mt-2 text-xs text-muted-foreground">{t("Unpaid customer balances")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("Unpaid customer balances")}</p>
             <p className="mt-1 break-words text-base font-semibold tabular-nums">
               {formatMmk(inputs?.receivables_mmk ?? null)}
             </p>
           </div>
-          <RangeField
-            label={t("Target collection")}
-            value={collectionPct}
-            min={0}
-            max={100}
-            unit="%"
-            onChange={setCollectionPct}
-          />
-          <p className="text-xs text-muted-foreground">
-            {t("Collection is a target, not a recorded receipt or a guarantee.")}
-          </p>
+          <div className="space-y-2.5">
+            <RangeField
+              label={t("Target collection")}
+              value={collectionPct}
+              min={0}
+              max={100}
+              unit="%"
+              onChange={setCollectionPct}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("Collection is a target, not a recorded receipt or a guarantee.")}
+            </p>
+          </div>
           <p
-            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            className="mt-auto rounded-lg bg-secondary p-2 text-sm font-bold text-success"
             title={formatExactMmk(collectionCash)}
             aria-label={collectionCash === null ? t("Unavailable") : formatExactMmk(collectionCash)}
           >
             {formatCashK(collectionCash) ?? t("Unavailable")}
           </p>
         </div>
-        <div className="min-w-0 space-y-3 rounded-xl border bg-muted/30 p-4 md:col-span-2 xl:col-span-1">
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-2.5 rounded-xl border bg-muted/30 p-4 md:col-span-2 xl:col-span-1">
           <div>
             <h3 className="font-semibold">{t("Pause optional spending")}</h3>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -164,7 +166,7 @@ export function UnlockCashSimulator({
             role="region"
             aria-label={t("Optional expense items")}
             tabIndex={0}
-            className={`overflow-y-auto overscroll-contain pr-1 touch-pan-y focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] ${hasLongExpenseList ? "h-60 md:h-72 xl:h-80" : "max-h-60 md:max-h-72 xl:max-h-80"}`}
+            className="max-h-64 min-h-0 overflow-y-auto overscroll-contain pr-1 touch-pan-y focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] md:max-h-[280px]"
           >
             <div className="space-y-2">
               {inputs?.expense_candidates.length ? (
@@ -201,7 +203,7 @@ export function UnlockCashSimulator({
             </div>
           </div>
           <p
-            className="rounded-lg bg-secondary p-2 text-sm font-bold text-success"
+            className="mt-auto rounded-lg bg-secondary p-2 text-sm font-bold text-success"
             title={formatExactMmk(expenseCash)}
             aria-label={expenseCash === null ? t("Unavailable") : formatExactMmk(expenseCash)}
           >
@@ -209,23 +211,28 @@ export function UnlockCashSimulator({
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary p-5 text-primary-foreground">
-        <div>
-          <p className="text-sm opacity-90">{t("Total cash unlocked")}</p>
-          <p className="font-display text-3xl font-bold" title={formatExactMmk(totalCash)}>
-            {formatCashK(totalCash) ?? t("Unavailable")}
+      <div className="grid min-w-0 grid-cols-1 gap-3 rounded-xl border bg-muted/50 p-4 sm:grid-cols-2 sm:items-center sm:gap-x-6">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t("Potential cash unlocked")}
+          </p>
+          <p className="mt-1 break-words font-display text-2xl font-bold tabular-nums text-primary sm:text-3xl">
+            {formatExactMmk(totalCash) ?? t("Unavailable")}
           </p>
         </div>
-        <div className="text-sm">
-          <p>
+        <div className="min-w-0 sm:border-l sm:pl-6">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t("Estimated operating-cost coverage")}
+          </p>
+          <p className="mt-1 break-words font-display text-xl font-semibold tabular-nums">
             {weeks === null
               ? t("Running-cost coverage unavailable")
-              : t("≈ {0} extra weeks of running costs covered", { "0": weeks })}
-          </p>
-          <p className="mt-1 text-xs opacity-90">
-            {t("Based on average weekly recorded operating expenses in the latest 30-day window.")}
+              : t("≈ {0} weeks", { "0": weeks })}
           </p>
         </div>
+        <p className="border-t pt-3 text-xs text-muted-foreground sm:col-span-2">
+          {t("Scenario estimates only. Actual results may differ.")}
+        </p>
       </div>
     </section>
   );

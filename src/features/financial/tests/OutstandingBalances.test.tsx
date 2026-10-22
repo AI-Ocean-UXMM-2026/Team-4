@@ -104,8 +104,13 @@ describe("OutstandingBalances", () => {
       />,
     );
     expect(
-      screen.getByText("Undated supplier balances are excluded from due-date totals."),
+      screen.getByText(/Obligations without recorded due dates remain outstanding/),
     ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "Review the Excel template in Data Source" })
+        .getAttribute("href"),
+    ).toBe("/data-source");
     const coverage = screen.getByText(
       "Cash after recorded obligations due by 30 days",
     ).parentElement;
@@ -219,5 +224,150 @@ describe("OutstandingBalances", () => {
       screen.getByText("Cash after recorded obligations due by 30 days").parentElement?.textContent,
     ).toContain("700 MMK");
     expect(screen.getByText("LN-1 installment 1")).toBeTruthy();
+  });
+
+  it("searches case-insensitive references and available supplier or lender names", () => {
+    render(
+      <OutstandingBalances
+        obligations={[
+          {
+            kind: "supplier",
+            reference_id: "PUR-204",
+            name: "Golden Wholesale",
+            due_date: null,
+            amount_mmk: "100",
+          },
+          {
+            kind: "loan",
+            reference_id: "LN-19",
+            name: "City Bank",
+            due_date: "2026-11-01",
+            amount_mmk: "200",
+          },
+          { kind: "expense", reference_id: "EXP-71", due_date: "2026-11-02", amount_mmk: "300" },
+        ]}
+        asAt="2026-10-22"
+      />,
+    );
+    const table = screen.getByRole("table", { name: /outstanding business obligations/i });
+    const search = screen.getByRole("searchbox", { name: "Search payments" });
+    fireEvent.change(search, { target: { value: "golden" } });
+    expect(within(table).getByText("PUR-204")).toBeTruthy();
+    expect(within(table).queryByText("LN-19")).toBeNull();
+    fireEvent.change(search, { target: { value: "ln-19" } });
+    expect(within(table).getByText("City Bank")).toBeTruthy();
+    expect(within(table).queryByText("PUR-204")).toBeNull();
+    fireEvent.change(search, { target: { value: "exp-71" } });
+    expect(within(table).getByText("EXP-71")).toBeTruthy();
+  });
+
+  it("sorts exact balances in both directions, references, and known dates before missing dates", () => {
+    render(
+      <OutstandingBalances
+        obligations={[
+          { kind: "supplier", reference_id: "Z", due_date: null, amount_mmk: "100.01" },
+          { kind: "supplier", reference_id: "B", due_date: "2026-11-02", amount_mmk: "100.10" },
+          { kind: "supplier", reference_id: "A", due_date: "2026-10-28", amount_mmk: "100.02" },
+        ]}
+        asAt="2026-10-22"
+      />,
+    );
+    const table = screen.getByRole("table", { name: /outstanding business obligations/i });
+    const order = () =>
+      within(table)
+        .getAllByRole("row")
+        .slice(1)
+        .map((row) => row.querySelectorAll("td")[1]?.textContent);
+    expect(order()).toEqual(["A", "B", "Z"]);
+    const sort = screen.getByRole("combobox", { name: "Sort payments" });
+    fireEvent.change(sort, { target: { value: "amount" } });
+    expect(order()).toEqual(["B", "A", "Z"]);
+    fireEvent.change(sort, { target: { value: "amount-asc" } });
+    expect(order()).toEqual(["Z", "A", "B"]);
+    fireEvent.change(sort, { target: { value: "reference" } });
+    expect(order()).toEqual(["A", "B", "Z"]);
+  });
+
+  it("paginates ten rows, resets after filters or a business dataset change, and retains complete totals", () => {
+    const obligations: Obligation[] = Array.from({ length: 23 }, (_, index) => ({
+      kind: "supplier",
+      reference_id: `BILL-${String(index + 1).padStart(2, "0")}`,
+      due_date: null,
+      amount_mmk: "100",
+    }));
+    const { rerender } = render(
+      <OutstandingBalances
+        obligations={obligations}
+        asAt="2026-10-22"
+        loanPrincipalOutstanding="0"
+      />,
+    );
+    const table = screen.getByRole("table", { name: /outstanding business obligations/i });
+    expect(within(table).getAllByRole("row")).toHaveLength(11);
+    expect(screen.getByText("Outstanding supplier payments").parentElement?.textContent).toContain(
+      "2,300 MMK",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByText("Page 2 of 3")).toBeTruthy();
+    expect(within(table).getByText("BILL-11")).toBeTruthy();
+    expect(within(table).queryByText("BILL-01")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(within(table).getAllByRole("row")).toHaveLength(4);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search payments" }), {
+      target: { value: "BILL-02" },
+    });
+    expect(screen.getByText("Page 1 of 1")).toBeTruthy();
+    expect(within(table).getByText("BILL-02")).toBeTruthy();
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search payments" }), {
+      target: { value: "" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    rerender(
+      <OutstandingBalances
+        obligations={[
+          { kind: "loan", reference_id: "OTHER-BUSINESS", due_date: null, amount_mmk: "50" },
+        ]}
+        asAt="2026-10-21"
+        loanPrincipalOutstanding="50"
+      />,
+    );
+    expect(screen.getByText("Page 1 of 1")).toBeTruthy();
+    expect(within(table).getByText("OTHER-BUSINESS")).toBeTruthy();
+    expect(within(table).queryByText("BILL-11")).toBeNull();
+  });
+
+  it("keeps an undated 100 MMK payment distinct from overdue and shows exact paid and remaining amounts", () => {
+    render(
+      <OutstandingBalances
+        obligations={[
+          {
+            kind: "supplier",
+            reference_id: "PART-100",
+            due_date: null,
+            original_amount_mmk: "300",
+            amount_paid_mmk: "100",
+            amount_mmk: "200",
+          },
+        ]}
+        asAt="2026-10-22"
+      />,
+    );
+    const row = within(screen.getByRole("table", { name: /outstanding business obligations/i }))
+      .getByText("PART-100")
+      .closest("tr");
+    expect(row).not.toBeNull();
+    expect(row!.cells[2]?.textContent).toBe("300 MMK");
+    expect(row!.cells[3]?.textContent).toBe("100 MMK");
+    expect(row!.cells[4]?.textContent).toBe("200 MMK");
+    expect(row!.cells[5]?.getAttribute("aria-label")).toBe("Due date unavailable");
+    expect(row!.cells[6]?.textContent).toBe("Due date unavailable");
+    fireEvent.change(screen.getByRole("combobox", { name: "Filter by status" }), {
+      target: { value: "Overdue" },
+    });
+    expect(
+      within(screen.getByRole("table", { name: /outstanding business obligations/i })).queryByText(
+        "PART-100",
+      ),
+    ).toBeNull();
   });
 });

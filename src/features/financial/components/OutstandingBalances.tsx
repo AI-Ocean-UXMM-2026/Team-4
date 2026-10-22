@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import {
   CalendarClock,
@@ -14,7 +14,8 @@ import { formatMmk } from "../types";
 
 type PaymentStatus =
   "Overdue" | "Due within 7 days" | "Due within 30 days" | "Due later" | "Due date unavailable";
-type SortBy = "due-date" | "amount" | "status" | "type";
+type SortBy = "due-date" | "amount" | "amount-asc" | "reference" | "status" | "type";
+const PAGE_SIZE = 10;
 
 function addDays(isoDate: string, count: number) {
   const date = new Date(`${isoDate}T00:00:00Z`);
@@ -104,7 +105,11 @@ export function OutstandingBalances({
   const [statusFilter, setStatusFilter] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
   const [minimumAmount, setMinimumAmount] = useState("");
+  const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("due-date");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => setPage(1), [obligations, asAt]);
 
   const classified = useMemo(
     () => obligations.map((item) => ({ item, status: statusFor(item, asAt) })),
@@ -150,9 +155,16 @@ export function OutstandingBalances({
     overdueTotal !== null &&
     due7Total !== null &&
     due30Total !== null;
-  const minAmount = minimumAmount.trim() === "" ? null : Number(minimumAmount);
+  const minAmount = minimumAmount.trim() === "" ? null : minimumAmount.trim();
+  const query = search.trim().toLocaleLowerCase();
 
   const rows = classified
+    .filter(
+      ({ item }) =>
+        query === "" ||
+        item.reference_id.toLocaleLowerCase().includes(query) ||
+        item.name?.toLocaleLowerCase().includes(query),
+    )
     .filter(({ item, status }) => typeFilter === "all" || item.kind === typeFilter)
     .filter(({ status }) => statusFilter === "all" || status === statusFilter)
     .filter(
@@ -160,15 +172,25 @@ export function OutstandingBalances({
         dueDateFilter === "all" ||
         (dueDateFilter === "available" ? item.due_date !== null : item.due_date === null),
     )
-    .filter(({ item }) => minAmount === null || Number(item.amount_mmk) >= minAmount)
+    .filter(({ item }) => minAmount === null || compareMmk(item.amount_mmk, minAmount) >= 0)
     .sort((left, right) => {
-      if (sortBy === "amount") return compareMmk(right.item.amount_mmk, left.item.amount_mmk);
-      if (sortBy === "status") return left.status.localeCompare(right.status);
-      if (sortBy === "type") return left.item.kind.localeCompare(right.item.kind);
-      return (left.item.due_date ?? "9999-12-31").localeCompare(
-        right.item.due_date ?? "9999-12-31",
-      );
+      let result = 0;
+      if (sortBy === "amount") result = compareMmk(right.item.amount_mmk, left.item.amount_mmk);
+      else if (sortBy === "amount-asc")
+        result = compareMmk(left.item.amount_mmk, right.item.amount_mmk);
+      else if (sortBy === "reference")
+        result = left.item.reference_id.localeCompare(right.item.reference_id);
+      else if (sortBy === "status") result = left.status.localeCompare(right.status);
+      else if (sortBy === "type") result = left.item.kind.localeCompare(right.item.kind);
+      else
+        result = (left.item.due_date ?? "9999-12-31").localeCompare(
+          right.item.due_date ?? "9999-12-31",
+        );
+      return result || left.item.reference_id.localeCompare(right.item.reference_id);
     });
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visibleRows = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const summary = [
     {
@@ -272,7 +294,18 @@ export function OutstandingBalances({
           <CalendarClock size={18} className="mt-0.5 shrink-0 text-amber-700" aria-hidden="true" />
           <p className="min-w-0">
             {hasUndated && (
-              <span>{t("Undated supplier balances are excluded from due-date totals.")} </span>
+              <span>
+                {t(
+                  "Obligations without recorded due dates remain outstanding but are not marked overdue or included in due-date totals.",
+                )}{" "}
+                <a
+                  href="/data-source"
+                  className="font-semibold text-primary underline underline-offset-2"
+                >
+                  {t("Review the Excel template in Data Source")}
+                </a>
+                .{" "}
+              </span>
             )}
             {loanPrincipal !== null &&
               compareMmk(loanPrincipal, 0) > 0 &&
@@ -318,13 +351,30 @@ export function OutstandingBalances({
       ) : (
         <>
           <div className="mt-5 flex flex-wrap gap-2">
+            <label className="min-w-0 flex-[1_1_15rem] text-xs font-medium text-muted-foreground">
+              {t("Search payments")}
+              <input
+                aria-label={t("Search payments")}
+                className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
+                type="search"
+                placeholder={t("Reference or name")}
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
             <label className="min-w-0 flex-[1_1_11rem] text-xs font-medium text-muted-foreground">
               {t("Type")}
               <select
                 aria-label={t("Filter by type")}
                 className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
                 value={typeFilter}
-                onChange={(event) => setTypeFilter(event.target.value)}
+                onChange={(event) => {
+                  setTypeFilter(event.target.value);
+                  setPage(1);
+                }}
               >
                 <option value="all">{t("All types")}</option>
                 <option value="supplier">{t("Supplier")}</option>
@@ -338,7 +388,10 @@ export function OutstandingBalances({
                 aria-label={t("Filter by status")}
                 className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
+                onChange={(event) => {
+                  setStatusFilter(event.target.value);
+                  setPage(1);
+                }}
               >
                 <option value="all">{t("All statuses")}</option>
                 {(
@@ -362,7 +415,10 @@ export function OutstandingBalances({
                 aria-label={t("Filter by due date")}
                 className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
                 value={dueDateFilter}
-                onChange={(event) => setDueDateFilter(event.target.value)}
+                onChange={(event) => {
+                  setDueDateFilter(event.target.value);
+                  setPage(1);
+                }}
               >
                 <option value="all">{t("All due dates")}</option>
                 <option value="available">{t("Date recorded")}</option>
@@ -377,7 +433,10 @@ export function OutstandingBalances({
                 type="number"
                 min="0"
                 value={minimumAmount}
-                onChange={(event) => setMinimumAmount(event.target.value)}
+                onChange={(event) => {
+                  setMinimumAmount(event.target.value);
+                  setPage(1);
+                }}
               />
             </label>
             <label className="min-w-0 flex-[1_1_11rem] text-xs font-medium text-muted-foreground">
@@ -386,16 +445,26 @@ export function OutstandingBalances({
                 aria-label={t("Sort payments")}
                 className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
                 value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as SortBy)}
+                onChange={(event) => {
+                  setSortBy(event.target.value as SortBy);
+                  setPage(1);
+                }}
               >
-                <option value="due-date">{t("Due date")}</option>
-                <option value="amount">{t("Outstanding amount")}</option>
+                <option value="due-date">{t("Nearest known due date")}</option>
+                <option value="amount">{t("Highest remaining balance")}</option>
+                <option value="amount-asc">{t("Smallest remaining balance")}</option>
+                <option value="reference">{t("Reference")}</option>
                 <option value="status">{t("Payment status")}</option>
                 <option value="type">{t("Type")}</option>
               </select>
             </label>
           </div>
-          <div className="mt-3 max-w-full overflow-x-auto rounded-xl border border-border">
+          <div
+            className="mt-3 max-w-full overflow-x-auto rounded-xl border border-border"
+            role="region"
+            aria-label={t("Scrollable outstanding payments table")}
+            tabIndex={0}
+          >
             <table className="w-full min-w-[850px] text-left text-xs sm:text-sm">
               <caption className="sr-only">
                 {t("Outstanding business obligations and payment statuses as of")} {asAt}
@@ -422,7 +491,7 @@ export function OutstandingBalances({
                 </tr>
               </thead>
               <tbody>
-                {rows.map(({ item, status }) => (
+                {visibleRows.map(({ item, status }) => (
                   <tr
                     key={`${item.kind}-${item.reference_id}`}
                     className="border-t border-border align-top"
@@ -482,6 +551,39 @@ export function OutstandingBalances({
               </tbody>
             </table>
           </div>
+          {rows.length > 0 && (
+            <nav
+              className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground"
+              aria-label={t("Outstanding payments pages")}
+            >
+              <p aria-live="polite">
+                {t("Showing {0}–{1} of {2} payments", {
+                  "0": (currentPage - 1) * PAGE_SIZE + 1,
+                  "1": Math.min(currentPage * PAGE_SIZE, rows.length),
+                  "2": rows.length,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border bg-background px-3 py-2 font-medium text-foreground disabled:opacity-50"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  {t("Previous")}
+                </button>
+                <span>{t("Page {0} of {1}", { "0": currentPage, "1": pageCount })}</span>
+                <button
+                  type="button"
+                  className="rounded-lg border bg-background px-3 py-2 font-medium text-foreground disabled:opacity-50"
+                  disabled={currentPage === pageCount}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  {t("Next")}
+                </button>
+              </div>
+            </nav>
+          )}
         </>
       )}
     </section>

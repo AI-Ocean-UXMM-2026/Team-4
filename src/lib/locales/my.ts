@@ -736,4 +736,98 @@ export const my: Record<string, string> = {
     "ချေးငွေစီမံမှုစာမျက်နှာတွင် မှတ်တမ်းပါ ပြန်ဆပ်မှုများကို စစ်ဆေးပါ။ နောင်ပေးချေရမည့်ငွေကို ခန့်မှန်းမီ ချေးငွေစာချုပ်ရှိ အတိုးနှုန်းနှင့် သက်တမ်းကို စစ်ဆေးပါ။",
   "Open Data Source to review import warnings, correct the source workbook where possible, and import it again before relying on missing figures.":
     "အချက်အလက်ရင်းမြစ်တွင် တင်သွင်းမှုသတိပေးချက်များကို စစ်ဆေးပါ။ မူရင်း Excel ဖိုင်တွင် ပြင်နိုင်သည့်အချက်များကို ပြင်ပြီး ပြန်တင်ပါ။ မရှိသေးသောကိန်းဂဏန်းများအပေါ် အခြေခံ၍ မဆုံးဖြတ်ပါနှင့်။",
+  "What type of business do you operate?": "သင့်လုပ်ငန်းသည် မည်သည့်အမျိုးအစားဖြစ်ပါသလဲ။",
+  "B2C — Business to Consumer": "B2C — တစ်ဦးချင်းဝယ်ယူသူများထံ ရောင်းချသောလုပ်ငန်း",
+  "B2B — Business to Business": "B2B — အခြားလုပ်ငန်းများထံ ရောင်းချသောလုပ်ငန်း",
+  "Retail shops and individual customers": "လက်လီဆိုင်များနှင့် တစ်ဦးချင်းဝယ်ယူသူများ",
+  "Wholesale and sales to other businesses": "လက်ကားနှင့် အခြားလုပ်ငန်းများထံ ရောင်းချခြင်း",
+  "I serve both B2B and B2C customers": "B2B နှင့် B2C ဝယ်ယူသူနှစ်မျိုးလုံးကို ဝန်ဆောင်မှုပေးသည်",
+  "Both — B2B and B2C": "နှစ်မျိုးလုံး — B2B နှင့် B2C",
+  "Sales to both businesses and individual customers":
+    "လုပ်ငန်းများနှင့် တစ်ဦးချင်းဝယ်ယူသူများထံ ရောင်းချခြင်း",
+  "B2C customer share": "B2C ဝယ်ယူသူအချိုး",
+  "B2B customer share": "B2B ဝယ်ယူသူအချိုး",
+  "This is your estimated customer mix, not a classification from the workbook.":
+    "ဤအချိုးသည် သင်ခန့်မှန်းထားသော ဝယ်ယူသူအမျိုးအစားဖြစ်ပြီး Excel စာရင်းမှ အတည်ပြုထားခြင်းမဟုတ်ပါ။",
+  "B2C sales paid later": "နောက်မှငွေပေးချေသော B2C အရောင်းအချိုး",
+  "B2B sales paid later": "နောက်မှငွေပေးချေသော B2B အရောင်းအချိုး",
+  "B2C collection days (DSO)": "B2C ငွေကောက်ခံရန်ကြာချိန် (DSO)",
+  "B2B collection days (DSO)": "B2B ငွေကောက်ခံရန်ကြာချိန် (DSO)",
+  "Average B2C customer payment days": "B2C ဝယ်ယူသူများ၏ ပျမ်းမျှငွေပေးချေရက်",
+  "Average B2B customer payment days": "B2B ဝယ်ယူသူများ၏ ပျမ်းမျှငွေပေးချေရက်",
+  "Average customer payment days across all sales":
+    "အရောင်းအားလုံးအတွက် ဝယ်ယူသူငွေပေးချေရက် ပျမ်းမျှ",
+  "Include immediately paid sales as 0 days in this average.":
+    "ချက်ချင်းငွေပေးချေသော အရောင်းများကို ဤပျမ်းမျှတွင် ၀ ရက်အဖြစ် ထည့်တွက်ပါ။",
+  "Include immediately paid sales as 0 days in each average.":
+    "ချက်ချင်းငွေပေးချေသော အရောင်းများကို ပျမ်းမျှတစ်ခုစီတွင် ၀ ရက်အဖြစ် ထည့်တွက်ပါ။",
+  "B2C scenario": "B2C ခန့်မှန်းအခြေအနေ",
+  "B2B scenario": "B2B ခန့်မှန်းအခြေအနေ",
+  "B2B and B2C are shown separately because verified sales shares are unavailable. These are scenario estimates, not a combined business cash gap.":
+    "အတည်ပြုထားသော B2B နှင့် B2C အရောင်းအချိုးများ မရှိသဖြင့် ခန့်မှန်းအခြေအနေများကို သီးခြားပြထားသည်။ ဤရလဒ်များသည် လုပ်ငန်းတစ်ခုလုံး၏ ပေါင်းစပ်ငွေသားလိုအပ်ချိန် မဟုတ်ပါ။",
+  "−60% wait days per group": "အုပ်စုတစ်ခုစီ၏ စောင့်ဆိုင်းရက် ၆၀% လျှော့ချ",
+  "{0} scenario cash gap falls by {1} days.":
+    "{0} ခန့်မှန်းအခြေအနေတွင် ငွေသားလိုအပ်ချိန် {1} ရက် လျော့ကျသည်။",
+  "Before Changes": "ပြောင်းလဲမှုမပြုမီ",
+  "After Changes": "ပြောင်းလဲပြီးနောက်",
+  "Potential improvement: {0} fewer days": "တိုးတက်နိုင်မှု — {0} ရက် လျော့နည်း",
+  "Cash gap worsens by {0} days": "ငွေသားလိုအပ်ချိန် {0} ရက် ပိုရှည်လာသည်",
+  "No change yet": "ပြောင်းလဲမှုမရှိသေးပါ",
+  "Cash amount cannot be estimated yet.": "ငွေသားပမာဏကို ယခု မခန့်မှန်းနိုင်သေးပါ။",
+  "A dated cash forecast is needed to estimate an MMK amount.":
+    "ကျပ်ပမာဏကို ခန့်မှန်းရန် ရက်စွဲပါ ငွေသားခန့်မှန်းချက် လိုအပ်သည်။",
+  "Ways to Reduce Your Cash Gap": "ငွေသားလိုအပ်ချိန် လျှော့ချနိုင်မည့် နည်းလမ်းများ",
+  "What-if: every pay-later sale provides a 60% deposit immediately. Actual terms may differ.":
+    "အခြေအနေခန့်မှန်းချက် — နောက်မှငွေပေးချေမည့် အရောင်းတိုင်းမှ ၆၀% ကြိုတင်ငွေကို ချက်ချင်းရမည်ဟု ယူဆထားသည်။ လက်တွေ့သဘောတူညီချက်များ ကွဲပြားနိုင်သည်။",
+  "No verified sales split; B2C and B2B estimates are shown separately.":
+    "အတည်ပြုထားသော အရောင်းအချိုးမရှိသဖြင့် B2C နှင့် B2B ခန့်မှန်းချက်များကို သီးခြားပြထားသည်။",
+  "Ways to reduce your cash gap": "ငွေသားလိုအပ်ချိန် လျှော့ချနိုင်မည့် နည်းလမ်းများ",
+  "What-if: ask every pay-later customer for a 60% deposit immediately":
+    "အခြေအနေခန့်မှန်းချက် — နောက်မှငွေပေးချေမည့် ဝယ်ယူသူတိုင်းထံမှ ၆၀% ကြိုတင်ငွေကို ချက်ချင်းတောင်းရန်",
+  "What-if: Restock only fast-selling items, reducing stock days by up to 10":
+    "အခြေအနေခန့်မှန်းချက် — အရောင်းမြန်သော ပစ္စည်းများကိုသာ ပြန်မှာယူပြီး ကုန်ပစ္စည်းထားရှိရက်ကို အများဆုံး ၁၀ ရက် လျှော့ချရန်",
+  "What-if: suppliers agree to 15 more days to pay":
+    "အခြေအနေခန့်မှန်းချက် — ပေးသွင်းသူများက ငွေပေးချေရန် နောက်ထပ် ၁၅ ရက် သဘောတူပေးရန်",
+  "Planning estimates only. Your business records do not change.":
+    "ဤကိန်းဂဏန်းများသည် စီမံကိန်းခန့်မှန်းချက်များသာဖြစ်ပြီး သင့်လုပ်ငန်းမှတ်တမ်းများကို မပြောင်းလဲပါ။",
+  "Days stock stays before selling (DIO)": "ရောင်းချမည့်အချိန်အထိ ကုန်ပစ္စည်းထားရှိရက် (DIO)",
+  "Days before paying suppliers (DPO)": "ပေးသွင်းသူများကို ငွေပေးချေမည့်အချိန်အထိ ရက် (DPO)",
+  "Assumes every pay-later sale receives a 60% deposit immediately; actual terms may differ.":
+    "နောက်မှငွေပေးချေမည့် အရောင်းတိုင်းအတွက် ၆၀% ကြိုတင်ငွေကို ချက်ချင်းရရှိမည်ဟု ယူဆထားသည်။ လက်တွေ့သဘောတူညီချက်များ ကွဲပြားနိုင်သည်။",
+  "Calculated from each customer group's share, pay-later percentage, and collection days. Pay-now sales add no waiting days.":
+    "ဝယ်ယူသူအုပ်စုတစ်ခုစီ၏ အချိုး၊ နောက်မှငွေပေးချေမှုအချိုးနှင့် ငွေကောက်ခံရန်ကြာချိန်အပေါ် မူတည်၍ တွက်ချက်သည်။ ချက်ချင်းငွေပေးချေသော အရောင်းများတွင် စောင့်ဆိုင်းရက်မရှိပါ။",
+  "Ask customers who pay later for a 60% deposit":
+    "နောက်မှငွေပေးချေမည့် ဝယ်ယူသူများထံမှ ၆၀% ကြိုတင်ငွေတောင်းရန်",
+  "Working Capital tools": "လုပ်ငန်းလည်ပတ်ငွေ စီမံရေးကိရိယာများ",
+  "Find Cash": "အသုံးချနိုင်သည့် ငွေသားရှာရန်",
+  "Cash Gap": "ငွေသားလိုအပ်ချိန်",
+  "Safety Reserve": "အရန်ငွေ",
+  "Planning tools": "စီမံကိန်းရေးဆွဲရန် ကိရိယာများ",
+  "You can edit planning inputs above whenever a tool needs information your workbook does not contain.":
+    "Excel စာရင်းတွင် မပါသည့်အချက်အလက်ကို ကိရိယာတစ်ခုက လိုအပ်ပါက အပေါ်ရှိ စီမံကိန်းအတွက် ထည့်သွင်းချက်များကို ပြင်ဆင်နိုင်သည်။",
+  "Enter monthly essential costs, a protected reserve target, and the amount already set aside in the planning inputs above to see a reserve plan.":
+    "အရန်ငွေစီမံချက်ကို ကြည့်ရန် အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လစဉ်မဖြစ်မနေကုန်ကျစရိတ်၊ ကာကွယ်ထားမည့်အရန်ငွေပန်းတိုင်နှင့် ဖယ်ထားပြီးသောပမာဏကို ထည့်ပါ။",
+  "Enter amount": "ပမာဏထည့်ပါ",
+  "Amount you plan to save each month.": "လစဉ် စုဆောင်းရန် စီစဉ်ထားသော ပမာဏ။",
+  "Enter a monthly contribution, or 0 if you cannot save yet.":
+    "လစဉ်စုဆောင်းမည့်ပမာဏကို ထည့်ပါ။ မစုဆောင်းနိုင်သေးပါက ၀ ထည့်ပါ။",
+  "Enter a non-negative whole MMK amount.": "အနုတ်မဟုတ်သော ကျပ်ပြည့်ပမာဏကို ထည့်ပါ။",
+  "Monthly contribution must be 1,000,000,000,000 MMK or less.":
+    "လစဉ်စုဆောင်းမည့်ပမာဏသည် ကျပ် ၁,၀၀၀,၀၀၀,၀၀၀,၀၀၀ ထက် မပိုရပါ။",
+  "Enter monthly essential costs and the reserve already saved in the planning inputs above.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လစဉ်မဖြစ်မနေကုန်ကျစရိတ်နှင့် စုဆောင်းထားပြီးသော အရန်ငွေကို ထည့်ပါ။",
+  "Enter monthly essential costs greater than 0 in the planning inputs above.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် သုညထက်ကြီးသော လစဉ်မဖြစ်မနေကုန်ကျစရိတ်ကို ထည့်ပါ။",
+  "Enter your current dedicated reserve in the planning inputs above. Use 0 if none.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လက်ရှိဖယ်ထားသော အရန်ငွေကို ထည့်ပါ။ မရှိပါက ၀ ထည့်ပါ။",
+  "Enter a protected reserve target in the planning inputs above. Use 0 if none.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် ကာကွယ်ထားမည့် အရန်ငွေပန်းတိုင်ကို ထည့်ပါ။ မရှိပါက ၀ ထည့်ပါ။",
+  "Choose target coverage from 1 to 6 months.": "ပန်းတိုင်အတွက် ၁ လမှ ၆ လအထိ ရွေးပါ။",
+  "Check your reserve planning inputs and try again.":
+    "အရန်ငွေစီမံကိန်း ထည့်သွင်းချက်များကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
+  "Reserve target already reached.": "အရန်ငွေပန်းတိုင်သို့ ရောက်ရှိပြီးဖြစ်သည်။",
+  "At 0 MMK per month, this target cannot be reached without additional contributions.":
+    "လစဉ် ၀ ကျပ်သာ စုဆောင်းပါက နောက်ထပ်ထည့်ဝင်မှုမရှိဘဲ ဤပန်းတိုင်သို့ မရောက်နိုင်ပါ။",
+  "At {0} per month, the target could be reached in about {1} months.":
+    "လစဉ် {0} စုဆောင်းပါက {1} လခန့်အကြာတွင် ပန်းတိုင်သို့ ရောက်နိုင်သည်။",
 };
