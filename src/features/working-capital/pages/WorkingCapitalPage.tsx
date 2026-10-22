@@ -1,9 +1,7 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
-import { CashGapSimulator } from "../components/CashGapSimulator";
 import { InventoryRiskTable } from "../components/InventoryRiskTable";
-import { ReservePlanner } from "../components/ReservePlanner";
-import { UnlockCashSimulator } from "../components/UnlockCashSimulator";
+import { WorkingCapitalToolTabs } from "../components/WorkingCapitalToolTabs";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
 import { usePlatform } from "@/app/providers";
 import { Link } from "@tanstack/react-router";
@@ -112,7 +110,7 @@ export function WorkingCapitalPage() {
       </section>
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-primary">
-          {t("Illustrative scenarios")}
+          {t("Planning tools")}
         </p>
         <h2 className="mt-1 text-2xl font-bold">{t("Explore what could change")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -120,18 +118,21 @@ export function WorkingCapitalPage() {
             "Unlock hidden cash uses imported amounts; sliders are what-if assumptions. Other scenario inputs may be illustrative.",
           )}
         </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t(
+            "You can edit planning inputs above whenever a tool needs information your workbook does not contain.",
+          )}
+        </p>
       </div>
-      <UnlockCashSimulator
+      <WorkingCapitalToolTabs
         key={`${business.id}:${business.source_version}`}
-        inputs={display?.unlock_cash}
+        unlockInputs={display?.unlock_cash}
+        cashGapInputs={snapshot?.unlock_cash}
         manualStock={!!manualInputs && Object.keys(manualInputs.stockLevels).length > 0}
-      />
-      <CashGapSimulator
-        key={`${business.id}:${business.source_version}`}
+        manualInputs={manualInputs}
         simulate={simulate}
-        inputs={snapshot?.unlock_cash}
+        planReserve={planReserve}
       />
-      <ReservePlanner planReserve={planReserve} inputs={manualInputs} />
     </main>
   );
 }

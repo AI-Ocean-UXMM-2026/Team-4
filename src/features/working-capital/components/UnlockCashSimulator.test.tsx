@@ -21,7 +21,11 @@ describe("UnlockCashSimulator", () => {
     render(<UnlockCashSimulator inputs={inputs} />);
     expect(screen.getByText("+ 240 K")).toBeTruthy();
     expect(screen.getByText("+ 250 K")).toBeTruthy();
-    expect(screen.getByText("≈ 2.3 extra weeks of running costs covered")).toBeTruthy();
+    expect(screen.getByText("Potential cash unlocked").parentElement?.textContent).toContain(
+      "490,000 MMK",
+    );
+    expect(screen.getByText("≈ 2.3 weeks")).toBeTruthy();
+    expect(screen.getByText("Scenario estimates only. Actual results may differ.")).toBeTruthy();
     expect(
       screen.queryByRole("button", {
         name: /Project stock sale|Project collection|Project spending avoided/,
@@ -45,13 +49,13 @@ describe("UnlockCashSimulator", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Campaign/ }));
     expect(screen.getAllByText("+ 400 K")).toHaveLength(2);
     expect(screen.getByText("+ 100 K")).toBeTruthy();
-    expect(screen.getByText("+ 900 K")).toBeTruthy();
-    expect(screen.getByText("≈ 4.3 extra weeks of running costs covered")).toBeTruthy();
+    expect(screen.getByText("900,000 MMK")).toBeTruthy();
+    expect(screen.getByText("≈ 4.3 weeks")).toBeTruthy();
     fireEvent.click(screen.getByRole("checkbox", { name: /Trip/ }));
     expect(screen.getByText("+ 150 K")).toBeTruthy();
-    expect(screen.getByText("+ 950 K")).toBeTruthy();
+    expect(screen.getByText("950,000 MMK")).toBeTruthy();
     fireEvent.click(screen.getByRole("checkbox", { name: /Campaign/ }));
-    expect(screen.getByText("+ 850 K")).toBeTruthy();
+    expect(screen.getByText("850,000 MMK")).toBeTruthy();
   });
 
   it("keeps missing source amounts and weekly coverage unavailable", () => {
@@ -67,7 +71,7 @@ describe("UnlockCashSimulator", () => {
       />,
     );
     expect(screen.getByText("Running-cost coverage unavailable")).toBeTruthy();
-    expect(screen.getByText("Total cash unlocked").parentElement?.textContent).toContain(
+    expect(screen.getByText("Potential cash unlocked").parentElement?.textContent).toContain(
       "Unavailable",
     );
     expect(screen.getByText("+ 0 K")).toBeTruthy();
@@ -88,8 +92,8 @@ describe("UnlockCashSimulator", () => {
     );
     expect(screen.getByText("+ 192 MMK")).toBeTruthy();
     expect(screen.getByText("+ 125 MMK")).toBeTruthy();
-    expect(screen.getByText("+ 317 MMK")).toBeTruthy();
-    expect(screen.getByText("≈ 1.5 extra weeks of running costs covered")).toBeTruthy();
+    expect(screen.getByText("317 MMK")).toBeTruthy();
+    expect(screen.getByText("≈ 1.5 weeks")).toBeTruthy();
   });
 
   it("keeps every expense selectable in a bounded, keyboard-focusable list", () => {
@@ -114,11 +118,19 @@ describe("UnlockCashSimulator", () => {
     expect(spendingCard?.parentElement).toBe(grid);
     expect(spendingCard?.className).toContain("md:col-span-2");
     expect(spendingCard?.className).toContain("xl:col-span-1");
+    for (const card of [stockCard, collectionCard, spendingCard]) {
+      expect(card?.className).toContain("flex");
+      expect(card?.className).toContain("flex-col");
+      expect(card?.className).toContain("h-full");
+      expect(card?.className).toContain("min-h-0");
+      expect(card?.className).toContain("gap-2.5");
+      expect(card?.lastElementChild?.className).toContain("mt-auto");
+    }
     expect(list.tabIndex).toBe(0);
     expect(list.className).toContain("overflow-y-auto");
-    expect(list.className).toContain("h-60");
-    expect(list.className).toContain("md:h-72");
-    expect(list.className).toContain("xl:h-80");
+    expect(list.className).toContain("max-h-64");
+    expect(list.className).toContain("md:max-h-[280px]");
+    expect(list.className).not.toContain("xl:h-80");
     expect(within(list).getAllByRole("checkbox")).toHaveLength(18);
     expect(list.contains(screen.getByText("Pause optional spending"))).toBe(false);
     expect(list.contains(screen.getByText("+ 0 K"))).toBe(false);
@@ -128,6 +140,9 @@ describe("UnlockCashSimulator", () => {
 
     fireEvent.click(within(list).getByRole("checkbox", { name: /Expense 18/ }));
     expect(screen.getByText("+ 1 K")).toBeTruthy();
-    expect(screen.getByText("Total cash unlocked").parentElement?.textContent).toContain("+ 491 K");
+    expect(screen.getByText("Potential cash unlocked").parentElement?.textContent).toContain(
+      "491,000 MMK",
+    );
+    expect(spendingCard?.lastElementChild?.className).toContain("mt-auto");
   });
 });
