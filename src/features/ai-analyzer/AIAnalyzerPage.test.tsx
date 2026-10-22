@@ -47,17 +47,15 @@ afterEach(() => {
   run.mockClear();
 });
 
-it("requires explicit consent for AI and allows rules-only analysis", () => {
+it("offers one clearly disclosed AI action", () => {
   render(<AIAnalyzerPage />);
   const aiButton = screen.getByRole("button", { name: "Analyze with AI" });
-  expect((aiButton as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Use rules only" }));
-  expect(run).toHaveBeenCalledWith(false);
-  expect(run).toHaveBeenCalledTimes(1);
-  fireEvent.click(screen.getByRole("checkbox"));
-  expect((aiButton as HTMLButtonElement).disabled).toBe(false);
+  expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Use rules only" })).toBeNull();
+  expect(screen.getByText(/By selecting Analyze with AI, you agree/)).toBeTruthy();
   fireEvent.click(aiButton);
   expect(run).toHaveBeenCalledWith(true);
+  expect(run).toHaveBeenCalledTimes(1);
 });
 
 it("shows each finding once with its action and expandable evidence", () => {
