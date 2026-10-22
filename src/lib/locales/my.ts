@@ -312,6 +312,11 @@ export const my: Record<string, string> = {
     "ဝယ်ယူရန် မစီစဉ်မီ ကုန်လက်ကျန်နှင့် လတ်တလောအရောင်းကို စစ်ဆေးပါ။",
   Risk: "အန္တရာယ်အခြေအနေ",
   "Rules-based analysis (AI unavailable)": "စည်းမျဉ်းအခြေခံ သုံးသပ်ချက် (AI မရရှိနိုင်ပါ)",
+  "Rules-based analysis": "စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်",
+  "AI wording was skipped because this upload is not configured as a demo workbook. Rules-based findings are still available. Ask an administrator to configure this exact demo file. Real business records require separate consent before AI provider use.":
+    "ဤဖိုင်ကို နမူနာဖိုင်အဖြစ် မသတ်မှတ်ရသေးသဖြင့် AI စာသားဖော်ပြမှုကို ချန်ထားပါသည်။ စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်များကို ဆက်လက်ကြည့်နိုင်ပါသည်။ ဤနမူနာဖိုင်ကို စနစ်တာဝန်ခံအား သတ်မှတ်ခိုင်းပါ။ အမှန်တကယ်လုပ်ငန်းအချက်အလက်များကို AI ဝန်ဆောင်မှုသို့ မပို့မီ သီးခြားသဘောတူညီချက် လိုအပ်ပါသည်။",
+  "AI provider was not called because this snapshot is not marked synthetic.":
+    "ဤဖိုင်ကို နမူနာအချက်အလက်ဟု အတည်မပြုနိုင်သဖြင့် AI ဝန်ဆောင်မှုသို့ မပို့ထားပါ။ စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်များကို ဆက်လက်ကြည့်နိုင်ပါသည်။",
   "Scheduled obligations are estimates. They are kept separate from actual imported payments.":
     "အစီအစဉ်ပါ ပေးရန်ရှိငွေများသည် ခန့်မှန်းချက်များသာ ဖြစ်ပြီး အမှန်တကယ်ပေးချေမှု မှတ်တမ်းများနှင့် ခွဲခြားထားပါသည်။",
   "Schedules are model estimates and may differ from lender statements because of fees, grace periods, day-count rules or variable rates.":

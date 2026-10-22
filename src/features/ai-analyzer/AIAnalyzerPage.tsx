@@ -216,7 +216,7 @@ export function AIAnalyzerPage() {
               {report.status === "completed"
                 ? t("AI-assisted analysis")
                 : report.status === "rules_only"
-                  ? t("Rules-based analysis (AI unavailable)")
+                  ? t("Rules-based analysis")
                   : t("Insufficient data for analysis")}
             </p>
             <p>

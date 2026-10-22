@@ -114,7 +114,11 @@ class AnalysisService:
                 provider_name = "OpenRouter" if getattr(self.client, "provider", "openai") == "openrouter" else "OpenAI"
                 warnings.append(provider_failure_warning(error, provider_name))
         elif selected and not context["synthetic"] and not getattr(self.client, "allow_real_data", False):
-            warnings.append("AI provider was not called because this snapshot is not marked synthetic.")
+            warnings.append(
+                "AI wording was skipped because this upload is not configured as a demo workbook. "
+                "Rules-based findings are still available. Ask an administrator to configure this exact demo file. "
+                "Real business records require separate consent before AI provider use."
+            )
         elif selected and not self.client.api_key:
             warnings.append("AI provider is not configured; rules-based findings are shown.")
         result = AIAnalysis(
