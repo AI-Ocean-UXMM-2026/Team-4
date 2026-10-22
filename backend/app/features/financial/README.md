@@ -73,9 +73,10 @@ supply source facts that the workbook lacks:
    expense due lists remain explicitly incomplete.
 4. Interest is cash-paid interest, not accrued interest. Taxes and depreciation
    are excluded. This is a simplified operational report.
-5. Production imports have no trusted synthetic-data flag. The connected page
-   does not falsely label arbitrary uploaded business records as synthetic;
-   synthetic preview fixtures remain explicitly labeled.
+5. Only an exact hash match for a bundled seed workbook and its matching seeded
+   business is labeled synthetic. Ordinary uploads and edited workbooks are not
+   mislabeled; the connected page displays the synthetic-data notice when this
+   exact match is present.
 
 P5 and the feature owners can agree on a future schema extension to supply
 historical sold costs, expense settlement facts, supplier due dates and loan

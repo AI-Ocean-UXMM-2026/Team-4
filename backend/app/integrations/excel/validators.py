@@ -49,6 +49,24 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
                     err("quantity", "Quantity times unit price must produce whole hundredths of MMK")
                 if paid > total or (value["payment_type"] == "cash" and paid != total):
                     err(key, "Cash transactions must be fully paid; credit payments cannot exceed the total")
+                if name == "Sales":
+                    unit_cost, supplied_cogs = value.get("unit_cost_at_sale_mmk"), value.get("cogs_mmk")
+                    if unit_cost is not None and supplied_cogs is not None and D(unit_cost) * D(value["quantity"]) != D(supplied_cogs):
+                        err("cogs_mmk", "Supplied COGS must equal quantity times historical unit cost")
+                    if supplied_cogs is not None and D(supplied_cogs) != (D(supplied_cogs).quantize(D(".01"))):
+                        err("cogs_mmk", "COGS must be an exact amount to whole hundredths of MMK")
+            if name == "Expenses":
+                status, paid, paid_date = value.get("payment_status"), value.get("amount_paid_mmk"), value.get("paid_date")
+                if paid is not None and D(paid) > D(value["amount_mmk"]):
+                    err("amount_paid_mmk", "Amount paid cannot exceed the expense amount")
+                if paid is not None and D(paid) > 0 and paid_date is None:
+                    err("paid_date", "A dated cash payment is required when amount paid is greater than zero")
+                if status == "paid" and paid is not None and D(paid) != D(value["amount_mmk"]):
+                    err("amount_paid_mmk", "A fully paid expense must record its full amount")
+                if status == "unpaid" and paid is not None and D(paid) != 0:
+                    err("amount_paid_mmk", "An unpaid expense cannot record a cash payment")
+                if status == "partial" and (paid is None or D(paid) <= 0 or D(paid) >= D(value["amount_mmk"])):
+                    err("amount_paid_mmk", "A partially paid expense must record a positive amount below the full expense")
             if name == "LoanPayments" and D(value["principal_mmk"]) + D(value["interest_mmk"]) == 0:
                 err("principal_mmk", "Loan payment must contain principal or interest")
     if errors:

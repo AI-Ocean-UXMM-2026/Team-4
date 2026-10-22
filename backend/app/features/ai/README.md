@@ -23,7 +23,7 @@ P4 marks data synthetic only when the latest successful import has the exact SHA
 
 The OpenAI step uses the Responses API with structured output and `store=false`. It can change wording only. Category, priority, evidence, and values remain deterministic. Responses with digits or unsupported claims fall back to rules-only. Timeouts and missing keys also show rules-only results.
 
-The cache is process-local and resets on backend restart; multi-worker deployments need a shared cache if persistent latest reports or global quotas are required. This MVP keeps results out of business transaction tables.
+The latest report is persisted in `ai_analysis_reports` with its business and source version, so it survives restarts and is consistent across workers. The ten-minute reuse cache and hourly provider-call quota remain process-local; multi-worker deployments should move those controls to a shared store. Reports stay separate from business transaction tables.
 Concurrent Analyze clicks for one business are serialized. At most ten provider calls per business are attempted per hour in each backend process.
 
 ## Verification

@@ -1,6 +1,8 @@
 """Local bootstrap only; production applies database/migrations in order."""
-from sqlalchemy import inspect
+from sqlalchemy import Date, inspect
 from .models import Base
+from ..integrations.excel.schemas import SCHEMA
+from .models import PROJECTIONS
 
 
 def initialize_local_database(engine):
@@ -11,6 +13,14 @@ def initialize_local_database(engine):
                      "businesses": {"owner_id": "VARCHAR(80) REFERENCES users(id)", "industry": "VARCHAR(120)",
                                     "city": "VARCHAR(120)", "phone": "VARCHAR(40)", "address": "VARCHAR(500)",
                                     "currency": "VARCHAR(3) NOT NULL DEFAULT 'MMK'"}}
+        for sheet, spec in SCHEMA.items():
+            optional = spec.get("optional_fields", [])
+            if optional:
+                table = PROJECTIONS[sheet]
+                additions[table.name] = {
+                    field: "DATE" if isinstance(table.c[field].type, Date) else "NUMERIC(18, 2)" if "money" in spec["fields"][field] else "VARCHAR(500)"
+                    for field in optional
+                }
         with engine.begin() as connection:
             for table, columns in additions.items():
                 existing = {column["name"] for column in inspect(connection).get_columns(table)}

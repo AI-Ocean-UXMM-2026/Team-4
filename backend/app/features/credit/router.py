@@ -35,7 +35,11 @@ def _loan_items(inputs: dict) -> list[dict]:
         term = raw.get("term_months")
         status, explanation, schedule = "missing_terms", "The imported workbook does not include interest rate and term, so no repayment schedule is estimated.", []
         if model != "reducing_balance":
-            status, explanation = "unsupported_loan_model", f"The {model} repayment model is not supported for schedule estimates."
+            status = "unsupported_loan_model"
+            if model in {"flat", "interest_only"}:
+                explanation = f"The {model} repayment model is not supported for schedule estimates."
+            else:
+                explanation = "The imported loan type does not provide a supported repayment model; no schedule is estimated."
         elif rate is not None and term is not None:
             try:
                 schedule = amortization_schedule(principal, Decimal(str(rate)), int(term), _serialize_date(raw["date"]), model)

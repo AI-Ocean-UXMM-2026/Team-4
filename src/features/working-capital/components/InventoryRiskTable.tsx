@@ -52,7 +52,8 @@ export function InventoryRiskTable({ items }: { items: InventoryRisk[] }) {
         </tbody>
       </table>
       <p className="border-t px-4 py-3 text-xs text-muted-foreground">
-        Slow-moving means no sales in the observed 30-day window; this demo rule is configurable.
+        Slow-moving means no sales in the 30-day window ending at the latest inventory activity
+        date.
       </p>
     </div>
   );
