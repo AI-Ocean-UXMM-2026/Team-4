@@ -2,9 +2,19 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { BankLoanGuide } from "../components/BankLoanGuide";
 
+vi.mock("../components/ApplicationFiles", () => ({ ApplicationFiles: () => <div>Application files</div> }));
 const preferences = vi.hoisted(() => ({ language: "en" }));
 vi.mock("@/lib/i18n", () => ({ useTranslation: () => preferences }));
-afterEach(() => { cleanup(); preferences.language = "en"; });
+afterEach(() => { cleanup(); localStorage.clear(); preferences.language = "en"; });
+
+it("keeps uploads in preparation and the guide informational", () => {
+  const view = render(<BankLoanGuide businessId="mine" onViewRecords={() => {}} />);
+  expect(screen.queryByText("Application files")).toBeNull();
+  expect(screen.getByText("Financial statements for the last 3 years")).toBeTruthy();
+  view.rerender(<BankLoanGuide businessId="mine" preparationOnly onViewRecords={() => {}} />);
+  expect(screen.getAllByText("Application files").length).toBeGreaterThan(0);
+  expect(screen.queryByRole("checkbox")).toBeNull();
+});
 
 it("resets the product when switching banks and shows that product's source and terms", () => {
   render(<BankLoanGuide onViewRecords={() => {}} />);
@@ -24,6 +34,6 @@ it("renders Burmese guidance and opens the user's preparation records", () => {
   const viewRecords = vi.fn();
   render(<BankLoanGuide onViewRecords={viewRecords} />);
   expect(screen.getByText("ဘဏ်ချေးငွေလမ်းညွှန်")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "မိမိပြင်ဆင်မှုမှတ်တမ်းများ ကြည့်ရန်" }));
+  fireEvent.click(screen.getByRole("button", { name: "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်" }));
   expect(viewRecords).toHaveBeenCalledOnce();
 });

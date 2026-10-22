@@ -25,3 +25,23 @@ def test_zero_interest_has_no_division_by_zero_and_reconciles():
 def test_unsupported_model_is_explicit():
     with pytest.raises(UnsupportedLoanModel):
         amortization_schedule(Decimal("1000"), Decimal("10"), 12, date(2026, 1, 1), "flat")
+
+
+def test_explicit_first_payment_anchors_monthly_due_dates():
+    rows = amortization_schedule(Decimal("1200000"), Decimal("12"), 12, date(2026, 10, 20),
+                                 first_payment_date=date(2026, 11, 20), payment_frequency="monthly")
+    assert rows[0].due_date == date(2026, 11, 20)
+    assert rows[-1].due_date == date(2027, 10, 20)
+    assert rows[0].scheduled_installment_mmk == Decimal("106619")
+    assert sum(row.principal_due_mmk for row in rows) == Decimal("1200000")
+
+
+@pytest.mark.parametrize("frequency", ["weekly", "quarterly"])
+def test_unsupported_frequency_is_never_estimated_as_monthly(frequency):
+    with pytest.raises(UnsupportedLoanModel, match="Only monthly"):
+        amortization_schedule(Decimal("1000"), Decimal("12"), 12, date(2026, 1, 1), payment_frequency=frequency)
+
+
+def test_irregular_first_period_is_not_silently_given_monthly_interest():
+    with pytest.raises(UnsupportedLoanModel, match="irregular"):
+        amortization_schedule(Decimal("1000"), Decimal("12"), 12, date(2026, 1, 1), first_payment_date=date(2026, 3, 1))

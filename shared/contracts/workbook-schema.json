@@ -87,6 +87,15 @@
     },
     "Loans": {
       "id": "loan_id",
+      "payload_fields": {
+        "bank_id": "enum:kbz,yoma",
+        "loan_product_id": "id",
+        "loan_product": "text",
+        "annual_rate_pct": "money",
+        "term_months": "positive_months",
+        "first_payment_date": "date",
+        "payment_frequency": "enum:monthly,weekly,quarterly"
+      },
       "fields": {
         "loan_id": "id",
         "business_id": "id",
