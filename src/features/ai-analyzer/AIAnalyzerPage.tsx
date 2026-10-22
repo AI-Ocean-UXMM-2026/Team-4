@@ -1,7 +1,6 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { useBusinessAnalysis } from "./useBusinessAnalysis";
 import type { Insight } from "./types";
 
@@ -167,8 +166,6 @@ export function AIAnalyzerPage() {
 
   const { business, report, isOutdated, isLoading, error, isAnalyzing, run } =
     useBusinessAnalysis();
-  const [providerConsent, setProviderConsent] = useState(false);
-  useEffect(() => setProviderConsent(false), [business.id, business.source_version]);
   return (
     <main className="space-y-6">
       <header className="bf-card space-y-3">
@@ -184,35 +181,14 @@ export function AIAnalyzerPage() {
         <p className="text-xs text-muted-foreground">
           {t("Current import version:")} {business.source_version}
         </p>
-        <label className="flex max-w-2xl items-start gap-3 rounded-lg border border-border p-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-1 size-4 shrink-0"
-            checked={providerConsent}
-            onChange={(event) => setProviderConsent(event.target.checked)}
-          />
-          <span>
-            {t(
-              "I agree to send summary financial amounts and findings from this import to the configured external AI provider for this analysis. The workbook, names, and individual transaction rows are not sent.",
-            )}
-          </span>
-        </label>
-        <div className="flex flex-wrap gap-3">
-          <button
-            className="bf-button"
-            onClick={() => run(true)}
-            disabled={isAnalyzing || !providerConsent}
-          >
-            {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
-          </button>
-          <button
-            className="rounded-lg border border-border px-4 py-2 font-medium"
-            onClick={() => run(false)}
-            disabled={isAnalyzing}
-          >
-            {t("Use rules only")}
-          </button>
-        </div>
+        <button className="bf-button" onClick={() => run(true)} disabled={isAnalyzing}>
+          {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
+        </button>
+        <p className="max-w-2xl text-xs text-muted-foreground">
+          {t(
+            "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.",
+          )}
+        </p>
       </header>
       {(isLoading || isAnalyzing) && (
         <LoadingAnimation label={isAnalyzing ? "Analyzing…" : "Loading your latest analysis…"} />
@@ -224,7 +200,7 @@ export function AIAnalyzerPage() {
       )}
       {!isLoading && !report && (
         <section className="bf-card">
-          <p>{t("No analysis yet. Import business records, then select Analyze Business.")}</p>
+          <p>{t("No analysis yet. Import business records, then select Analyze with AI.")}</p>
           <Link to="/data-source" className="mt-3 inline-block text-primary underline">
             {t("Open Data Source")}
           </Link>
@@ -235,17 +211,16 @@ export function AIAnalyzerPage() {
           {isOutdated && (
             <p role="status" className="bf-card border border-destructive text-destructive">
               {t(
-                "This report uses an older import. Analyze Business again for the current version.",
+                "This report uses an older import. Select Analyze with AI again for the current version.",
               )}
             </p>
           )}
-          <NextSteps insights={report.insights} />
           <section className="bf-card space-y-2 text-sm">
             <p className="font-semibold">
               {report.status === "completed"
                 ? t("AI-assisted analysis")
                 : report.status === "rules_only"
-                  ? t("Rules-based analysis")
+                  ? t("AI was not used — verified findings shown")
                   : t("Insufficient data for analysis")}
             </p>
             <p>
@@ -268,6 +243,7 @@ export function AIAnalyzerPage() {
               </Link>
             )}
           </section>
+          <NextSteps insights={report.insights} />
           <p className="text-xs text-muted-foreground">{report.disclaimer}</p>
         </>
       )}
