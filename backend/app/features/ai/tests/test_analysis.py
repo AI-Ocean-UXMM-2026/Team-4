@@ -1,13 +1,23 @@
 import asyncio
+import json
 from datetime import date, datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
+import httpx
 
 from app.features.ai.context_builder import build_context
+from app.features.ai.llm_client import AIWordingClient
 from app.features.ai.parser import grounded_insights
 from app.features.ai.schemas import AIAnalysis, SnapshotBundle
-from app.features.ai.service import AnalysisService, _cache, _call_times, _latest, _locks
+from app.features.ai.service import (
+    AnalysisService,
+    _cache,
+    _call_times,
+    _latest,
+    _locks,
+    provider_failure_warning,
+)
 from app.features.ai.snapshot_provider import SnapshotProvider, _optional_snapshot
 from app.db.connection import make_engine, session_factory
 from app.db.models import Base, Business
@@ -64,6 +74,65 @@ class Client:
         ]}
 
 
+def test_credit_balance_error_has_actionable_fallback_warning():
+    request = httpx.Request("POST", "https://api.openai.com/v1/responses")
+    response = httpx.Response(429, request=request,
+                              json={"error": {"code": "credit_balance_exhausted", "type": "insufficient_quota"}})
+    error = httpx.HTTPStatusError("failed", request=request, response=response)
+    assert "credits are exhausted" in provider_failure_warning(error)
+
+
+def test_openrouter_payment_error_names_selected_provider():
+    request = httpx.Request("POST", "https://openrouter.ai/api/v1/responses")
+    response = httpx.Response(402, request=request, json={"error": {"message": "Payment required"}})
+    error = httpx.HTTPStatusError("failed", request=request, response=response)
+    assert provider_failure_warning(error, "OpenRouter") == (
+        "OpenRouter account has insufficient credits; rules-based findings are shown."
+    )
+
+
+def test_openrouter_settings_select_its_own_key_and_model(monkeypatch):
+    monkeypatch.setenv("AI_PROVIDER", "openrouter")
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-key")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "router-key")
+    client = AIWordingClient()
+    assert client.api_key == "router-key"
+    assert client.model == "openai/gpt-5-mini"
+    assert client.endpoint == "https://openrouter.ai/api/v1/responses"
+
+
+def test_openrouter_request_uses_responses_endpoint_and_schema(monkeypatch):
+    sent = []
+
+    def respond(request):
+        sent.append(request)
+        return httpx.Response(200, json={
+            "status": "completed",
+            "output": [{"content": [{"type": "output_text", "text": json.dumps({"items": []})}]}],
+        })
+
+    original_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        "app.features.ai.llm_client.httpx.AsyncClient",
+        lambda **kwargs: original_client(transport=httpx.MockTransport(respond), **kwargs),
+    )
+    client = AIWordingClient(api_key="router-key", provider="openrouter")
+    result = asyncio.run(client.explain([], {"metrics": {"cash_balance_mmk": 100}, "wording_retry": True}))
+    assert result == {"items": []}
+    assert len(sent) == 1
+    assert str(sent[0].url) == "https://openrouter.ai/api/v1/responses"
+    assert sent[0].headers["authorization"] == "Bearer router-key"
+    body = json.loads(sent[0].content)
+    assert body["model"] == "openai/gpt-5-mini"
+    assert body["provider"] == {"require_parameters": True}
+    assert body["reasoning"] == {"effort": "minimal"}
+    assert body["max_output_tokens"] == 2000
+    assert "validation retry" in body["instructions"]
+    assert "wording_retry" not in body["input"]
+    assert body["text"]["format"]["type"] == "json_schema"
+    assert body["store"] is False
+
+
 @pytest.fixture(autouse=True)
 def clear_cache():
     _cache.clear()
@@ -90,6 +159,20 @@ async def test_synthetic_report_uses_grounded_evidence_and_reuses_same_import():
     assert client.calls == 1
     provider.current_version = 3
     assert service.latest("biz-a").outdated is True
+
+
+@pytest.mark.anyio
+async def test_model_wording_cannot_replace_specific_next_actions():
+    class VagueActionClient(Client):
+        async def explain(self, insights, context):
+            result = await super().explain(insights, context)
+            result["items"][0]["suggested_action"] = "Consider the situation carefully."
+            return result
+
+    result = await AnalysisService(Provider(bundle()), VagueActionClient()).analyze("biz-a")
+    assert result.status == "completed"
+    assert "customer receipts" in result.insights[0].suggested_actions[0]
+    assert "Consider the situation carefully" not in str(result.insights)
 
 
 @pytest.mark.anyio
@@ -137,9 +220,32 @@ async def test_invented_model_numbers_revert_to_rules():
             result = await super().explain(insights, context)
             result["items"][0]["explanation"] = "Cash will rise by 900000 MMK."
             return result
-    result = await AnalysisService(Provider(bundle()), InventingClient()).analyze("biz-a")
+    client = InventingClient()
+    service = AnalysisService(Provider(bundle()), client)
+    result = await service.analyze("biz-a")
     assert result.status == "rules_only"
     assert all("900000" not in item.explanation for item in result.insights)
+    assert "evidence validation" in result.warnings[-1]
+    assert client.calls == 2
+    await service.analyze("biz-a")
+    assert client.calls == 4  # A failed provider result must not be cached.
+
+
+@pytest.mark.anyio
+async def test_invalid_wording_retries_once_with_stricter_context():
+    class RecoveringClient(Client):
+        async def explain(self, insights, context):
+            result = await super().explain(insights, context)
+            if self.calls == 1:
+                result["items"][0]["explanation"] = "Cash will rise by 900000 MMK."
+            else:
+                assert context["wording_retry"] is True
+            return result
+
+    client = RecoveringClient()
+    result = await AnalysisService(Provider(bundle()), client).analyze("biz-a")
+    assert result.status == "completed"
+    assert client.calls == 2
 
 
 @pytest.mark.anyio
@@ -223,6 +329,28 @@ def test_latest_analysis_survives_service_recreation_and_is_business_scoped(tmp_
     assert latest.source_version == generated.source_version
     assert latest.business_id == "biz-a"
     engine.dispose()
+
+
+@pytest.mark.anyio
+async def test_showcase_insights_cover_supplier_stock_and_loan_records():
+    snapshot = bundle(loan=True)
+    snapshot.working_capital = {
+        "business_id": "biz-a", "source_version": 2, "synthetic": True,
+        "slow_moving_stock_count": 1, "inventory_risks": [],
+    }
+    snapshot.credit["outstanding_principal_mmk"] = "1400000"
+    snapshot.credit["missing_schedule_terms_count"] = 1
+    snapshot.credit["repayment"]["assessment"] = "unavailable"
+    result = await AnalysisService(Provider(snapshot), Client()).analyze("biz-a")
+    assert result.status == "completed"
+    assert [item.id for item in result.insights] == [
+        "receivables-followup", "supplier-balances", "slow-stock-review",
+        "loan-terms-review", "data-quality",
+    ]
+    assert [(item.metric, item.value) for item in result.insights[3].evidence] == [
+        ("outstanding_principal_mmk", 1400000),
+        ("missing_schedule_terms_count", 1),
+    ]
 
 
 @pytest.mark.anyio

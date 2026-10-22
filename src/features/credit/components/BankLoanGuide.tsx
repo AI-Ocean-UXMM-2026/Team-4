@@ -1,0 +1,343 @@
+import { useState } from "react";
+import { ExternalLink, Landmark } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
+
+type Copy = readonly [string, string];
+type Product = {
+  id: string;
+  name: string;
+  purpose: Copy;
+  term: Copy;
+  amount?: Copy;
+  rate: Copy;
+  fees?: Copy;
+  notes?: Copy[];
+};
+const kbzSource =
+  "https://www.kbzbank.com/en/products-services/finance-your-business-international-trade/";
+const kbzProducts = `${kbzSource}loans-2/`;
+const yomaSource = "https://www.yomabank.com/en/business/";
+const products: Record<string, Product[]> = {
+  kbz: [
+    {
+      id: "term",
+      name: "SME Term Loan",
+      purpose: [
+        "Fixed assets and business expansion",
+        "ပုံသေပိုင်ဆိုင်မှုဝယ်ယူခြင်းနှင့် လုပ်ငန်းတိုးချဲ့ခြင်း",
+      ],
+      term: ["1–3 years", "၁–၃ နှစ်"],
+      amount: ["MMK 10–1,000 million", "ကျပ်သန်း ၁၀–၁,၀၀၀"],
+      rate: ["12% secured; 12–15% unsecured per year", "တစ်နှစ်လျှင် အာမခံပါ ၁၂%၊ အာမခံမပါ ၁၂–၁၅%"],
+      notes: [
+        [
+          "Construction requests need a layout plan and cost estimate.",
+          "ဆောက်လုပ်ရေးအတွက် မြေပုံနှင့် ကုန်ကျစရိတ်ခန့်မှန်းချက် လိုပါသည်။",
+        ],
+      ],
+    },
+    {
+      id: "od",
+      name: "SME Overdraft (OD)",
+      purpose: [
+        "Short-term working capital and inventory purchases",
+        "ရေတိုလည်ပတ်ငွေနှင့် ကုန်ဝယ်ယူခြင်း",
+      ],
+      term: ["Up to 1 year", "၁ နှစ်အထိ"],
+      amount: ["MMK 10–1,000 million", "ကျပ်သန်း ၁၀–၁,၀၀၀"],
+      rate: ["12% secured; 12–15% unsecured per year", "တစ်နှစ်လျှင် အာမခံပါ ၁၂%၊ အာမခံမပါ ၁၂–၁၅%"],
+    },
+    {
+      id: "jica",
+      name: "JICA Two Steps Loan",
+      purpose: [
+        "Capital investment, with a working-capital allocation",
+        "ရင်းနှီးမြှုပ်နှံမှုနှင့် လည်ပတ်ငွေအချို့",
+      ],
+      term: ["Up to 5 years", "၅ နှစ်အထိ"],
+      amount: ["Up to MMK 500 million", "ကျပ်သန်း ၅၀၀ အထိ"],
+      rate: [
+        "7.5% secured; 7.5–15% unsecured per year",
+        "တစ်နှစ်လျှင် အာမခံပါ ၇.၅%၊ အာမခံမပါ ၇.၅–၁၅%",
+      ],
+      notes: [
+        [
+          "The bank describes an 80% capital / 20% working-capital allocation. Sector exclusions apply; see the official product page.",
+          "ဘဏ်က ရင်းနှီးမြှုပ်နှံမှု ၈၀%၊ လည်ပတ်ငွေ ၂၀% ဟု ဖော်ပြထားသည်။ လုပ်ငန်းအမျိုးအစား ကန့်သတ်ချက်များကို တရားဝင်စာမျက်နှာတွင် ကြည့်ပါ။",
+        ],
+      ],
+    },
+    {
+      id: "contract",
+      name: "Contract Financing",
+      purpose: [
+        "Financing for businesses awarded tenders",
+        "တင်ဒါအောင်မြင်ထားသော လုပ်ငန်းများအတွက်",
+      ],
+      term: ["Up to 1 year", "၁ နှစ်အထိ"],
+      amount: ["Up to 80% of contract value", "စာချုပ်တန်ဖိုး၏ ၈၀% အထိ"],
+      rate: ["14% per year (unsecured)", "တစ်နှစ်လျှင် ၁၄% (အာမခံမပါ)"],
+      notes: [
+        [
+          "Additional contract-specific requirements and charges must be confirmed with KBZ.",
+          "စာချုပ်ဆိုင်ရာလိုအပ်ချက်နှင့် အခကြေးငွေများကို KBZ နှင့် အတည်ပြုပါ။",
+        ],
+      ],
+    },
+  ],
+  yoma: [
+    {
+      id: "sme",
+      name: "SME Business Loan",
+      purpose: [
+        "Business expansion and day-to-day cash flow",
+        "လုပ်ငန်းတိုးချဲ့မှုနှင့် နေ့စဉ်လည်ပတ်ငွေ",
+      ],
+      term: ["1–3 years", "၁–၃ နှစ်"],
+      rate: ["13–15% per year", "တစ်နှစ်လျှင် ၁၃–၁၅%"],
+      fees: ["Establishment fee: 1% of loan amount", "စတင်ဆောင်ရွက်ခ — ချေးငွေပမာဏ၏ ၁%"],
+      notes: [
+        [
+          "Listed collateral: land, land and building, condominium or apartment.",
+          "ဖော်ပြထားသောအာမခံပစ္စည်း — မြေ၊ မြေနှင့်အဆောက်အအုံ၊ ကွန်ဒို သို့မဟုတ် တိုက်ခန်း။",
+        ],
+      ],
+    },
+    {
+      id: "od",
+      name: "Business Overdraft",
+      purpose: [
+        "Short-term working capital; interest on the amount used",
+        "ရေတိုလည်ပတ်ငွေ၊ အသုံးပြုသောငွေအပေါ် အတိုးတွက်ခြင်း",
+      ],
+      term: ["Up to 12 months", "၁၂ လအထိ"],
+      rate: [
+        "13–15% per year; calculated daily, charged monthly",
+        "တစ်နှစ်လျှင် ၁၃–၁၅%၊ နေ့စဉ်တွက်ပြီး လစဉ်ကောက်ခံသည်",
+      ],
+      fees: [
+        "Establishment 1%; non-utilization 1%; renewal 0.75%",
+        "စတင်ဆောင်ရွက်ခ ၁%၊ မသုံးစွဲမှုခ ၁%၊ သက်တမ်းတိုးခ ၀.၇၅%",
+      ],
+      notes: [
+        [
+          "Balance must be fully repaid for at least two weeks each year. Not for fixed-asset purchases.",
+          "နှစ်စဉ် အနည်းဆုံး နှစ်ပတ်အတွင်း လက်ကျန်အပြည့်ဆပ်ထားရမည်။ ပုံသေပိုင်ဆိုင်မှုဝယ်ရန် မသုံးရပါ။",
+        ],
+      ],
+    },
+  ],
+};
+const kbzRequirements: Copy[] = [
+  [
+    "Operating business with at least 2 years of experience and a valid business license",
+    "အနည်းဆုံး ၂ နှစ် လည်ပတ်ထားပြီး သက်တမ်းရှိလုပ်ငန်းလိုင်စင်ရှိခြင်း",
+  ],
+  ["Financial statements for the last 3 years", "နောက်ဆုံး ၃ နှစ်စာ ဘဏ္ဍာရေးရှင်းတမ်းများ"],
+  [
+    "Income tax receipts for the last 3 years where applicable; confirm exceptions with the bank",
+    "သက်ဆိုင်ပါက နောက်ဆုံး ၃ နှစ်စာ အခွန်ပြေစာ၊ ခြွင်းချက်များကို ဘဏ်နှင့် အတည်ပြုရန်",
+  ],
+  [
+    "NRC, household registration and residence evidence; other personal documents as applicable",
+    "NRC၊ အိမ်ထောင်စုစာရင်း၊ နေထိုင်မှုအထောက်အထားနှင့် သက်ဆိုင်ရာ ကိုယ်ရေးစာရွက်စာတမ်းများ",
+  ],
+  [
+    "Company registration, DICA extract, BOD resolution and trade licenses where applicable",
+    "သက်ဆိုင်ပါက ကုမ္ပဏီမှတ်ပုံတင်၊ DICA extract၊ ဒါရိုက်တာအဖွဲ့ဆုံးဖြတ်ချက်နှင့် ကုန်သွယ်လိုင်စင်များ",
+  ],
+  [
+    "Business-premises ownership or lease evidence; security documents for secured lending",
+    "လုပ်ငန်းနေရာ ပိုင်ဆိုင်မှု သို့မဟုတ် ငှားရမ်းမှုအထောက်အထား၊ အာမခံပါချေးငွေအတွက် အာမခံစာရွက်စာတမ်းများ",
+  ],
+];
+const yomaRequirements: Copy[] = [
+  [
+    "Business license, revenue tax receipts and financial statements",
+    "လုပ်ငန်းလိုင်စင်၊ အခွန်ပြေစာနှင့် ဘဏ္ဍာရေးရှင်းတမ်းများ",
+  ],
+  ["Bank statements for the last year", "နောက်ဆုံး ၁ နှစ်စာ ဘဏ်စာရင်းရှင်းတမ်းများ"],
+  [
+    "BOD resolution or loan meeting minutes",
+    "ဒါရိုက်တာအဖွဲ့ဆုံးဖြတ်ချက် သို့မဟုတ် ချေးငွေဆိုင်ရာအစည်းအဝေးမှတ်တမ်း",
+  ],
+  [
+    "Sales or purchase vouchers with summaries",
+    "အရောင်း သို့မဟုတ် အဝယ်ဘောက်ချာနှင့် အနှစ်ချုပ်များ",
+  ],
+];
+
+export function BankLoanGuide({ onViewRecords }: { onViewRecords: () => void }) {
+  const { language } = useTranslation();
+  const copy = (text: Copy) => text[language === "my" ? 1 : 0];
+  const [bank, setBank] = useState("kbz");
+  const [productId, setProductId] = useState("term");
+  const available = products[bank]!;
+  const product = available.find((item) => item.id === productId) || available[0]!;
+  const source =
+    bank === "kbz"
+      ? kbzProducts
+      : `${yomaSource}${product.id === "sme" ? "sme-business-loan" : "business-overdraft"}/`;
+  const requirements =
+    bank === "kbz"
+      ? kbzRequirements
+      : [
+          ...yomaRequirements,
+          ...(product.id === "sme"
+            ? [
+                [
+                  "Borrower/co-borrower: original NRC and household list, ward recommendation and one license photo",
+                  "ချေးယူသူနှင့် ပူးတွဲချေးယူသူ၏ NRC/အိမ်ထောင်စုစာရင်းမူရင်း၊ ရပ်ကွက်ထောက်ခံစာနှင့် လိုင်စင်ဓာတ်ပုံ ၁ ပုံ",
+                ] as Copy,
+                [
+                  "SME Business Loan specifies the last year of sales/purchase vouchers and summaries",
+                  "SME Business Loan အတွက် နောက်ဆုံး ၁ နှစ်စာ အရောင်း/အဝယ်ဘောက်ချာနှင့် အနှစ်ချုပ် လိုအပ်သည်",
+                ] as Copy,
+              ]
+            : []),
+        ];
+  const selectClass =
+    "mt-2 block min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground";
+  return (
+    <section className="space-y-4">
+      <div className="bf-card space-y-4">
+        <h2 className="flex items-center gap-2 text-xl font-semibold">
+          <Landmark size={21} className="text-primary" />
+          {copy(["Bank loan guide", "ဘဏ်ချေးငွေလမ်းညွှန်"])}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {copy([
+            "Explore published business loan information. This guide does not change your recorded loans or assess approval.",
+            "ဘဏ်ထုတ်ပြန်ထားသော လုပ်ငန်းချေးငွေအချက်အလက်များကို လေ့လာနိုင်ပါသည်။ ရှိပြီးသားချေးငွေများကို မပြောင်းလဲသကဲ့သို့ ခွင့်ပြုနိုင်မှုကိုလည်း မဆုံးဖြတ်ပါ။",
+          ])}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm font-medium">
+            {copy(["Bank", "ဘဏ်"])}
+            <select
+              className={selectClass}
+              value={bank}
+              onChange={(event) => {
+                const next = event.target.value;
+                setBank(next);
+                setProductId(products[next]![0]!.id);
+              }}
+            >
+              <option value="kbz">KBZ Bank</option>
+              <option value="yoma">Yoma Bank</option>
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            {copy(["Loan product", "ချေးငွေအမျိုးအစား"])}
+            <select
+              className={selectClass}
+              value={product.id}
+              onChange={(event) => setProductId(event.target.value)}
+            >
+              {available.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <article className="bf-card space-y-4">
+          <h3 className="text-lg font-semibold">{product.name}</h3>
+          <p className="text-sm text-muted-foreground">{copy(product.purpose)}</p>
+          <dl className="space-y-3 text-sm">
+            <div>
+              <dt className="text-muted-foreground">{copy(["Term", "သက်တမ်း"])}</dt>
+              <dd className="mt-1 font-semibold">{copy(product.term)}</dd>
+            </div>
+            {product.amount && (
+              <div>
+                <dt className="text-muted-foreground">
+                  {copy(["Published financing limit", "ထုတ်ပြန်ထားသောချေးငွေပမာဏ"])}
+                </dt>
+                <dd className="mt-1 font-semibold">{copy(product.amount)}</dd>
+              </div>
+            )}
+            <div>
+              <dt className="text-muted-foreground">
+                {copy(["Published annual interest", "ထုတ်ပြန်ထားသော နှစ်စဉ်အတိုးနှုန်း"])}
+              </dt>
+              <dd className="mt-1 font-semibold">{copy(product.rate)}</dd>
+            </div>
+            {product.fees && (
+              <div>
+                <dt className="text-muted-foreground">
+                  {copy(["Published fees", "ထုတ်ပြန်ထားသောအခကြေးငွေများ"])}
+                </dt>
+                <dd className="mt-1">{copy(product.fees)}</dd>
+              </div>
+            )}
+          </dl>
+          {product.notes?.map((note) => (
+            <p key={note[0]} className="text-sm text-muted-foreground">
+              {copy(note)}
+            </p>
+          ))}
+        </article>
+        <article className="bf-card">
+          <h3 className="mb-3 text-lg font-semibold">
+            {copy(["Application requirements", "လျှောက်ထားရန်လိုအပ်ချက်များ"])}
+          </h3>
+          {bank === "kbz" && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              {copy([
+                "KBZ's general business-lending checklist; product-specific exceptions may apply.",
+                "KBZ ၏ ယေဘုယျလုပ်ငန်းချေးငွေစာရင်းဖြစ်ပြီး product အလိုက် ခြွင်းချက်ရှိနိုင်ပါသည်။",
+              ])}
+            </p>
+          )}
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-6">
+            {requirements.map((item) => (
+              <li key={item[0]}>{copy(item)}</li>
+            ))}
+          </ul>
+        </article>
+      </div>
+      <div className="bf-card space-y-3 text-sm">
+        <p className="font-medium">
+          {copy([
+            "Checked: 22 October 2026 · Published website information",
+            "စစ်ဆေးရက် — ၂၂ အောက်တိုဘာ ၂၀၂၆ · ဝက်ဘ်ဆိုက်ထုတ်ပြန်ချက်",
+          ])}
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a
+            href={source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary underline"
+          >
+            {copy(["Official product page", "တရားဝင် product စာမျက်နှာ"])}
+            <ExternalLink size={14} />
+          </a>
+          {bank === "kbz" && (
+            <a
+              href={kbzSource}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              {copy(["KBZ requirements and rates", "KBZ လိုအပ်ချက်နှင့် နှုန်းထားများ"])}
+            </a>
+          )}
+        </div>
+        <p className="text-muted-foreground">
+          {copy([
+            "Terms and availability may change. Confirm the current offer, fees and eligibility with the bank. Use your signed loan agreement for existing loan calculations.",
+            "သတ်မှတ်ချက်နှင့် ရရှိနိုင်မှု ပြောင်းလဲနိုင်ပါသည်။ လက်ရှိနှုန်းထား၊ အခကြေးငွေနှင့် လျှောက်ထားနိုင်မှုကို ဘဏ်နှင့် အတည်ပြုပါ။ ရှိပြီးသားချေးငွေတွက်ချက်ရာတွင် မိမိလက်မှတ်ထိုးထားသော စာချုပ်ကိုသာ အသုံးပြုပါ။",
+          ])}
+        </p>
+        <button type="button" className="bf-button-secondary" onClick={onViewRecords}>
+          {copy(["View my preparation records", "မိမိပြင်ဆင်မှုမှတ်တမ်းများ ကြည့်ရန်"])}
+        </button>
+      </div>
+    </section>
+  );
+}

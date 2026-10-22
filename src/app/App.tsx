@@ -23,7 +23,7 @@ export function App({ children }: { children: ReactNode }) {
       ) : (
         <AccountGate>
           <PlatformProvider>
-            <MainLayout>{children}</MainLayout>
+            <MainLayout path={path}>{children}</MainLayout>
           </PlatformProvider>
         </AccountGate>
       )}

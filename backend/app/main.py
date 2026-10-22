@@ -102,7 +102,7 @@ def create_app(settings=None, engine=None):
     def config():
         auth_status = {"ready": True, "code": None, "message": None}
         try:
-            app.state.auth.require_email_confirmation(signup=True)
+            app.state.auth.require_account_configuration(signup=True)
         except APIError as error:
             auth_status = {"ready": False, "code": error.code, "message": error.message}
         return {"auth_provider": "supabase", "auth_configured": settings.auth_configured,

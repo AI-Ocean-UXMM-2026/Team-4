@@ -91,13 +91,34 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
                 cash += amount(row, "amount_mmk") * (1 if row["direction"] == "in" else -1)
         # Completeness is evaluated only through the report's as-of date. A future
         # expense cannot make an earlier cash balance unknowable.
-        all_expenses = [row for row in tables["Expenses"] if row["date"] <= period.end]
-        cash_expenses = [row for row in all_expenses if row.get("amount_paid_mmk") is None or (amount(row, "amount_paid_mmk") > 0 and row.get("paid_date") is None)]
+        all_expenses = [
+            row
+            for row in tables["Expenses"]
+            if row["date"] <= period.end
+            or (
+                row.get("paid_date") is not None
+                and start <= row["paid_date"] <= period.end
+            )
+        ]
+        cash_expenses = [
+            row
+            for row in all_expenses
+            if row.get("amount_paid_mmk") is None
+            or (amount(row, "amount_paid_mmk") > 0 and row.get("paid_date") is None)
+        ]
         if cash_expenses:
             cash = None
             warnings.append("Expense cash movements are incomplete: import payment status, paid date, and amount paid for every expense to calculate cash available.")
         else:
-            cash -= sum((amount(row, "amount_paid_mmk") for row in all_expenses if row.get("paid_date") is not None and start <= row["paid_date"] <= period.end), ZERO)
+            cash -= sum(
+                (
+                    amount(row, "amount_paid_mmk")
+                    for row in all_expenses
+                    if row.get("paid_date") is not None
+                    and start <= row["paid_date"] <= period.end
+                ),
+                ZERO,
+            )
             warnings.append(f"Cash balance uses opening cash plus recorded cash inflows, less recorded payments through {period.end.isoformat()}, including expenses by paid date.")
     else:
         warnings.append("Reporting end precedes the opening cash date; historical balances are unavailable.")

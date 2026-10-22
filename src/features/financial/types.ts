@@ -1,3 +1,4 @@
+import { translate } from "@/lib/i18n";
 export type Period = { start: string; end: string };
 export type Money = string | number | null;
 export type Obligation = {
@@ -52,10 +53,10 @@ export interface FinancialClient {
   trends(businessId: string, end: string, signal: AbortSignal): Promise<Trends>;
 }
 export const formatMmk = (value: Money) => {
-  if (value === null) return "Unavailable";
+  if (value === null) return translate("Unavailable");
   const text = String(value);
-  if (!/^-?\d+(\.\d+)?$/.test(text)) return "Unavailable";
+  if (!/^-?\d+(\.\d+)?$/.test(text)) return translate("Unavailable");
   const [whole = "0", fraction = ""] = text.split(".");
   const cents = fraction.replace(/0+$/, "");
-  return `${whole === "-0" ? "-0" : BigInt(whole).toLocaleString("en-US")}${cents ? `.${cents}` : ""} MMK`;
+  return `${whole === "-0" ? "-0" : BigInt(whole).toLocaleString("en-US")}${cents ? `.${cents}` : ""} ${translate("MMK")}`;
 };

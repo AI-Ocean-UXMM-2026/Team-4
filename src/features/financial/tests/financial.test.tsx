@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FinancialPage } from "../pages/FinancialPage";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
 import { useFinancialSummary } from "../hooks/useFinancialSummary";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FinancialClient, FinancialSnapshot } from "../types";
 
 afterEach(cleanup);
@@ -56,6 +57,33 @@ function Probe({ api, batch }: { api: FinancialClient; batch: string }) {
 }
 
 describe("Financial reporting", () => {
+  it("reuses the current import when returning to the page but fetches a new import", async () => {
+    const queries = new QueryClient();
+    const api = client();
+    const first = render(
+      <QueryClientProvider client={queries}>
+        <Probe api={api} batch="batch-1" />
+      </QueryClientProvider>,
+    );
+    await screen.findByText("150000");
+    first.unmount();
+    const second = render(
+      <QueryClientProvider client={queries}>
+        <Probe api={api} batch="batch-1" />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("150000")).toBeTruthy();
+    expect(api.summary).toHaveBeenCalledTimes(1);
+    second.rerender(
+      <QueryClientProvider client={queries}>
+        <Probe api={api} batch="batch-2" />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("Loading")).toBeTruthy();
+    await waitFor(() => expect(api.summary).toHaveBeenCalledTimes(2));
+    second.unmount();
+    queries.clear();
+  });
   it("shows imported figures with MMK and treats missing as unavailable", () => {
     const data = snapshot();
     data.actual.revenue_mmk = null;
@@ -76,15 +104,14 @@ describe("Financial reporting", () => {
         today="2026-10-20"
       />,
     );
-    expect(await screen.findByRole("alert")).toHaveProperty(
-      "textContent",
-      expect.stringContaining("No workbook imported"),
-    );
+    expect(
+      await screen.findByRole("heading", { name: "Start with your business data" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
     expect(api.summary).not.toHaveBeenCalled();
     expect(api.trends).not.toHaveBeenCalled();
     expect(screen.getByText("Synthetic demo data")).toBeTruthy();
-    expect(screen.queryByRole("option", { name: "Custom range" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Review data source" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Set up my data" }).getAttribute("href")).toBe(
       "/data-source",
     );
   });
@@ -147,11 +174,8 @@ describe("Financial reporting", () => {
       />,
     );
     expect(await screen.findByText("150,000 MMK")).toBeTruthy();
-    expect(screen.queryByText("Please note about this report")).toBeNull();
-    expect(screen.getByRole("group", { name: "Selected date range" }).textContent).toContain(
-      "Oct 1 – Oct 20, 2026",
-    );
-    expect(screen.queryByText(/Yangon time/i)).toBeNull();
+    expect(screen.getByText("Please note about this report")).toBeTruthy();
+    expect(screen.getByText(/2026-10-01 – 2026-10-20 · Yangon time/)).toBeTruthy();
     expect(screen.getByText("2026-10-15 · Overdue")).toBeTruthy();
     expect(screen.getByText("30,000 MMK")).toBeTruthy();
     expect(screen.getByText("No reporting periods available.")).toBeTruthy();

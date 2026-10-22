@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 import { RangeField, ScenarioResult } from "./ScenarioUI";
 
@@ -8,6 +9,8 @@ export function CashGapSimulator({
 }: {
   simulate: <T>(type: string, assumptions: Record<string, unknown>) => Promise<T>;
 }) {
+  const { t } = useTranslation();
+
   const [dio, setDio] = useState(30);
   const [dso, setDso] = useState(12);
   const [extension, setExtension] = useState(15);
@@ -39,16 +42,17 @@ export function CashGapSimulator({
   return (
     <section className="bf-card space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-primary">Step 2</p>
-        <h2 className="mt-1 text-xl font-bold">Explore the cash gap</h2>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">{t("Step 2")}</p>
+        <h2 className="mt-1 text-xl font-bold">{t("Explore the cash gap")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Change example day counts to compare cash conversion cycles. The 25 supplier payment days
-          are an illustrative assumption; results are in days, not MMK.
+          {t(
+            "Change example day counts to compare cash conversion cycles. The 25 supplier payment days are an illustrative assumption; results are in days, not MMK.",
+          )}
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <RangeField
-          label="Inventory days (DIO)"
+          label={t("Inventory days (DIO)")}
           value={dio}
           min={0}
           max={180}
@@ -56,7 +60,7 @@ export function CashGapSimulator({
           onChange={setDio}
         />
         <RangeField
-          label="Collection days (DSO)"
+          label={t("Collection days (DSO)")}
           value={dso}
           min={0}
           max={180}
@@ -64,7 +68,7 @@ export function CashGapSimulator({
           onChange={setDso}
         />
         <RangeField
-          label="Supplier extension"
+          label={t("Supplier extension")}
           value={extension}
           min={0}
           max={90}
@@ -73,11 +77,11 @@ export function CashGapSimulator({
         />
       </div>
       <button className="bf-button" disabled={pending} onClick={() => void run()}>
-        {pending ? "Comparing…" : "Compare projected cycle"}
+        {pending ? t("Comparing…") : t("Compare projected cycle")}
       </button>
       {error && (
         <p role="alert" className="text-sm text-destructive">
-          {error}
+          {t(error)}
         </p>
       )}
       <ScenarioResult response={result} />

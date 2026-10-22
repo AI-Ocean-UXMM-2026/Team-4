@@ -1,10 +1,13 @@
+import { useTranslation } from "@/lib/i18n";
 import type { InventoryRisk } from "../hooks/useWorkingCapital";
 
 export function InventoryRiskTable({ items }: { items: InventoryRisk[] }) {
+  const { t } = useTranslation();
+
   if (!items.length)
     return (
       <p className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
-        No imported product and sales data is available yet.
+        {t("No imported product and sales data is available yet.")}
       </p>
     );
   return (
@@ -12,11 +15,11 @@ export function InventoryRiskTable({ items }: { items: InventoryRisk[] }) {
       <table className="w-full min-w-[620px] text-left text-sm">
         <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
-            <th className="px-4 py-3">Product</th>
-            <th className="px-4 py-3">Stock</th>
-            <th className="px-4 py-3">7 / 30-day sales</th>
-            <th className="px-4 py-3">Coverage</th>
-            <th className="px-4 py-3">Risk</th>
+            <th className="px-4 py-3">{t("Product")}</th>
+            <th className="px-4 py-3">{t("Stock")}</th>
+            <th className="px-4 py-3">{t("7 / 30-day sales")}</th>
+            <th className="px-4 py-3">{t("Coverage")}</th>
+            <th className="px-4 py-3">{t("Risk")}</th>
           </tr>
         </thead>
         <tbody>
@@ -26,7 +29,7 @@ export function InventoryRiskTable({ items }: { items: InventoryRisk[] }) {
                 {item.name}
                 {item.slow_moving && (
                   <span className="ml-2 rounded-full bg-warning/20 px-2 py-0.5 text-xs">
-                    Slow-moving
+                    {t("Slow-moving")}
                   </span>
                 )}
               </td>
@@ -36,24 +39,27 @@ export function InventoryRiskTable({ items }: { items: InventoryRisk[] }) {
                 {item.average_units_sold_per_day_30 ?? "—"}
               </td>
               <td className="px-4 py-3">
-                {item.coverage_days == null ? "No recent sales" : `${item.coverage_days} days`}
+                {item.coverage_days == null
+                  ? t("No recent sales")
+                  : t("{0} days", { "0": item.coverage_days })}
               </td>
               <td className="px-4 py-3">
                 {item.stockout_risk === true
-                  ? "Stockout risk"
+                  ? t("Stockout risk")
                   : item.stockout_risk === false
-                    ? "Within stated lead time"
+                    ? t("Within stated lead time")
                     : item.status === "no_recent_sales"
-                      ? "No recent sales"
-                      : "Need supplier lead time"}
+                      ? t("No recent sales")
+                      : t("Need supplier lead time")}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
       <p className="border-t px-4 py-3 text-xs text-muted-foreground">
-        Slow-moving means no sales in the 30-day window ending at the latest inventory activity
-        date.
+        {t(
+          "Slow-moving means no sales in the 30-day window ending at the latest inventory activity date.",
+        )}
       </p>
     </div>
   );

@@ -1,14 +1,15 @@
+import { useTranslation } from "@/lib/i18n";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import type { Trends } from "../types";
+import type { Money, Trends } from "../types";
 import { formatMmk } from "../types";
 
 const shortPeriod = (start: string) => {
@@ -20,216 +21,226 @@ const shortPeriod = (start: string) => {
       );
 };
 
-function isPartialPeriod(start: string, end: string) {
-  const date = new Date(`${start}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) return false;
-  const monthEnd = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0))
-    .toISOString()
-    .slice(0, 10);
-  return end < monthEnd;
-}
-
-function recordCountLabel(count: number) {
-  return `${count} ${count === 1 ? "record" : "records"}`;
-}
+const plotValue = (value: Money) => {
+  if (value === null || !/^-?\d+(\.\d+)?$/.test(String(value))) return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
 
 export function CashflowTrendChart({ trends }: { trends: Trends }) {
+  const { t } = useTranslation();
+
   if (!trends.points.length)
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Revenue and operating expenses</h2>
-        <div className="mt-5 rounded-xl bg-slate-50 px-5 py-8 text-center">
-          <p className="text-sm font-medium text-slate-700">No reporting periods available.</p>
-          <p className="mt-1 text-sm text-slate-500">
-            Import records covering more than one reporting period to see a comparison.
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <h2 className="text-lg font-semibold text-foreground">
+          {t("Revenue and operating expenses")}
+        </h2>
+        <div className="mt-5 rounded-xl bg-muted px-5 py-8 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            {t("No reporting periods available.")}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("Import records covering more than one reporting period to see a comparison.")}
           </p>
         </div>
       </section>
     );
 
-  const chartData = trends.points
-    .filter(
-      (point) =>
-        (point.revenue_record_count ?? 0) > 0 || (point.operating_expense_record_count ?? 0) > 0,
-    )
-    .map((point) => {
-      const partial = isPartialPeriod(point.period.start, point.period.end);
-      return {
-        ...point,
-        label: `${shortPeriod(point.period.start)}${partial ? "*" : ""}`,
-        range: `${point.period.start} – ${point.period.end}`,
-        partial,
-        revenueBar: point.revenue_record_count ? point.revenue_mmk : null,
-        expensesBar: point.operating_expense_record_count ? point.operating_expenses_mmk : null,
-      };
-    });
+  const chartData = trends.points.map((point) => ({
+    ...point,
+    exact: point,
+    // No records is not the same as recorded zero. Leave those points absent from the plot.
+    revenue_mmk:
+      point.revenue_record_count == null || point.revenue_record_count === 0
+        ? null
+        : plotValue(point.revenue_mmk),
+    operating_expenses_mmk:
+      point.operating_expense_record_count == null || point.operating_expense_record_count === 0
+        ? null
+        : plotValue(point.operating_expenses_mmk),
+    label: shortPeriod(point.period.start),
+    range: `${point.period.start} – ${point.period.end}`,
+  }));
   const recordCountsAvailable = trends.points.every(
     (point) => point.revenue_record_count !== null && point.operating_expense_record_count !== null,
   );
-  const lastPeriod = trends.points.at(-1);
-  const partialDescription =
-    lastPeriod && isPartialPeriod(lastPeriod.period.start, lastPeriod.period.end)
-      ? `The latest period, ${lastPeriod.period.start}–${lastPeriod.period.end}, is partial.`
-      : "The periods shown are complete calendar months.";
-  const explanation = `${partialDescription} Operating expenses exclude cost of goods sold (COGS), and revenue is not profit.`;
+  const hasRecordedActivity = trends.points.some(
+    (point) => (point.revenue_record_count ?? 0) > 0 || (point.operating_expense_record_count ?? 0) > 0,
+  );
+  const latestPeriod = trends.points[trends.points.length - 1];
+  const latestPeriodEnd = latestPeriod
+    ? new Date(
+        Date.UTC(
+          Number(latestPeriod.period.start.slice(0, 4)),
+          Number(latestPeriod.period.start.slice(5, 7)),
+          0,
+        ),
+      )
+        .toISOString()
+        .slice(0, 10)
+    : "";
+  const latestIsPartial = Boolean(latestPeriod && latestPeriod.period.end < latestPeriodEnd);
 
   return (
     <section
-      className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5"
-      aria-label="Revenue and operating expense trends"
+      className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5"
+      aria-label={t("Revenue and operating expense trends")}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[.14em] text-teal-700">
-            Performance over time
+          <p className="text-xs font-semibold uppercase tracking-[.14em] text-primary">
+            {t("Performance over time")}
           </p>
-          <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">
-            Revenue and operating expenses
+          <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+            {t("Revenue and operating expenses")}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Monthly trend · latest 3 calendar months. These amounts are not cash movements.
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("Recorded amounts by period. These are not cash movements.")} {t("Operating expenses exclude cost of goods sold (COGS); revenue is not profit.")}
           </p>
         </div>
-        <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
-          * Partial reporting period
+        <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+          {latestIsPartial
+            ? t("Latest period, {0}–{1}, is partial", {
+                "0": latestPeriod?.period.start ?? "",
+                "1": latestPeriod?.period.end ?? "",
+              })
+            : t("Final period may be partial")}
         </span>
       </div>
-
-      {chartData.length ? (
-        <div className="mt-4 min-w-0" style={{ height: 280 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
-              barCategoryGap="24%"
-              aria-label="Grouped monthly bar chart for revenue and operating expenses"
-            >
-              <CartesianGrid stroke="#e8edf1" strokeDasharray="4 5" vertical={false} />
-              <XAxis
-                dataKey="label"
-                tick={{ fill: "#64748b", fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                minTickGap={12}
-              />
-              <YAxis
-                tick={{ fill: "#64748b", fontSize: 11 }}
-                tickLine={false}
-                axisLine={false}
-                width={64}
-                tickFormatter={(value: number) =>
-                  value >= 1_000_000
-                    ? `${(value / 1_000_000).toFixed(value % 1_000_000 ? 1 : 0)}m`
-                    : value >= 1_000
-                      ? `${Math.round(value / 1_000)}k`
-                      : `${value}`
-                }
-              />
-              <Tooltip
-                labelFormatter={(_, payload) => {
-                  const point = payload?.[0]?.payload;
-                  return point ? `${point.range}${point.partial ? " · Partial period" : ""}` : "";
-                }}
-                formatter={(value: number, name: string) => [formatMmk(value), name]}
-                contentStyle={{
-                  borderRadius: 14,
-                  borderColor: "#e2e8f0",
-                  boxShadow: "0 10px 30px rgba(15,23,42,.1)",
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-              <Bar dataKey="revenueBar" name="Revenue" fill="#0f766e" radius={[5, 5, 0, 0]} />
-              <Bar
-                dataKey="expensesBar"
-                name="Operating expenses"
-                fill="#f59e0b"
-                radius={[5, 5, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-xl bg-slate-50 px-5 py-8 text-center" role="status">
-          <p className="text-sm font-medium text-slate-700">
-            {recordCountsAvailable
-              ? "No revenue or operating expense records in these periods."
-              : "Trend data is unavailable for these periods."}
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            {recordCountsAvailable
-              ? "Months without records are omitted from the chart; they are not treated as recorded zeroes."
-              : "The available data cannot confirm whether the months had no activity or missing records."}
-          </p>
-        </div>
+      <div className="mt-4 min-w-0" style={{ height: 280 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
+            <CartesianGrid stroke="var(--border)" strokeDasharray="4 5" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              minTickGap={18}
+            />
+            <YAxis
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={66}
+              tickFormatter={(value: number) =>
+                value >= 1_000_000
+                  ? `${(value / 1_000_000).toFixed(value % 1_000_000 ? 1 : 0)}m`
+                  : value >= 1_000
+                    ? `${Math.round(value / 1_000)}k`
+                    : `${value}`
+              }
+            />
+            <Tooltip
+              labelFormatter={(_, payload) => payload?.[0]?.payload?.range ?? ""}
+              formatter={(_value, _name, item) =>
+                formatMmk(
+                  item.dataKey === "revenue_mmk"
+                    ? item.payload.exact.revenue_mmk
+                    : item.payload.exact.operating_expenses_mmk,
+                )
+              }
+              contentStyle={{
+                borderRadius: 14,
+                borderColor: "var(--border)",
+                background: "var(--card)",
+                color: "var(--foreground)",
+                boxShadow: "0 10px 30px rgba(15,23,42,.1)",
+              }}
+            />
+            <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+            <Line
+              type="monotone"
+              dataKey="revenue_mmk"
+              isAnimationActive={false}
+              name={t("Revenue")}
+              stroke="var(--chart-revenue)"
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "var(--chart-revenue)", strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+              connectNulls={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="operating_expenses_mmk"
+              isAnimationActive={false}
+              name={t("Operating expenses")}
+              stroke="var(--chart-expenses)"
+              strokeDasharray="5 4"
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: "var(--chart-expenses)", strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+              connectNulls={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {!hasRecordedActivity && (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          {recordCountsAvailable
+            ? t("No revenue or operating expense records in these periods.")
+            : t("Trend data is unavailable for these periods; the available data cannot confirm whether there was no activity.")}
+        </p>
       )}
-
-      <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5 text-sm leading-relaxed text-slate-600">
-        {explanation}
-      </p>
-
-      <div className="mt-3 overflow-x-auto rounded-xl border border-slate-100">
+      <div className="mt-2 overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[510px] text-left text-xs sm:text-sm">
           <caption className="sr-only">
-            Monthly revenue and operating expenses, exact MMK amounts and record counts; months
-            without records are distinguished from recorded zeroes.
+            {t("Exact trend figures; unavailable values are not zero")}
           </caption>
-          <thead className="bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <thead className="bg-muted text-xs font-medium uppercase tracking-wide text-muted-foreground">
             <tr>
               <th scope="col" className="px-3 py-2.5">
-                Period
+                {t("Period")}
               </th>
               <th scope="col" className="px-3 py-2.5">
-                Revenue
+                {t("Revenue")}
               </th>
               <th scope="col" className="px-3 py-2.5">
-                Operating expenses
+                {t("Operating expenses")}
               </th>
             </tr>
           </thead>
           <tbody>
-            {trends.points.map((point) => {
-              const partial = isPartialPeriod(point.period.start, point.period.end);
-              const metricCell = (
-                amount: number | string | null,
-                count: number | null,
-                color: string,
-              ) => (
-                <td className={`px-3 py-2.5 font-medium ${color}`}>
-                  <span className="block">
-                    {count === null || amount === null
-                      ? "Unavailable"
-                      : count === 0
-                        ? "No records"
-                        : formatMmk(amount)}
-                  </span>
-                  {count !== null && count > 0 && (
-                    <span className="mt-0.5 block text-[11px] font-normal text-slate-500">
-                      {recordCountLabel(count)}
+            {trends.points.map((point, index) => {
+              const partial = index === trends.points.length - 1 && point.period.end < new Date(
+                Date.UTC(
+                  Number(point.period.start.slice(0, 4)),
+                  Number(point.period.start.slice(5, 7)),
+                  0,
+                ),
+              ).toISOString().slice(0, 10);
+              return (
+              <tr key={point.period.start} className="border-t border-border">
+                <th scope="row" className="px-3 py-2.5 font-medium text-muted-foreground">
+                  {point.period.start} – {point.period.end}
+                  {partial && <span className="ml-2 rounded-full bg-warning/20 px-2 py-0.5 text-xs">{t("Partial")}</span>}
+                </th>
+                <td className="px-3 py-2.5 font-medium text-violet-800">
+                  {point.revenue_record_count == null
+                    ? t("Unavailable")
+                    : point.revenue_record_count === 0
+                      ? t("No records")
+                      : formatMmk(point.revenue_mmk)}
+                  {point.revenue_record_count != null && point.revenue_record_count > 0 && (
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {point.revenue_record_count} {t(point.revenue_record_count === 1 ? "record" : "records")}
                     </span>
                   )}
                 </td>
-              );
-              return (
-                <tr key={point.period.start} className="border-t border-slate-100">
-                  <th scope="row" className="px-3 py-2.5 font-medium text-slate-600">
-                    <span className="inline-flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold tabular-nums text-slate-700 shadow-sm sm:text-xs">
-                        {point.period.start} – {point.period.end}
-                      </span>
-                      {partial && (
-                        <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-800">
-                          Partial
-                        </span>
-                      )}
+                <td className="px-3 py-2.5 font-medium text-blue-800">
+                  {point.operating_expense_record_count == null
+                    ? t("Unavailable")
+                    : point.operating_expense_record_count === 0
+                      ? t("No records")
+                      : formatMmk(point.operating_expenses_mmk)}
+                  {point.operating_expense_record_count != null && point.operating_expense_record_count > 0 && (
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {point.operating_expense_record_count} {t(point.operating_expense_record_count === 1 ? "record" : "records")}
                     </span>
-                  </th>
-                  {metricCell(point.revenue_mmk, point.revenue_record_count, "text-teal-800")}
-                  {metricCell(
-                    point.operating_expenses_mmk,
-                    point.operating_expense_record_count,
-                    "text-amber-800",
                   )}
-                </tr>
+                </td>
+              </tr>
               );
             })}
           </tbody>

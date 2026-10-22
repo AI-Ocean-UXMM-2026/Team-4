@@ -1,3 +1,4 @@
+import { useTranslation } from "@/lib/i18n";
 type RangeFieldProps = {
   label: string;
   value: number;
@@ -9,13 +10,15 @@ type RangeFieldProps = {
 };
 
 export function RangeField({ label, value, min, max, step, unit = "", onChange }: RangeFieldProps) {
+  const { t } = useTranslation();
+
   return (
     <label className="block space-y-3 rounded-xl border bg-background p-4">
       <span className="flex items-center justify-between gap-3 text-sm">
-        <span className="font-medium text-foreground">{label}</span>
+        <span className="font-medium text-foreground">{t(label)}</span>
         <span className="whitespace-nowrap font-semibold text-primary">
           {value.toLocaleString("en-US")}
-          {unit}
+          {t(unit)}
         </span>
       </span>
       <input
@@ -66,6 +69,8 @@ export function ScenarioResult({
 }: {
   response: { result?: Record<string, unknown> } | null;
 }) {
+  const { t } = useTranslation();
+
   if (!response?.result) return null;
   const { warning, business_impact, ...values } = response.result;
   const current = values["current"] as Record<string, unknown> | undefined;
@@ -89,14 +94,16 @@ export function ScenarioResult({
       );
   return (
     <div role="status" className="mt-5 rounded-xl border border-primary/20 bg-secondary/50 p-4">
-      <p className="text-sm font-semibold text-primary">Projected result · records unchanged</p>
+      <p className="text-sm font-semibold text-primary">
+        {t("Projected result · records unchanged")}
+      </p>
       <dl className="mt-3 grid gap-3 sm:grid-cols-2">
         {metrics.map(([key, value]) => (
           <div key={key} className="rounded-lg bg-card px-3 py-2">
             <dt className="text-xs text-muted-foreground">
-              {labels[key] ?? key.replaceAll("_", " ")}
+              {t(labels[key] ?? key.replaceAll("_", " "))}
             </dt>
-            <dd className="mt-1 font-semibold">{displayValue(key, value)}</dd>
+            <dd className="mt-1 font-semibold">{t(displayValue(key, value))}</dd>
           </div>
         ))}
       </dl>
@@ -104,7 +111,7 @@ export function ScenarioResult({
         <p className="mt-3 text-xs text-muted-foreground">{business_impact}</p>
       )}
       {typeof warning === "string" && (
-        <p className="mt-2 text-xs text-muted-foreground">{warning}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{t(warning)}</p>
       )}
     </div>
   );

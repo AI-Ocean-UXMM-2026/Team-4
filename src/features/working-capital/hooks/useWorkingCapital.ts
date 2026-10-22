@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/apiClient";
 
 export type DecimalString = string | number;
@@ -25,28 +25,14 @@ export type WorkingCapitalSnapshot = {
 };
 
 export function useWorkingCapital(businessId: string, sourceVersion: number, safetyBufferDays = 3) {
-  const [snapshot, setSnapshot] = useState<WorkingCapitalSnapshot | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const refresh = useCallback(async () => {
-    if (!businessId) return;
-    setLoading(true);
-    try {
-      setSnapshot(
-        await api<WorkingCapitalSnapshot>(
-          `/api/v1/working-capital/summary?business_id=${encodeURIComponent(businessId)}&safety_buffer_days=${safetyBufferDays}`,
-        ),
-      );
-      setError(null);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not load working-capital data.");
-    } finally {
-      setLoading(false);
-    }
-  }, [businessId, safetyBufferDays]);
-  useEffect(() => {
-    void refresh();
-  }, [refresh, sourceVersion]);
+  const query = useQuery({
+    queryKey: ["working-capital", businessId, sourceVersion, safetyBufferDays],
+    enabled: !!businessId,
+    queryFn: () =>
+      api<WorkingCapitalSnapshot>(
+        `/api/v1/working-capital/summary?business_id=${encodeURIComponent(businessId)}&safety_buffer_days=${safetyBufferDays}`,
+      ),
+  });
   const simulate = <T>(scenario_type: string, assumptions: Record<string, unknown>) =>
     api<T>(`/api/v1/working-capital/simulate?business_id=${encodeURIComponent(businessId)}`, {
       method: "POST",
@@ -57,5 +43,12 @@ export function useWorkingCapital(businessId: string, sourceVersion: number, saf
       method: "POST",
       body: JSON.stringify(payload),
     });
-  return { snapshot, error, loading, refresh, simulate, planReserve };
+  return {
+    snapshot: query.data ?? null,
+    error: query.error?.message ?? null,
+    loading: query.isPending,
+    refresh: query.refetch,
+    simulate,
+    planReserve,
+  };
 }

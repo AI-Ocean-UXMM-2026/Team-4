@@ -1,39 +1,106 @@
+import { useTranslation } from "@/lib/i18n";
 import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChartNoAxesCombined,
+  Eye,
+  EyeOff,
+  Layers3,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 import type { BusinessDetails } from "@/lib/contracts";
 import type { PasswordPolicy } from "./validation";
+import { Brand } from "@/components/layout/Brand";
+import { DisplayPreferences } from "@/components/layout/DisplayPreferences";
+import { AuroraBackdrop } from "@/components/layout/AuroraBackdrop";
 
 export function AuthShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+
   return (
-    <main className="min-h-screen bg-background px-5 py-8 sm:px-10">
-      <a
-        href="/sign-in"
-        className="mx-auto flex max-w-6xl items-center gap-3 text-lg font-bold tracking-wide"
-      >
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary font-display text-2xl text-primary-foreground">
-          B
-        </span>
-        BIZFLOW
-      </a>
-      <div className="mx-auto grid min-h-[80vh] max-w-6xl items-center gap-14 py-10 lg:grid-cols-2">
-        <aside className="hidden space-y-7 lg:block">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-            Built around your business
+    <main className="bf-auth min-h-screen px-5 py-6 sm:px-10">
+      <AuroraBackdrop />
+      <header className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-4">
+        <Brand href="/sign-in" />
+        <DisplayPreferences />
+      </header>
+      <div className="mx-auto grid min-h-[calc(100svh-100px)] max-w-[1220px] items-center gap-10 py-8 lg:grid-cols-[1.05fr_1fr] lg:py-7">
+        <aside className="bf-auth-story">
+          <p className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-violet-100">
+            <Sparkles size={13} aria-hidden="true" />
+            {t("Built around your business")}
           </p>
-          <h2 className="max-w-md font-display text-5xl font-bold leading-tight">
-            A clearer view.
-            <br />A stronger business.
+          <h2 className="max-w-md font-display text-[2.8rem] font-bold leading-[1.12] tracking-[-0.045em] xl:text-[3.3rem]">
+            {t("A clearer view.")}
+            <br />
+            {t("A stronger")}
+            <br />
+            <span className="text-violet-200">{t("business.")}</span>
           </h2>
-          <p className="max-w-sm leading-relaxed text-muted-foreground">
-            Keep your finances connected, understand your cashflow, and plan your next step with
-            confidence.
+          <p className="mt-5 max-w-sm text-sm leading-7 text-violet-100">
+            {t(
+              "Keep your finances connected, understand your cashflow, and plan your next step with confidence.",
+            )}
           </p>
-          <div className="flex items-center gap-3 text-sm text-primary">
-            <span className="h-px w-10 bg-primary/40" />
-            Your workspace. Your business.
+          <div className="bf-flow-visual" aria-hidden="true">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <Layers3 size={17} />
+                {t("One connected workspace")}
+              </span>
+              <ArrowUpRight size={17} className="text-violet-200" />
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-violet-100">
+              {[
+                { Icon: Wallet, label: "Cash flow" },
+                { Icon: ChartNoAxesCombined, label: "Insights" },
+                { Icon: Layers3, label: "Planning" },
+              ].map(({ Icon, label }) => (
+                <div
+                  key={label}
+                  className="bf-flow-tile rounded-xl border border-white/10 bg-white/10 px-2 py-4"
+                >
+                  <Icon size={21} strokeWidth={1.5} className="mx-auto mb-2 text-white" />
+                  {t(label)}
+                </div>
+              ))}
+            </div>
+          </div>
+          <svg
+            className="bf-flow-path mt-6 h-10 w-full"
+            viewBox="0 0 440 40"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
+              stroke="white"
+              strokeOpacity=".2"
+            />
+            <path
+              className="bf-flow-trace"
+              d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
+              stroke="url(#shay-flow-light)"
+              strokeWidth="2"
+              pathLength="1"
+            />
+            <circle cx="8" cy="29" r="3" fill="#c4b5fd" />
+            <circle cx="220" cy="11" r="4" fill="#ddd6fe" />
+            <circle cx="432" cy="29" r="3" fill="#99f6e4" />
+            <defs>
+              <linearGradient id="shay-flow-light">
+                <stop stopColor="#c4b5fd" />
+                <stop offset="1" stopColor="#99f6e4" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="mt-8 flex items-center gap-3 text-xs text-violet-200">
+            <span className="h-px w-8 bg-white/30" />
+            {t("Less guesswork. More confidence.")}
           </div>
         </aside>
-        <section className="bf-card mx-auto w-full max-w-lg p-7 sm:p-9">{children}</section>
+        <section className="bf-auth-form">{children}</section>
       </div>
     </main>
   );
@@ -42,10 +109,12 @@ export function Field({
   label,
   ...props
 }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
+  const { t } = useTranslation();
+
   const id = useId();
   return (
     <label htmlFor={id} className="block text-sm font-semibold">
-      {label}
+      {t(label)}
       <input id={id} {...props} className="bf-input mt-2" />
     </label>
   );
@@ -61,12 +130,14 @@ export function PasswordField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { t } = useTranslation();
+
   const id = useId();
   const [visible, setVisible] = useState(false);
   return (
     <div>
       <label htmlFor={id} className="block text-sm font-semibold">
-        {label}
+        {t(label)}
       </label>
       <div className="relative mt-2">
         <input
@@ -74,7 +145,7 @@ export function PasswordField({
           name={
             autoComplete === "current-password"
               ? "password"
-              : label === "Confirm password"
+              : label === t("Confirm password")
                 ? "confirm_password"
                 : "new_password"
           }
@@ -89,10 +160,14 @@ export function PasswordField({
         />
         <button
           type="button"
-          aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          aria-label={
+            visible
+              ? t("Hide {0}", { "0": t(label).toLocaleLowerCase() })
+              : t("Show {0}", { "0": t(label).toLocaleLowerCase() })
+          }
           aria-controls={id}
           aria-pressed={visible}
-          className="absolute right-3 top-2.5 rounded p-0.5 text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
           onClick={() => setVisible(!visible)}
         >
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -102,6 +177,8 @@ export function PasswordField({
   );
 }
 export function Requirements({ policy }: { policy: PasswordPolicy }) {
+  const { t } = useTranslation();
+
   const names: Record<string, string> = {
     lower: "a lowercase letter",
     upper: "an uppercase letter",
@@ -110,11 +187,13 @@ export function Requirements({ policy }: { policy: PasswordPolicy }) {
   };
   return (
     <p id="password-requirements" className="text-xs leading-relaxed text-muted-foreground">
-      Use at least {policy.min_length} characters
+      {t("Use at least")} {policy.min_length} {t("characters")}
       {policy.required_characters.length
-        ? `, including ${policy.required_characters.map((kind) => names[kind]).join(", ")}`
+        ? t(", including {0}", {
+            "0": policy.required_characters.map((kind) => t(names[kind] || kind)).join(", "),
+          })
         : ""}
-      . Your account provider also checks password security.
+      {t(". Your account provider also checks password security.")}
     </p>
   );
 }
@@ -125,11 +204,13 @@ export function BusinessFields({
   value: BusinessDetails;
   onChange: (value: BusinessDetails) => void;
 }) {
+  const { t } = useTranslation();
+
   const field = (key: keyof BusinessDetails, next: string) => onChange({ ...value, [key]: next });
   return (
     <div className="space-y-4">
       <Field
-        label="Company or business name"
+        label={t("Company or business name")}
         name="business_name"
         required
         maxLength={200}
@@ -138,10 +219,10 @@ export function BusinessFields({
         onChange={(e) => field("name", e.target.value)}
       />
       <p className="-mt-2 text-xs text-muted-foreground">
-        Your shop or trading name is welcome. No registration number is required.
+        {t("Your shop or trading name is welcome. No registration number is required.")}
       </p>
       <Field
-        label="Business type or industry"
+        label={t("Business type or industry")}
         name="industry"
         required
         maxLength={120}
@@ -149,7 +230,7 @@ export function BusinessFields({
         onChange={(e) => field("industry", e.target.value)}
       />
       <Field
-        label="City or township"
+        label={t("City or township")}
         name="city"
         required
         maxLength={120}
@@ -158,7 +239,7 @@ export function BusinessFields({
         onChange={(e) => field("city", e.target.value)}
       />
       <Field
-        label="Business phone number (optional)"
+        label={t("Business phone number (optional)")}
         name="phone"
         type="tel"
         maxLength={40}
@@ -167,7 +248,7 @@ export function BusinessFields({
         onChange={(e) => field("phone", e.target.value)}
       />
       <Field
-        label="Business address (optional)"
+        label={t("Business address (optional)")}
         name="address"
         maxLength={500}
         autoComplete="street-address"
@@ -175,23 +256,24 @@ export function BusinessFields({
         onChange={(e) => field("address", e.target.value)}
       />
       <label className="block text-sm font-semibold">
-        Preferred currency
+        {t("Preferred currency")}
         <select
           className="bf-input mt-2"
           name="currency"
           value={value.currency}
           onChange={() => {}}
         >
-          <option value="MMK">MMK — Myanmar kyat</option>
+          <option value="MMK">{t("MMK — Myanmar kyat")}</option>
         </select>
       </label>
     </div>
   );
 }
 export function FormError({ message }: { message: string }) {
+  const { t } = useTranslation();
   return message ? (
     <p role="alert" className="rounded-lg bg-destructive/5 p-3 text-sm text-destructive">
-      {message}
+      {t(message)}
     </p>
   ) : null;
 }

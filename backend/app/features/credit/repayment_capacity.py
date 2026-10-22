@@ -7,7 +7,7 @@ def repayment_capacity(p1_cash_context: dict | None, next_payment_due_mmk: str |
             "status": "insufficient_data",
             "projected_cash_available_before_loan_mmk": None,
             "repayment_gap_mmk": None,
-            "explanation": "Cash and operating obligations from P1 are not available. This view does not use profit as repayment cash.",
+            "explanation": "Cash balances and operating payments from Financial Health are not available yet. Repayment planning uses cash, not profit.",
         }
     # Receipt rows must be explicitly marked confirmed by the upstream owner.
     from decimal import Decimal

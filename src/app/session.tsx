@@ -24,9 +24,10 @@ export function useConfig() {
     queryFn: async () => {
       const config = await api<PlatformConfig>("/api/v1/config");
       if (
-        config.auth_status.ready &&
+        config.auth_configured &&
         !(await authConfigurationMatches(config.auth_url, config.auth_key_fingerprint))
       ) {
+        config.auth_configured = false;
         config.auth_status = {
           ready: false,
           code: "AUTH_CLIENT_MISMATCH",
