@@ -32,6 +32,13 @@ def test_unknown_enums_and_invalid_dates_rejected(workbook_bytes):
     assert {e["field"] for e in errors} >= {"payment_type", "date"}
 
 
+def test_partial_payment_is_normalized_to_credit(workbook_bytes):
+    data = edit_workbook(workbook_bytes, lambda w: setattr(w["Sales"]["G2"], "value", "partial"))
+    parsed = parse_workbook(data)
+    assert parsed.errors == []
+    assert parsed.sheets["Sales"][0].values["payment_type"] == "credit"
+
+
 def test_zip_expansion_limit(monkeypatch, workbook_bytes):
     monkeypatch.setattr("app.integrations.excel.workbook_parser.MAX_EXPANDED_BYTES", 10)
     assert parse_workbook(workbook_bytes).errors
@@ -41,9 +48,9 @@ def test_invalid_zip_is_validation_error():
     assert parse_workbook(b"not a workbook").errors
 
 
-def test_loan_principal_limit_and_unsupported_type():
+def test_loan_principal_limit_and_required_type():
     content = (ROOT / "database/seed/grocery.xlsx").read_bytes()
     overpayment = edit_workbook(content, lambda w: setattr(w["LoanPayments"]["E2"], "value", 600001))
     assert any(e["field"] == "principal_mmk" for e in validate_workbook(parse_workbook(overpayment), "grocery"))
-    unknown = edit_workbook(content, lambda w: setattr(w["Loans"]["E2"], "value", "unsupported"))
-    assert any(e["field"] == "loan_type" for e in parse_workbook(unknown).errors)
+    missing = edit_workbook(content, lambda w: setattr(w["Loans"]["E2"], "value", None))
+    assert any(e["field"] == "loan_type" for e in parse_workbook(missing).errors)

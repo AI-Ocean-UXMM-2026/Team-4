@@ -35,6 +35,7 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
             actual=Actual(**{name: None for name in Actual.model_fields}), upcoming_obligations=[],
             data_quality=DataQuality(status="missing_data", missing_sheets=missing or ["Settings"], warnings=["No successful workbook import is available."]),
             as_of=ledger.as_of, import_batch_id=ledger.import_batch_id, source_version=ledger.source_version,
+            synthetic=ledger.synthetic,
         )
     if missing:
         raise ValueError("Imported ledger is missing required projections")
@@ -54,9 +55,23 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
         *ledger.warnings,
     ]
     revenue = sum((value(row, "unit_price_mmk") for row in period_sales), ZERO)
-    cogs = ZERO if not period_sales else None
-    if cogs is None:
-        warnings.append("Historical unit cost at sale is not imported. COGS and profit are unavailable; current product cost is not substituted.")
+    cogs = ZERO
+    cogs_complete = True
+    for row in period_sales:
+        supplied = row.get("cogs_mmk")
+        unit_cost = row.get("unit_cost_at_sale_mmk")
+        if supplied is None and unit_cost is None:
+            cogs_complete = False
+            break
+        row_cogs = amount(row, "cogs_mmk") if supplied is not None else amount(row, "quantity") * amount(row, "unit_cost_at_sale_mmk")
+        if supplied is not None and unit_cost is not None and row_cogs != amount(row, "quantity") * amount(row, "unit_cost_at_sale_mmk"):
+            raise ValueError("Supplied COGS does not match historical unit cost")
+        cogs += row_cogs
+    if not cogs_complete:
+        cogs = None
+        warnings.append("Historical cost is missing for one or more sales in this period. COGS and operating profit are unavailable; current product cost is not substituted.")
+    else:
+        warnings.append("COGS uses supplied historical row totals, or quantity × historical unit cost when row totals are absent; it is counted once per sale.")
     opex = total([row for row in expenses if in_period(row)], "amount_mmk")
     interest = total([row for row in rows_at("LoanPayments") if in_period(row)], "interest_mmk")
     # Supplier/customer balances include initial partial settlement plus later events.
@@ -66,7 +81,7 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
     if ar < 0 or ap < 0:
         raise ValueError("Payments exceed recorded balances")
     cash = None
-    if start <= period.end and not expenses:
+    if start <= period.end:
         cash = amount(settings[0], "opening_cash_mmk") + total(sales, "cash_received_mmk") + total(receipts, "amount_mmk")
         cash += total(rows_at("Loans"), "principal_mmk")
         cash -= total(purchases, "cash_paid_mmk") + total(payments, "amount_mmk")
@@ -74,8 +89,37 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
         for row in tables.get("CashAdjustments", []):
             if as_at(row):
                 cash += amount(row, "amount_mmk") * (1 if row["direction"] == "in" else -1)
-    elif expenses:
-        warnings.append("Expense payment status/date is not imported. Actual cash and unpaid-expense obligations cannot be determined.")
+        # Completeness is evaluated only through the report's as-of date. A future
+        # expense cannot make an earlier cash balance unknowable.
+        all_expenses = [
+            row
+            for row in tables["Expenses"]
+            if row["date"] <= period.end
+            or (
+                row.get("paid_date") is not None
+                and start <= row["paid_date"] <= period.end
+            )
+        ]
+        cash_expenses = [
+            row
+            for row in all_expenses
+            if row.get("amount_paid_mmk") is None
+            or (amount(row, "amount_paid_mmk") > 0 and row.get("paid_date") is None)
+        ]
+        if cash_expenses:
+            cash = None
+            warnings.append("Expense cash movements are incomplete: import payment status, paid date, and amount paid for every expense to calculate cash available.")
+        else:
+            cash -= sum(
+                (
+                    amount(row, "amount_paid_mmk")
+                    for row in all_expenses
+                    if row.get("paid_date") is not None
+                    and start <= row["paid_date"] <= period.end
+                ),
+                ZERO,
+            )
+            warnings.append(f"Cash balance uses opening cash plus recorded cash inflows, less recorded payments through {period.end.isoformat()}, including expenses by paid date.")
     else:
         warnings.append("Reporting end precedes the opening cash date; historical balances are unavailable.")
     if "CashAdjustments" not in tables:
@@ -90,7 +134,7 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
     if obligations_before:
         warnings.append("Undated supplier balances are included for visibility, but are not classified as due before the cutoff.")
     gross = revenue - cogs if cogs is not None else None
-    operating = gross - opex if gross is not None else None
+    operating = gross - opex if gross is not None and opex is not None else None
     return FinancialSnapshot(
         business_id=ledger.business_id, period=period,
         actual=Actual(revenue_mmk=revenue, cogs_mmk=cogs, gross_profit_mmk=gross,
@@ -99,6 +143,7 @@ def calculate_platform_snapshot(ledger, period, obligations_before=None):
             cash_balance_mmk=cash, receivables_mmk=ar if start <= period.end else None, payables_mmk=ap if start <= period.end else None),
         upcoming_obligations=obligations, data_quality=DataQuality(status="partial", missing_sheets=[], warnings=warnings),
         as_of=ledger.as_of, import_batch_id=ledger.import_batch_id, source_version=ledger.source_version,
+        synthetic=ledger.synthetic,
     )
 
 
@@ -131,5 +176,19 @@ class PlatformFinancialService:
             next_year, next_month = divmod(index + 1, 12)
             period = Period(start=date(year, month + 1, 1), end=min(end, date(next_year, next_month + 1, 1) - timedelta(days=1)))
             snapshot = calculate_platform_snapshot(ledger, period)
-            points.append(TrendPoint(period=period, revenue_mmk=snapshot.actual.revenue_mmk, operating_expenses_mmk=snapshot.actual.operating_expenses_mmk))
-        return {"business_id": business_id, "points": points, "source_version": ledger.source_version, "as_of": ledger.as_of, "import_batch_id": ledger.import_batch_id}
+            settings = ledger.tables.get("Settings", [])
+            if not settings or not ledger.import_batch_id:
+                revenue_count = expense_count = None
+            else:
+                opening_date = settings[0]["opening_date"]
+                in_period = lambda row: opening_date <= row["date"] and period.start <= row["date"] <= period.end
+                revenue_count = sum(1 for row in ledger.tables.get("Sales", []) if in_period(row))
+                expense_count = sum(1 for row in ledger.tables.get("Expenses", []) if in_period(row))
+            points.append(TrendPoint(
+                period=period,
+                revenue_mmk=snapshot.actual.revenue_mmk,
+                operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                revenue_record_count=revenue_count,
+                operating_expense_record_count=expense_count,
+            ))
+        return {"business_id": business_id, "points": points, "source_version": ledger.source_version, "as_of": ledger.as_of, "import_batch_id": ledger.import_batch_id, "synthetic": ledger.synthetic}

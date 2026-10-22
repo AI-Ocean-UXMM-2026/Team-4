@@ -74,7 +74,8 @@ def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
                 header = [str(c.value).strip() if c.value is not None else "" for c in next(rows, [])]
                 if len([h for h in header if h]) != len(set(h for h in header if h)):
                     parsed.errors.append(issue(name, 1, "header", "Duplicate column headers"))
-                missing = set(spec["fields"]) - set(header)
+                optional_fields = set(spec.get("optional_fields", []))
+                missing = set(spec["fields"]) - optional_fields - set(header)
                 for key in sorted(missing):
                     parsed.errors.append(issue(name, 1, key, "Required column is missing"))
                 parsed.sheets[name] = []
@@ -90,11 +91,25 @@ def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
                         raise ValueError("Workbook exceeds the total row limit")
                     values = {}
                     for key, kind in spec["fields"].items():
+                        if key not in header:
+                            values[key] = None
+                            continue
                         cell = cells[header.index(key)]
+                        if key in optional_fields and cell.value is None:
+                            values[key] = None
+                            continue
                         try:
                             if cell.data_type == "f":
                                 raise ValueError("Formula inputs are unsupported; paste the calculated value")
-                            values[key] = _value(cell.value, kind)
+                            value = _value(cell.value, kind)
+                            # Workbook sources may call an initially part-paid
+                            # sale/purchase "partial". In the ledger this is a
+                            # credit transaction with an initial settlement.
+                            if key == "payment_type" and value == "partial":
+                                value = "credit"
+                            if key == "payment_status" and value == "partial":
+                                value = "partial"
+                            values[key] = value
                         except (ValueError, TypeError, OverflowError) as exc:
                             parsed.errors.append(issue(name, number, key, str(exc)))
                     parsed.sheets[name].append(WorkbookRow(number, values))

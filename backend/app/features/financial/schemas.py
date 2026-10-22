@@ -154,3 +154,5 @@ class TrendPoint(Record):
     period: Period
     revenue_mmk: Decimal | None
     operating_expenses_mmk: Decimal | None
+    revenue_record_count: int | None
+    operating_expense_record_count: int | None

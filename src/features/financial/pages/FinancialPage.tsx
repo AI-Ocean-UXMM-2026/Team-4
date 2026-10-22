@@ -6,7 +6,7 @@ import { FinancialKpiCards } from "../components/FinancialKpiCards";
 import { CashflowTrendChart } from "../components/CashflowTrendChart";
 import { OutstandingBalances } from "../components/OutstandingBalances";
 import { useFinancialSummary } from "../hooks/useFinancialSummary";
-import type { FinancialClient } from "../types";
+import type { FinancialClient, Period } from "../types";
 
 export interface FinancialPageProps {
   client: FinancialClient;
@@ -31,6 +31,43 @@ function yangonToday() {
   }).format(new Date());
 }
 
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+function addMonthsClamped(date: Date, months: number) {
+  const day = date.getUTCDate();
+  const firstOfTarget = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
+  const lastDay = new Date(
+    Date.UTC(firstOfTarget.getUTCFullYear(), firstOfTarget.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  firstOfTarget.setUTCDate(Math.min(day, lastDay));
+  return firstOfTarget;
+}
+
+function isoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function periodForSelection(selection: string, today: string): Period {
+  const end = new Date(`${today}T00:00:00Z`);
+  if (Number.isNaN(end.getTime())) return { start: today, end: today };
+  if (selection === "previous") {
+    const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 1, 1));
+    const previousEnd = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 0));
+    return { start: isoDate(start), end: isoDate(previousEnd) };
+  }
+  if (selection === "year") return { start: `${today.slice(0, 4)}-01-01`, end: today };
+  if (selection === "3months" || selection === "6months") {
+    const months = selection === "3months" ? 3 : 6;
+    return { start: isoDate(addMonthsClamped(end, -months)), end: today };
+  }
+  if (selection === "30days") return { start: isoDate(addDays(end, -29)), end: today };
+  return { start: `${today.slice(0, 7)}-01`, end: today };
+}
+
 export function FinancialPage({
   client,
   businessId,
@@ -46,12 +83,7 @@ export function FinancialPage({
 
   const [selection, setSelection] = useState("month");
   const [refresh, setRefresh] = useState(0);
-  const period = useMemo(() => {
-    if (selection === "month") return { start: `${today.slice(0, 7)}-01`, end: today };
-    const date = new Date(`${today}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() - 29);
-    return { start: date.toISOString().slice(0, 10), end: today };
-  }, [selection, today]);
+  const period = useMemo(() => periodForSelection(selection, today), [selection, today]);
   const state = useFinancialSummary(
     client,
     businessId,
@@ -104,6 +136,10 @@ export function FinancialPage({
             >
               <option value="month">{t("Current month")}</option>
               <option value="30days">{t("Last 30 days")}</option>
+              <option value="previous">{t("Previous month")}</option>
+              <option value="3months">{t("Last 3 months")}</option>
+              <option value="6months">{t("Last 6 months")}</option>
+              <option value="year">{t("This year")}</option>
             </select>
           </label>
           <p className="inline-flex items-center gap-2 pb-2.5 text-sm text-muted-foreground">

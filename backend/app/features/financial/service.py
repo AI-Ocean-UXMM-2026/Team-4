@@ -35,5 +35,14 @@ class FinancialService:
             next_year, next_month = divmod(index + 1, 12)
             stop = min(end, date(next_year, next_month + 1, 1) - timedelta(days=1))
             snapshot = calculate_snapshot(records, Period(start=start, end=stop))
-            points.append(TrendPoint(period=snapshot.period, revenue_mmk=snapshot.actual.revenue_mmk, operating_expenses_mmk=snapshot.actual.operating_expenses_mmk))
+            in_period = lambda row: start <= row.date <= stop
+            revenue_count = sum(1 for row in records.sales if in_period(row)) if "Sales" in records.available_sheets else None
+            expense_count = sum(1 for row in records.expenses if in_period(row)) if "Expenses" in records.available_sheets else None
+            points.append(TrendPoint(
+                period=snapshot.period,
+                revenue_mmk=snapshot.actual.revenue_mmk,
+                operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                revenue_record_count=revenue_count,
+                operating_expense_record_count=expense_count,
+            ))
         return {"business_id": business_id, "points": points, "as_of": records.as_of, "import_batch_id": records.import_batch_id}

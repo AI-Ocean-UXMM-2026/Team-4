@@ -9,9 +9,18 @@ import httpx
 from app.features.ai.context_builder import build_context
 from app.features.ai.llm_client import AIWordingClient
 from app.features.ai.parser import grounded_insights
-from app.features.ai.schemas import SnapshotBundle
-from app.features.ai.service import AnalysisService, _cache, _call_times, _latest, _locks, provider_failure_warning
-from app.features.ai.snapshot_provider import _optional_snapshot
+from app.features.ai.schemas import AIAnalysis, SnapshotBundle
+from app.features.ai.service import (
+    AnalysisService,
+    _cache,
+    _call_times,
+    _latest,
+    _locks,
+    provider_failure_warning,
+)
+from app.features.ai.snapshot_provider import SnapshotProvider, _optional_snapshot
+from app.db.connection import make_engine, session_factory
+from app.db.models import Base, Business
 
 
 def bundle(version=2, synthetic=True, loan=False):
@@ -297,6 +306,29 @@ def test_optional_adapter_requires_matching_business_and_import(monkeypatch):
     assert _optional_snapshot("any", "biz-a", 3, "sessions") is None
     assert _optional_snapshot("any", "biz-a", 2, "sessions")["source_version"] == 2
     assert seen == [("biz-a", "sessions"), ("biz-a", "sessions")]
+
+
+def test_latest_analysis_survives_service_recreation_and_is_business_scoped(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'ai-reports.db'}")
+    Base.metadata.create_all(engine)
+    sessions = session_factory(engine)
+    with sessions.begin() as session:
+        session.add(Business(id="biz-a", name="Business A", industry="Retail", city="Yangon"))
+    provider = SnapshotProvider(sessions)
+    generated = AIAnalysis(
+        business_id="biz-a", status="insufficient_data", data_as_of=None,
+        source_version=0, import_batch_id=None, generated_at=datetime.now(timezone.utc),
+        insights=[], warnings=["No imported records"], disclaimer="Decision support only.",
+    )
+    provider.save_analysis(generated)
+
+    restarted_service = AnalysisService(SnapshotProvider(sessions), Client())
+    latest = restarted_service.latest("biz-a")
+    assert latest is not None
+    assert latest.generated_at == generated.generated_at
+    assert latest.source_version == generated.source_version
+    assert latest.business_id == "biz-a"
+    engine.dispose()
 
 
 @pytest.mark.anyio

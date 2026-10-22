@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FinancialPage } from "../pages/FinancialPage";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
@@ -174,9 +174,104 @@ describe("Financial reporting", () => {
       />,
     );
     expect(await screen.findByText("150,000 MMK")).toBeTruthy();
-    expect(screen.getByText("Interest uses cash-paid amounts.")).toBeTruthy();
+    expect(screen.getByText("Please note about this report")).toBeTruthy();
+    expect(screen.getByText(/2026-10-01 – 2026-10-20 · Yangon time/)).toBeTruthy();
     expect(screen.getByText("2026-10-15 · Overdue")).toBeTruthy();
     expect(screen.getByText("30,000 MMK")).toBeTruthy();
     expect(screen.getByText("No reporting periods available.")).toBeTruthy();
+  });
+
+  it.each([
+    ["Current month", "2024-02-29", "2024-02-01", "2024-02-29"],
+    ["Last 30 days", "2026-10-22", "2026-09-23", "2026-10-22"],
+    ["Previous month", "2026-01-15", "2025-12-01", "2025-12-31"],
+    ["Last 3 months", "2026-10-22", "2026-07-22", "2026-10-22"],
+    ["Last 6 months", "2024-08-31", "2024-02-29", "2024-08-31"],
+    ["This year", "2026-10-22", "2026-01-01", "2026-10-22"],
+  ])("requests the correct dates for %s", async (label, today, start, end) => {
+    const api = client();
+    api.summary = vi.fn(async (businessId, period) => ({
+      ...snapshot(),
+      business_id: businessId,
+      period,
+    }));
+    api.trends = vi.fn(async (businessId) => ({
+      business_id: businessId,
+      points: [],
+      as_of: "2026-10-20T10:00:00Z",
+      import_batch_id: "batch-1",
+    }));
+    render(
+      <FinancialPage
+        client={api}
+        businessId="A"
+        businessName="Demo Store"
+        synthetic
+        importBatchId="batch-1"
+        today={today}
+      />,
+    );
+    if (label !== "Current month") {
+      fireEvent.change(screen.getByRole("combobox", { name: "Reporting period" }), {
+        target: {
+          value:
+            label === "Previous month"
+              ? "previous"
+              : label === "Last 3 months"
+                ? "3months"
+                : label === "Last 6 months"
+                  ? "6months"
+                  : label === "This year"
+                    ? "year"
+                    : "30days",
+        },
+      });
+    }
+    await waitFor(() =>
+      expect(api.summary).toHaveBeenLastCalledWith("A", { start, end }, expect.any(AbortSignal)),
+    );
+  });
+
+  it("keeps the selected period when requesting a newly selected business", async () => {
+    const api = client();
+    api.summary = vi.fn(async (businessId, period) => ({
+      ...snapshot(),
+      business_id: businessId,
+      period,
+    }));
+    api.trends = vi.fn(async (businessId) => ({
+      business_id: businessId,
+      points: [],
+      as_of: "2026-10-20T10:00:00Z",
+      import_batch_id: "batch-1",
+    }));
+    const view = render(
+      <FinancialPage
+        client={api}
+        businessId="A"
+        businessName="Business A"
+        synthetic
+        importBatchId="batch-1"
+        today="2026-10-22"
+      />,
+    );
+    await screen.findByText("150,000 MMK");
+    view.rerender(
+      <FinancialPage
+        client={api}
+        businessId="B"
+        businessName="Business B"
+        synthetic
+        importBatchId="batch-1"
+        today="2026-10-22"
+      />,
+    );
+    await waitFor(() =>
+      expect(api.summary).toHaveBeenLastCalledWith(
+        "B",
+        { start: "2026-10-01", end: "2026-10-22" },
+        expect.any(AbortSignal),
+      ),
+    );
   });
 });

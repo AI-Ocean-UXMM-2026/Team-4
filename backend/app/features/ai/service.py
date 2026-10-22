@@ -54,7 +54,9 @@ class AnalysisService:
 
     def latest(self, business_id: str) -> AIAnalysis | None:
         version = self.provider.version(business_id)
-        item = _latest.get(business_id)
+        load_persisted = getattr(self.provider, "latest_analysis", None)
+        item = load_persisted(business_id) if callable(load_persisted) else None
+        item = item or _latest.get(business_id)
         if item is None:
             return None
         return item.model_copy(update={"outdated": item.source_version != version})
@@ -126,4 +128,7 @@ class AnalysisService:
         if not provider_failed:
             _cache[cache_key] = (time.monotonic(), result)
         _latest[business_id] = result
+        save_persisted = getattr(self.provider, "save_analysis", None)
+        if callable(save_persisted):
+            save_persisted(result)
         return result

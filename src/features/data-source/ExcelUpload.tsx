@@ -12,6 +12,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { business, imported } = usePlatform();
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [replaceOmitted, setReplaceOmitted] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
   const businessMismatch = result?.errors.some(
@@ -38,7 +39,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
       </div>
       <p className="mb-5 text-sm text-muted-foreground">
         {t(
-          "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once.",
+          "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once. Rows omitted from an upload are kept unless you choose full replacement.",
         )}
       </p>
       <label className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6">
@@ -64,6 +65,22 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           }}
         />
       </label>
+      <label className="mt-4 flex items-start gap-3 rounded-xl border p-3 text-sm">
+        <input
+          type="checkbox"
+          checked={replaceOmitted}
+          disabled={busy}
+          onChange={(event) => setReplaceOmitted(event.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          <span className="block font-semibold">This workbook is a complete replacement</span>
+          <span className="text-muted-foreground">
+            Records missing from this file will be removed from current reports. Their import
+            history is retained.
+          </span>
+        </span>
+      </label>
       <div className="mt-4 flex flex-wrap gap-3">
         <button
           className="bf-button"
@@ -76,11 +93,15 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
             try {
               const form = new FormData();
               form.append("file", file);
+              const uploadPath = businessPath("upload", business.id);
               setResult(
-                await api<ImportResult>(businessPath("upload", business.id), {
-                  method: "POST",
-                  body: form,
-                }),
+                await api<ImportResult>(
+                  replaceOmitted ? `${uploadPath}&replace_omitted=true` : uploadPath,
+                  {
+                    method: "POST",
+                    body: form,
+                  },
+                ),
               );
               await imported();
             } catch (failure) {
@@ -115,10 +136,11 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
             <p className="font-semibold text-primary">
               {result.status === "up_to_date"
                 ? t("Already up to date. No duplicate rows added.")
-                : t("Imported: {0} added, {1} updated, {2} unchanged.", {
+                : t("Imported: {0} added, {1} updated, {2} unchanged, {3} removed.", {
                     "0": result.row_counts.inserted || 0,
                     "1": result.row_counts.updated || 0,
                     "2": result.row_counts.unchanged || 0,
+                    "3": result.row_counts.removed || 0,
                   })}
             </p>
           )}

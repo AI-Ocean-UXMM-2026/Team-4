@@ -35,7 +35,7 @@ export function ConnectedFinancialPage() {
       businessName={business.name}
       importBatchId={null}
       sourceVersion={snapshot.data.source_version}
-      synthetic={false}
+      synthetic={snapshot.data.synthetic ?? false}
       dataRefreshing={snapshot.isFetching}
       onRefresh={async () => {
         await snapshot.refetch();

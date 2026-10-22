@@ -21,7 +21,6 @@ const shortPeriod = (start: string) => {
       );
 };
 
-// Plot numeric coordinates, retaining exact decimal strings for labels and tables.
 const plotValue = (value: Money) => {
   if (value === null || !/^-?\d+(\.\d+)?$/.test(String(value))) return null;
   const numeric = Number(value);
@@ -47,14 +46,42 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
         </div>
       </section>
     );
+
   const chartData = trends.points.map((point) => ({
     ...point,
     exact: point,
-    revenue_mmk: plotValue(point.revenue_mmk),
-    operating_expenses_mmk: plotValue(point.operating_expenses_mmk),
+    // No records is not the same as recorded zero. Leave those points absent from the plot.
+    revenue_mmk:
+      point.revenue_record_count == null || point.revenue_record_count === 0
+        ? null
+        : plotValue(point.revenue_mmk),
+    operating_expenses_mmk:
+      point.operating_expense_record_count == null || point.operating_expense_record_count === 0
+        ? null
+        : plotValue(point.operating_expenses_mmk),
     label: shortPeriod(point.period.start),
     range: `${point.period.start} – ${point.period.end}`,
   }));
+  const recordCountsAvailable = trends.points.every(
+    (point) => point.revenue_record_count !== null && point.operating_expense_record_count !== null,
+  );
+  const hasRecordedActivity = trends.points.some(
+    (point) => (point.revenue_record_count ?? 0) > 0 || (point.operating_expense_record_count ?? 0) > 0,
+  );
+  const latestPeriod = trends.points[trends.points.length - 1];
+  const latestPeriodEnd = latestPeriod
+    ? new Date(
+        Date.UTC(
+          Number(latestPeriod.period.start.slice(0, 4)),
+          Number(latestPeriod.period.start.slice(5, 7)),
+          0,
+        ),
+      )
+        .toISOString()
+        .slice(0, 10)
+    : "";
+  const latestIsPartial = Boolean(latestPeriod && latestPeriod.period.end < latestPeriodEnd);
+
   return (
     <section
       className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5"
@@ -69,11 +96,16 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
             {t("Revenue and operating expenses")}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("Recorded amounts by period. These are not cash movements.")}
+            {t("Recorded amounts by period. These are not cash movements.")} {t("Operating expenses exclude cost of goods sold (COGS); revenue is not profit.")}
           </p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-          {t("Final period may be partial")}
+          {latestIsPartial
+            ? t("Latest period, {0}–{1}, is partial", {
+                "0": latestPeriod?.period.start ?? "",
+                "1": latestPeriod?.period.end ?? "",
+              })
+            : t("Final period may be partial")}
         </span>
       </div>
       <div className="mt-4 min-w-0" style={{ height: 280 }}>
@@ -144,6 +176,13 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      {!hasRecordedActivity && (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          {recordCountsAvailable
+            ? t("No revenue or operating expense records in these periods.")
+            : t("Trend data is unavailable for these periods; the available data cannot confirm whether there was no activity.")}
+        </p>
+      )}
       <div className="mt-2 overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[510px] text-left text-xs sm:text-sm">
           <caption className="sr-only">
@@ -163,19 +202,47 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
             </tr>
           </thead>
           <tbody>
-            {trends.points.map((point) => (
+            {trends.points.map((point, index) => {
+              const partial = index === trends.points.length - 1 && point.period.end < new Date(
+                Date.UTC(
+                  Number(point.period.start.slice(0, 4)),
+                  Number(point.period.start.slice(5, 7)),
+                  0,
+                ),
+              ).toISOString().slice(0, 10);
+              return (
               <tr key={point.period.start} className="border-t border-border">
                 <th scope="row" className="px-3 py-2.5 font-medium text-muted-foreground">
                   {point.period.start} – {point.period.end}
+                  {partial && <span className="ml-2 rounded-full bg-warning/20 px-2 py-0.5 text-xs">{t("Partial")}</span>}
                 </th>
                 <td className="px-3 py-2.5 font-medium text-primary">
-                  {formatMmk(point.revenue_mmk)}
+                  {point.revenue_record_count == null
+                    ? t("Unavailable")
+                    : point.revenue_record_count === 0
+                      ? t("No records")
+                      : formatMmk(point.revenue_mmk)}
+                  {point.revenue_record_count != null && point.revenue_record_count > 0 && (
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {point.revenue_record_count} {t(point.revenue_record_count === 1 ? "record" : "records")}
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2.5 font-medium text-cyan-800 dark:text-cyan-200">
-                  {formatMmk(point.operating_expenses_mmk)}
+                  {point.operating_expense_record_count == null
+                    ? t("Unavailable")
+                    : point.operating_expense_record_count === 0
+                      ? t("No records")
+                      : formatMmk(point.operating_expenses_mmk)}
+                  {point.operating_expense_record_count != null && point.operating_expense_record_count > 0 && (
+                    <span className="block text-xs font-normal text-muted-foreground">
+                      {point.operating_expense_record_count} {t(point.operating_expense_record_count === 1 ? "record" : "records")}
+                    </span>
+                  )}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

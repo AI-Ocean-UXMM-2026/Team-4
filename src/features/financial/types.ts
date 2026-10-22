@@ -35,7 +35,13 @@ export type FinancialSnapshot = {
 };
 export type Trends = {
   business_id: string;
-  points: { period: Period; revenue_mmk: Money; operating_expenses_mmk: Money }[];
+  points: {
+    period: Period;
+    revenue_mmk: Money;
+    operating_expenses_mmk: Money;
+    revenue_record_count: number | null;
+    operating_expense_record_count: number | null;
+  }[];
   as_of: string | null;
   import_batch_id: string | null;
   source_version?: number | null;

@@ -4,9 +4,10 @@ import pytest
 from sqlalchemy import func, select
 
 from app.core.errors import APIError
-from app.db.models import ImportBatch, ImportedRow, PROJECTIONS, RowRevision
+from app.db.connection import make_engine, session_factory
+from app.db.models import Base, Business, ImportBatch, ImportedRow, PROJECTIONS, RowRevision
 from app.integrations.excel.import_service import import_validated_snapshot
-from conftest import edit_workbook, upload
+from conftest import ROOT, edit_workbook, upload
 
 
 def snapshot(client):
@@ -69,6 +70,33 @@ def test_missing_rows_retained_and_checked(client, workbook_bytes):
     assert result.status_code == 200
     assert "Missing row E002 retained" in str(result.json()["warnings"])
     assert len(snapshot(client)["tables"]["Expenses"]) == 2
+
+
+def test_replacement_reactivates_reappearing_row(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'replacement.db'}")
+    Base.metadata.create_all(engine)
+    sessions = session_factory(engine)
+    with sessions.begin() as session:
+        session.add(Business(id="tea-shop", name="Tea Shop", industry="Food", city="Yangon"))
+    content = (ROOT / "database/seed/tea-shop.xlsx").read_bytes()
+    shortened = edit_workbook(content, lambda w: w["Expenses"].delete_rows(3))
+    import_validated_snapshot(sessions, "tea-shop", "owner", content)
+    merged = import_validated_snapshot(sessions, "tea-shop", "owner", shortened)
+    assert "Missing row E002 retained" in str(merged["warnings"])
+    result = import_validated_snapshot(sessions, "tea-shop", "owner", shortened, replace_omitted=True)
+    assert result["row_counts"]["removed"] == 1
+    with sessions() as session:
+        omitted = session.scalar(select(ImportedRow).where(ImportedRow.row_id == "E002"))
+        assert omitted.active_status == "removed"
+        assert session.scalar(select(func.count()).select_from(PROJECTIONS["Expenses"])) == 1
+        assert session.scalar(select(func.count()).select_from(RowRevision)) == 1
+    restored = import_validated_snapshot(sessions, "tea-shop", "owner", content)
+    assert restored["row_counts"]["updated"] == 1
+    with sessions() as session:
+        row = session.scalar(select(ImportedRow).where(ImportedRow.row_id == "E002"))
+        assert row.active_status == "active"
+        assert session.scalar(select(func.count()).select_from(PROJECTIONS["Expenses"])) == 2
+    engine.dispose()
 
 
 def test_omitted_payments_still_prevent_overpayment(client, workbook_bytes):

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
+from ...core.demo_data import is_synthetic_seed_workbook
 from ...core.errors import APIError
 from ...db.models import Business, ImportBatch, PROJECTIONS, WorkbookSource
 
@@ -16,6 +17,7 @@ class Ledger:
     as_of: datetime | None
     import_batch_id: str | None
     warnings: tuple[str, ...] = ()
+    synthetic: bool = False
 
 
 class SqlFinancialRepository:
@@ -49,4 +51,5 @@ class SqlFinancialRepository:
                 business_id=business_id, source_version=business.version, tables=tables,
                 as_of=stamp, import_batch_id=batch.id if batch else None,
                 warnings=tuple(issue.get("reason", "Import warning") for issue in (batch.warnings if batch else [])),
+                synthetic=is_synthetic_seed_workbook(business_id, batch.content_hash if batch else None),
             )
