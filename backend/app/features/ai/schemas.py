@@ -39,6 +39,11 @@ class AIAnalysis(StrictModel):
     disclaimer: str
 
 
+class AnalyzeRequest(StrictModel):
+    source_version: int | None = Field(default=None, ge=0, strict=True)
+    provider_consent: bool = Field(default=False, strict=True)
+
+
 class SnapshotBundle(StrictModel):
     """P1/P2/P3 service outputs are passed in, never workbook transactions."""
     business_id: str

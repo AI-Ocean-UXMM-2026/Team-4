@@ -138,6 +138,12 @@ export const my: Record<string, string> = {
     "နောက်ဆုံးအခြေအနေ ဖြစ်နေပါပြီ။ ထပ်တူမှတ်တမ်း မထည့်ထားပါ။",
   "Amount still needed": "လိုအပ်နေသေးသော ပမာဏ",
   "Analyze Business": "လုပ်ငန်းကို သုံးသပ်ရန်",
+  "Analyze with AI": "AI ဖြင့် သုံးသပ်ရန်",
+  "Use rules only": "စည်းမျဉ်းများဖြင့်သာ သုံးသပ်ရန်",
+  "I agree to send summary financial amounts and findings from this import to the configured external AI provider for this analysis. The workbook, names, and individual transaction rows are not sent.":
+    "ဤသုံးသပ်ချက်အတွက် ဤဖိုင်မှ စုစည်းထားသော ငွေကြေးပမာဏများနှင့် တွေ့ရှိချက်များကို ပြင်ပ AI ဝန်ဆောင်မှုသို့ ပို့ရန် သဘောတူပါသည်။ Excel ဖိုင်၊ အမည်များနှင့် ငွေလွှဲတစ်ကြောင်းချင်း၏ မှတ်တမ်းများကို မပို့ပါ။",
+  "External AI analysis was not selected; rules-based findings are shown.":
+    "ပြင်ပ AI သုံးသပ်ချက်ကို မရွေးချယ်ထားသဖြင့် စည်းမျဉ်းအခြေခံ တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "Analyzing…": "သုံးသပ်နေသည်…",
   "Appears covered from recorded cash": "မှတ်တမ်းပါ ငွေသားဖြင့် လုံလောက်နိုင်ပါသည်",
   "Associated cost of goods": "ဆက်စပ်ကုန်ပစ္စည်း ကုန်ကျစရိတ်",

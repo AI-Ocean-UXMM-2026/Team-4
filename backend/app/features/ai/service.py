@@ -21,6 +21,10 @@ _locks: dict[str, asyncio.Lock] = {}
 _call_times: dict[str, list[float]] = {}
 
 
+class SourceVersionChanged(Exception):
+    """A request's consent must apply to the import the user saw."""
+
+
 def provider_failure_warning(error: Exception, provider_name: str = "OpenAI") -> str:
     if isinstance(error, httpx.TimeoutException):
         return f"{provider_name} timed out; rules-based findings are shown. Try Analyze Business again."
@@ -61,15 +65,21 @@ class AnalysisService:
             return None
         return item.model_copy(update={"outdated": item.source_version != version})
 
-    async def analyze(self, business_id: str) -> AIAnalysis:
+    async def analyze(self, business_id: str, *, expected_source_version: int | None = None,
+                      provider_consent: bool = False) -> AIAnalysis:
         # Serialize concurrent clicks for the same business before checking cache/quota.
         async with _locks.setdefault(business_id, asyncio.Lock()):
-            return await self._analyze_locked(business_id)
+            return await self._analyze_locked(business_id, expected_source_version, provider_consent)
 
-    async def _analyze_locked(self, business_id: str) -> AIAnalysis:
+    async def _analyze_locked(self, business_id: str, expected_source_version: int | None,
+                              provider_consent: bool) -> AIAnalysis:
         bundle: SnapshotBundle = self.provider.load(business_id)
         if bundle.business_id != business_id:
             raise PermissionError("Cross-business analysis input")
+        if expected_source_version is not None and bundle.source_version != expected_source_version:
+            raise SourceVersionChanged()
+        if provider_consent and expected_source_version is None:
+            raise ValueError("AI provider consent must name the current import version")
         context = build_context(bundle)
         selected = flags(context)
         digest = hashlib.sha256(json.dumps(bundle.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
@@ -77,7 +87,7 @@ class AnalysisService:
         cache_key = (
             f"{business_id}:{bundle.source_version}:{bundle.import_batch_id}:{digest}:"
             f"{getattr(self.client, 'provider', 'openai')}:{getattr(self.client, 'model', '')}:"
-            f"{client_key}:{getattr(self.client, 'allow_real_data', False)}"
+            f"{client_key}:{provider_consent}"
         )
         cached = _cache.get(cache_key)
         if cached and time.monotonic() - cached[0] < CACHE_TTL_SECONDS:
@@ -86,7 +96,7 @@ class AnalysisService:
         warnings = list(context["warnings"])
         eligible_for_model = (
             bool(selected) and
-            (context["synthetic"] or getattr(self.client, "allow_real_data", False)) and
+            provider_consent and
             bool(self.client.api_key)
         )
         now = time.monotonic()
@@ -113,12 +123,8 @@ class AnalysisService:
                 # No provider payload, key, or financial details are logged.
                 provider_name = "OpenRouter" if getattr(self.client, "provider", "openai") == "openrouter" else "OpenAI"
                 warnings.append(provider_failure_warning(error, provider_name))
-        elif selected and not context["synthetic"] and not getattr(self.client, "allow_real_data", False):
-            warnings.append(
-                "AI wording was skipped because this upload is not configured as a demo workbook. "
-                "Rules-based findings are still available. Ask an administrator to configure this exact demo file. "
-                "Real business records require separate consent before AI provider use."
-            )
+        elif selected and not provider_consent:
+            warnings.append("External AI analysis was not selected; rules-based findings are shown.")
         elif selected and not self.client.api_key:
             warnings.append("AI provider is not configured; rules-based findings are shown.")
         result = AIAnalysis(
