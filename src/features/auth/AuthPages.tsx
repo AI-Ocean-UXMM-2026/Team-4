@@ -325,15 +325,17 @@ export function RegisterPage() {
               setVerification(result);
               return;
             }
-            const { error: sessionError } = await requireAuthClient().auth.setSession(
-              result.session,
+            // Establish the browser session through the same provider login used
+            // by SignInPage instead of importing server-returned session tokens.
+            const { error: sessionError } = await signInWithDeadline(
+              account.email.trim(), account.password,
             );
             if (sessionError)
               throw new Error(
                 "Your account was created, but automatic sign-in failed. Please sign in.",
               );
             await queries.invalidateQueries({ queryKey: ["account"] });
-            await navigate({ to: "/onboarding" });
+            await navigate({ to: "/data-source" });
           } catch (failure) {
             setError(message(failure));
           } finally {
