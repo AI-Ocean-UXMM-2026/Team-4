@@ -1,8 +1,8 @@
-"""Workbook storage on local disk for historical snapshot inspection and re-activation."""
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-STORAGE_DIR = ROOT / "backend" / "storage" / "workbooks"
+STORAGE_DIR = Path("/tmp/workbooks") if os.getenv("VERCEL") else (ROOT / "backend" / "storage" / "workbooks")
 
 
 def save_batch_workbook(business_id: str, batch_id: str, content: bytes) -> Path:
