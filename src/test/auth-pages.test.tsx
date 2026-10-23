@@ -283,7 +283,7 @@ describe("Account UI", () => {
     fill("Email address", "owner@example.test");
     fill("Password", "correct password");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/" }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" }));
   });
   it("stops waiting and allows another attempt when sign-in stalls", async () => {
     vi.useFakeTimers();
@@ -318,7 +318,7 @@ describe("Account UI", () => {
     fill("Email address", "owner@example.test");
     fill("Password", "StrongPassword1!");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/" }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" }));
     expect(mocks.signIn).toHaveBeenCalledWith({
       email: "owner@example.test",
       password: "StrongPassword1!",
@@ -435,7 +435,7 @@ describe("Automatic workspace setup", () => {
     mocks.account = pendingAccount();
     mocks.api.mockResolvedValue({ business_id: "workspace-1", created: true });
     render(<StrictMode><OnboardingPage /></StrictMode>);
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source", replace: true }));
     expect(mocks.api).toHaveBeenCalledTimes(1);
     expect(mocks.api).toHaveBeenCalledWith("/api/v1/auth/onboarding", {
       method: "POST", body: JSON.stringify({ ...mocks.account.pending_business, full_name: "Owner" }),
@@ -444,10 +444,10 @@ describe("Automatic workspace setup", () => {
     expect(mocks.invalidate).toHaveBeenCalledWith({ queryKey: ["businesses"] });
     expect(screen.queryByRole("button", { name: "Create business workspace" })).not.toBeInTheDocument();
   });
-  it("takes an existing completed account to the dashboard without creating anything", () => {
+  it("takes an existing completed account to data source without creating anything", () => {
     mocks.account = { ...pendingAccount(), onboarding_complete: true, owned_business_id: "existing" };
     render(<OnboardingPage />);
-    expect(screen.getByText("Redirect: /")).toBeInTheDocument();
+    expect(screen.getByText("Redirect: /data-source")).toBeInTheDocument();
     expect(mocks.api).not.toHaveBeenCalled();
   });
   it("keeps manual setup when registration details are missing", () => {
@@ -471,7 +471,17 @@ describe("Automatic workspace setup", () => {
     expect(screen.getByLabelText("Company or business name")).toHaveValue("Trading Shop");
     mocks.api.mockResolvedValueOnce({ business_id: "workspace-1", created: false });
     fireEvent.click(screen.getByRole("button", { name: "Create business workspace" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source", replace: true }));
     expect(sessionStorage.getItem("bizflow-business")).toBe("workspace-1");
   });
+});
+
+
+it.each([
+  [false, "/data-source"],
+  [true, "/reset-password"],
+])("routes email callbacks with recovery=%s to %s", async (recovery, destination) => {
+  mocks.callback.mockResolvedValue({ recovery });
+  render(<EmailCallbackPage />);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: destination, replace: true }));
 });

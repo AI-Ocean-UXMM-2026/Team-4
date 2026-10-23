@@ -145,7 +145,7 @@ export function SignInPage() {
   const navigate = useNavigate();
   const availability = useAvailability(false, true);
   const { session, ready } = useAuth();
-  if (ready && session) return <Navigate to="/" replace />;
+  if (ready && session) return <Navigate to="/data-source" replace />;
   return (
     <AuthShell>
       <h1 className="text-3xl font-bold">{t("Sign in to Shay Sett")}</h1>
@@ -191,7 +191,7 @@ export function SignInPage() {
               return;
             }
             setPassword("");
-            await navigate({ to: "/" });
+            await navigate({ to: "/data-source" });
           } catch (failure) {
             setError(message(failure));
           } finally {
@@ -565,7 +565,7 @@ export function EmailCallbackPage() {
       .then(async (result) => {
         if (!active) return;
         setRecoveryReady(result.recovery);
-        await navigate({ to: result.recovery ? "/reset-password" : "/", replace: true });
+        await navigate({ to: result.recovery ? "/reset-password" : "/data-source", replace: true });
       })
       .catch((failure) => {
         if (active) setError(message(failure));
@@ -725,7 +725,7 @@ function AutomaticBusinessSetup({ account }: { account: AccountStatus }) {
         sessionStorage.setItem("bizflow-business", result.business_id);
         await queries.invalidateQueries({ queryKey: ["account"] });
         await queries.invalidateQueries({ queryKey: ["businesses"] });
-        if (active) await navigate({ to: "/", replace: true });
+        if (active) await navigate({ to: "/data-source", replace: true });
       })
       .catch((failure) => {
         if (active) setError(message(failure));
@@ -733,7 +733,7 @@ function AutomaticBusinessSetup({ account }: { account: AccountStatus }) {
     return () => { active = false; };
   }, [account.onboarding_complete, canCreate, business, name, queries, navigate]);
 
-  if (account.onboarding_complete) return <Navigate to="/" replace />;
+  if (account.onboarding_complete) return <Navigate to="/data-source" replace />;
   if (canCreate && !error) return <Loading />;
   return (
     <>
@@ -794,7 +794,7 @@ function BusinessSetup({
             sessionStorage.setItem("bizflow-business", result.business_id);
             await queries.invalidateQueries({ queryKey: ["account"] });
             await queries.invalidateQueries({ queryKey: ["businesses"] });
-            await navigate({ to: "/", replace: true });
+            await navigate({ to: "/data-source", replace: true });
           } catch (failure) {
             setError(message(failure));
           } finally {
