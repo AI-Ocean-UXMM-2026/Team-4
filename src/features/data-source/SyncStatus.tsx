@@ -15,31 +15,194 @@ import {
 
 export function Issues({ result }: { result: ImportResult }) {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const [showDetailedRows, setShowDetailedRows] = useState(false);
 
-  const issues = [...result.errors, ...result.warnings];
-  if (!issues.length) return null;
+  const rawIssues = [...result.errors, ...result.warnings];
+  if (!rawIssues.length) return null;
+
+  // Separate ownership issues (business_id mismatch across rows/sheets)
+  const ownershipIssues = rawIssues.filter(
+    (i) => i.field === "business_id" && i.reason === "Row belongs to another business",
+  );
+  const otherIssues = rawIssues.filter(
+    (i) => !(i.field === "business_id" && i.reason === "Row belongs to another business"),
+  );
+
+  // Group non-ownership issues by sheet + field + reason
+  const otherGroupedMap = new Map<
+    string,
+    {
+      sheet: string;
+      field: string;
+      reason: string;
+      rows: number[];
+    }
+  >();
+
+  for (const issue of otherIssues) {
+    const key = `${issue.sheet}::${issue.field}::${issue.reason}`;
+    const existing = otherGroupedMap.get(key);
+    if (existing) {
+      existing.rows.push(issue.row);
+    } else {
+      otherGroupedMap.set(key, {
+        sheet: issue.sheet,
+        field: issue.field,
+        reason: issue.reason,
+        rows: [issue.row],
+      });
+    }
+  }
+
+  type GroupedIssueItem = {
+    key: string;
+    sheet: string;
+    rowDisplay: string;
+    field: string;
+    reason: string;
+    count: number;
+    isOwnership?: boolean;
+  };
+
+  const groupedIssues: GroupedIssueItem[] = [];
+
+  // 1. Add non-ownership issues first so real validation errors aren't hidden
+  for (const [key, group] of otherGroupedMap.entries()) {
+    let rowDisplay = "";
+    if (group.rows.length === 1) {
+      rowDisplay = String(group.rows[0] ?? t("Previous import"));
+    } else {
+      rowDisplay = t("Row {0} (+{1} more)", {
+        "0": group.rows[0] ?? 0,
+        "1": group.rows.length - 1,
+      });
+    }
+    groupedIssues.push({
+      key,
+      sheet: group.sheet,
+      rowDisplay,
+      field: group.field,
+      reason: group.reason,
+      count: group.rows.length,
+    });
+  }
+
+  // 2. Add consolidated ownership issue if present
+  if (ownershipIssues.length > 0) {
+    if (ownershipIssues.length === 1) {
+      const single = ownershipIssues[0]!;
+      groupedIssues.push({
+        key: "ownership-single",
+        sheet: single.sheet,
+        rowDisplay: String(single.row || t("Previous import")),
+        field: single.field,
+        reason: single.reason,
+        count: 1,
+        isOwnership: true,
+      });
+    } else {
+      const uniqueSheets = Array.from(new Set(ownershipIssues.map((i) => i.sheet)));
+      const firstSheet = uniqueSheets[0] ?? "";
+      const sheetDisplay =
+        uniqueSheets.length === 1
+          ? firstSheet
+          : `${firstSheet} (+${uniqueSheets.length - 1} ${t("other sheets")})`;
+
+      groupedIssues.push({
+        key: "ownership-consolidated",
+        sheet: sheetDisplay,
+        rowDisplay: t("Multiple rows ({0})", { "0": ownershipIssues.length }),
+        field: "business_id",
+        reason: "Row belongs to another business",
+        count: ownershipIssues.length,
+        isOwnership: true,
+      });
+    }
+  }
+
+  const MAX_VISIBLE = 5;
+  const isCapped = !expanded && groupedIssues.length > MAX_VISIBLE;
+  const displayedGrouped = isCapped ? groupedIssues.slice(0, MAX_VISIBLE) : groupedIssues;
+
   return (
-    <div className="mt-4 overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="p-2">{t("Sheet")}</th>
-            <th className="p-2">{t("Excel row")}</th>
-            <th className="p-2">{t("Field")}</th>
-            <th className="p-2">{t("Action needed")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {issues.map((issue, index) => (
-            <tr key={index} className="border-b align-top">
-              <td className="p-2">{issue.sheet}</td>
-              <td className="p-2">{issue.row || t("Previous import")}</td>
-              <td className="p-2">{issue.field}</td>
-              <td className="p-2">{t(issue.reason)}</td>
+    <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 overflow-hidden text-sm">
+      {rawIssues.length > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 px-3 py-2 text-xs text-muted-foreground bg-muted/40">
+          <span className="font-semibold text-foreground/80">
+            {t("Issues found ({0})", { "0": rawIssues.length })}
+          </span>
+          {rawIssues.length > groupedIssues.length && (
+            <button
+              type="button"
+              onClick={() => setShowDetailedRows((prev) => !prev)}
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {showDetailedRows
+                ? t("Show summary view")
+                : t("View all {0} rows", { "0": rawIssues.length })}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border/40 text-xs font-semibold text-muted-foreground">
+              <th className="p-2.5">{t("Sheet")}</th>
+              <th className="p-2.5">{t("Excel row")}</th>
+              <th className="p-2.5">{t("Field")}</th>
+              <th className="p-2.5">{t("Action needed")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {showDetailedRows
+              ? rawIssues.map((issue, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-border/30 last:border-0 align-top hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="p-2.5 font-medium">{issue.sheet}</td>
+                    <td className="p-2.5 text-muted-foreground">
+                      {issue.row || t("Previous import")}
+                    </td>
+                    <td className="p-2.5 font-mono text-xs">{issue.field}</td>
+                    <td className="p-2.5 text-destructive/90 dark:text-red-400 font-medium">
+                      {t(issue.reason)}
+                    </td>
+                  </tr>
+                ))
+              : displayedGrouped.map((issue) => (
+                  <tr
+                    key={issue.key}
+                    className="border-b border-border/30 last:border-0 align-top hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="p-2.5 font-medium">{issue.sheet}</td>
+                    <td className="p-2.5 text-muted-foreground">{issue.rowDisplay}</td>
+                    <td className="p-2.5 font-mono text-xs">{issue.field}</td>
+                    <td className="p-2.5 text-destructive/90 dark:text-red-400 font-medium">
+                      {t(issue.reason)}
+                    </td>
+                  </tr>
+                ))}
+          </tbody>
+        </table>
+      </div>
+
+      {!showDetailedRows && groupedIssues.length > MAX_VISIBLE && (
+        <div className="border-t border-border/40 p-2 text-center bg-muted/20">
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            className="text-xs font-semibold text-primary hover:underline"
+          >
+            {expanded
+              ? t("Show fewer issues")
+              : t("Show all {0} issues", { "0": groupedIssues.length })}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
