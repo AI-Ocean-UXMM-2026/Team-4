@@ -55,10 +55,6 @@ export function WorkbookGuideCard() {
           <span>{t("Download template")}</span>
         </button>
 
-        <p className="mt-4 text-sm text-muted-foreground">
-          {t("Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.")}
-        </p>
-
         {/* Sheet Coverage Breakdown */}
         <div className="mt-4 space-y-3">
           <div role="group" aria-label={t("Core Sheets (Required)")}>

@@ -413,11 +413,6 @@ export function SyncStatus({ status }: { status: Status }) {
                     </button>
                   )}
 
-                  {isCurrentlyActive && (
-                    <span className="text-xs font-semibold text-primary">
-                      {t("Currently active across all features")}
-                    </span>
-                  )}
                 </div>
               </div>
             );
