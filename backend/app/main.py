@@ -1,4 +1,4 @@
-"""BizFlow platform composition. Feature routers are mounted when owners supply them."""
+"""Shay Sett platform composition. Feature routers are mounted when owners supply them."""
 import importlib
 import importlib.util
 import hashlib
@@ -59,7 +59,7 @@ def create_app(settings=None, engine=None):
         app.state.auth.close()
         engine.dispose()
 
-    app = FastAPI(title="BizFlow Platform", version="1.0.0", lifespan=lifespan)
+    app = FastAPI(title="Shay Sett Platform", version="1.0.0", lifespan=lifespan)
     app.state.settings, app.state.engine = settings, engine
     app.state.sessions, app.state.auth = session_factory(engine), SupabaseAuth(settings)
     app.add_exception_handler(APIError, api_error_handler)

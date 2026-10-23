@@ -6,7 +6,7 @@ This is a self-contained context document for writing a project proposal, report
 
 ## 1. Instructions for ChatGPT receiving this document
 
-Treat this document as the project context, rather than assuming the product is a generic accounting app or a lending platform. Use **Shay Sett (ရှေ့ဆက်)** as the public product name. The source repository and some older documents use **BIZFLOW/BizFlow**; these refer to this same project, not another product.
+Treat this document as the project context, rather than assuming the product is a generic accounting app or a lending platform. Use **Shay Sett (ရှေ့ဆက်)** as the public product name. Use this name consistently throughout the project.
 
 Keep three categories separate:
 

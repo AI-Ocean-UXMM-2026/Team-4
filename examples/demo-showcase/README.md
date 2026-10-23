@@ -1,14 +1,14 @@
-# BizFlow Demo Workbooks: Kyaw Myanmar
+# Shay Sett Demo Workbooks: Kyaw Myanmar
 
-This directory contains curated demonstration datasets designed to showcase the full effectiveness, depth, and intelligence of the BizFlow / Shay Sett platform for **Kyaw Myanmar** (`57ef1d0f-5584-47e8-941f-09179bad7560`).
+This directory contains curated demonstration datasets designed to showcase the full effectiveness, depth, and intelligence of the Shay Sett platform for **Kyaw Myanmar** (`57ef1d0f-5584-47e8-941f-09179bad7560`).
 
 ---
 
-## 1. Flagship Showcase: `BIZFLOW_Showcase_Wholesale_Kyaw_Myanmar.xlsx` (Recommended)
+## 1. Flagship Showcase: `SHAY_SETT_Showcase_Wholesale_Kyaw_Myanmar.xlsx` (Recommended)
 
 This is the comprehensive, end-to-end dataset that lights up **every single module and feature** of the system:
 
-- **Location**: [`BIZFLOW_Showcase_Wholesale_Kyaw_Myanmar.xlsx`](file:///c:/Users/hp/Desktop/UXMM_HACKATHON/UXMM_NEXT/examples/demo-showcase/BIZFLOW_Showcase_Wholesale_Kyaw_Myanmar.xlsx) (also copied to `Downloads/` for quick browser upload).
+- **Location**: [`SHAY_SETT_Showcase_Wholesale_Kyaw_Myanmar.xlsx`](SHAY_SETT_Showcase_Wholesale_Kyaw_Myanmar.xlsx) (also copied to `Downloads/` for quick browser upload).
 - **Business**: Kyaw Myanmar Wholesale & Distribution (Yangon, Myanmar).
 - **Opening Baseline**: 2026-04-01 with 5,000,000 MMK opening cash.
 - **Demo Pin**:
@@ -29,7 +29,7 @@ This is the comprehensive, end-to-end dataset that lights up **every single modu
 
 ---
 
-## 2. Baseline Workbook: `bizflow-showcase-kyaw-myanmar.xlsx`
+## 2. Baseline Workbook: `shay-sett-showcase-kyaw-myanmar.xlsx`
 
 The earlier baseline workbook illustrating partial loan terms and a 2-step version bump (from 1 to 2).
 

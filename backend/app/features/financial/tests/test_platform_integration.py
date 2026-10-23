@@ -37,7 +37,7 @@ def prepare_wholesale_sample(workbook, *, single_lender):
 
 
 def test_original_multilender_wholesale_sample_is_accepted(client):
-    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
     prepare_wholesale_sample(workbook, single_lender=False)
     content = BytesIO()
@@ -131,7 +131,7 @@ def test_only_exact_seed_workbook_is_marked_synthetic(tmp_path):
 
 
 def test_wholesale_october_workbook_import_and_financial_availability(client):
-    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
     prepare_wholesale_sample(workbook, single_lender=True)
     purchases = workbook["Purchases"]
@@ -196,7 +196,7 @@ def test_wholesale_october_workbook_import_and_financial_availability(client):
 
 
 def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client):
-    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026_Enhanced.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
     prepare_wholesale_sample(workbook, single_lender=True)
     content = BytesIO()
@@ -259,7 +259,7 @@ def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client
 
 
 def test_same_hash_reimport_backfills_fields_added_after_legacy_import(client):
-    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026_Enhanced.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
     prepare_wholesale_sample(workbook, single_lender=True)
     content = BytesIO()

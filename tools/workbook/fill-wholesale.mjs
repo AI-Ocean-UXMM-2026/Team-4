@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const sourcePath = "C:/Users/Thiri/Downloads/Telegram Desktop/BIZFLOW_Wholesale_Sample_October_2026(2).xlsx";
+const sourcePath = "C:/Users/Thiri/Downloads/Telegram Desktop/SHAY_SETT_Wholesale_Sample_October_2026(2).xlsx";
 const templatePath = "C:/Users/Thiri/Downloads/0c009beb-8c8b-4445-a898-da7ab6661980-template(1).xlsx";
 const out = path.join(root, "outputs/mi-thar-su-credit-20261022");
 await fs.mkdir(out, { recursive: true });
@@ -53,7 +53,7 @@ const loans = target.worksheets.getItem("Loans");
 loans.getRange("G2:M2").values = [["kbz", "kbz-term", "SME Term Loan", 12, 24, new Date("2026-11-03T00:00:00Z"), "monthly"]];
 const notes = target.worksheets.getItem("ReadMe");
 const provenance = [
-  ["Data copied from", "BIZFLOW_Wholesale_Sample_October_2026(2).xlsx. The original source file is unchanged."],
+  ["Data copied from", "SHAY_SETT_Wholesale_Sample_October_2026(2).xlsx. The original source file is unchanged."],
   ["Destination business", `${settings[1]} (${settings[0]}). All business_id values use the destination template ID.`],
   ["Loan selection", "KBZ LOAN-001 and LP-001/LP-002 only. Yoma LOAN-002 and LP-003 excluded from this copy at the user's request."],
   ["DEMO LOAN TERMS", "FICTIONAL: SME Term Loan, 12% annual, 24 months, monthly reducing balance. First payment 2026-11-03. Not a verified KBZ offer or agreement."],

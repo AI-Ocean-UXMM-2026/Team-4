@@ -47,7 +47,7 @@ def activate_history(request: Request, business_id: str, batch_id: str = Query(.
         filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"snapshot-{batch.id[:8]}.xlsx"
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            demo_path = ROOT / "examples" / "demo-showcase" / "shay-sett-showcase-kyaw-myanmar.xlsx"
             if demo_path.exists():
                 content = demo_path.read_bytes()
             else:
@@ -64,7 +64,7 @@ def download_history(request: Request, business_id: str, batch_id: str, _user_id
             raise APIError(404, "BATCH_NOT_FOUND", "Import batch not found.")
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            demo_path = ROOT / "examples" / "demo-showcase" / "shay-sett-showcase-kyaw-myanmar.xlsx"
             if demo_path.exists():
                 content = demo_path.read_bytes()
             else:
@@ -128,7 +128,7 @@ def snapshot(request: Request, business_id: str, _user_id: str = Depends(authori
 
 @router.get("/template")
 def template(request: Request, business_id: str, _user_id: str = Depends(authorize_business)):
-    path = ROOT / "shared/workbook-template/bizflow-template.xlsx"
+    path = ROOT / "shared/workbook-template/shay-sett-template.xlsx"
     if not path.exists():
         raise APIError(503, "TEMPLATE_UNAVAILABLE", "Workbook template has not been generated.")
     workbook = load_workbook(path)
@@ -175,7 +175,7 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
     finally:
         workbook.close()
     return Response(buffer.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": 'attachment; filename="bizflow-template.xlsx"'})
+                    headers={"Content-Disposition": 'attachment; filename="shay-sett-template.xlsx"'})
 
 
 def cloud_client(request, business_id, user_id):

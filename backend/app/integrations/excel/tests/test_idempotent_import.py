@@ -142,9 +142,11 @@ def test_concurrent_same_file_import_is_serialized(client, workbook_bytes):
 def test_template_is_personalized_and_public_reset_removed(client, workbook_bytes):
     template = client.get("/api/v1/data/template?business_id=tea-shop")
     assert template.status_code == 200
+    assert 'filename="shay-sett-template.xlsx"' in template.headers["content-disposition"]
     from openpyxl import load_workbook
     from io import BytesIO
     workbook = load_workbook(BytesIO(template.content), read_only=True)
+    assert workbook["ReadMe"]["A1"].value == "Shay Sett workbook"
     assert "due_date" in [cell.value for cell in workbook["Purchases"][1]]
     for sheet in workbook:
         assert "business_id" not in [cell.value for cell in sheet[1]]

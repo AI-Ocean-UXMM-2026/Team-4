@@ -1,4 +1,4 @@
-# BIZFLOW
+# Shay Sett
 
 Business cashflow application with Supabase email/password authentication, account registration, owned workspaces and Excel ingestion. The existing Lovable frontend remains in `src/`; FastAPI is in `backend/`.
 

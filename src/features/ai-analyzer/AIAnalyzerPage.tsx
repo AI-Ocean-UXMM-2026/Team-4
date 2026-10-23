@@ -329,11 +329,6 @@ function AnalysisSummaryCard({ report }: { report: AIAnalysis }) {
       /partial|missing|incomplete|quality warning|data-quality|unavailable/i.test(w),
     );
 
-  // Identify if external AI provider is not configured
-  const isProviderNotConfigured = warnings.some((w) =>
-    /provider is not configured/i.test(w),
-  );
-
   // Secondary technical details to show in expandable section
   const technicalDetails = warnings.filter(
     (w) =>
@@ -440,16 +435,6 @@ function AnalysisSummaryCard({ report }: { report: AIAnalysis }) {
                 <span className="font-mono text-[11px]">{report.import_batch_id}</span>
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-medium text-foreground">{t("Provider configuration status:")}</span>
-              <span>
-                {isCompleted
-                  ? t("External AI active and verified")
-                  : isProviderNotConfigured
-                    ? t("Not configured (using local verified rules engine)")
-                    : t("Rules-based engine active")}
-              </span>
-            </div>
             {technicalDetails.length > 0 && (
               <div className="space-y-1 pt-0.5">
                 <span className="font-medium text-foreground">{t("Technical notes:")}</span>
@@ -482,7 +467,7 @@ export function AIAnalyzerPage() {
         <h1 className="text-3xl font-bold">{t("AI Business Analyzer")}</h1>
         <p className="text-sm text-muted-foreground">
           {t(
-            "Review evidence-backed findings from your financial, working capital, and credit snapshots.",
+            "Analyze your imported business data with AI, then explore the details in Financial Health, Working Capital, and Credit Hub.",
           )}
         </p>
         <p className="text-xs text-muted-foreground">
@@ -492,11 +477,6 @@ export function AIAnalyzerPage() {
           <Sparkles size={15} />
           {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
         </button>
-        <p className="max-w-2xl text-xs text-muted-foreground">
-          {t(
-            "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.",
-          )}
-        </p>
       </header>
       {(isLoading || isAnalyzing) && (
         <LoadingAnimation label={isAnalyzing ? "Analyzing…" : "Loading your latest analysis…"} />

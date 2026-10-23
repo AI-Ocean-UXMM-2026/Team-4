@@ -8,7 +8,7 @@ const folder = path.join(root, "outputs/cash-balances-template-20261022");
 await fs.mkdir(folder, {recursive: true});
 const sources = [
   ["C:/Users/Thiri/Downloads/0c009beb-8c8b-4445-a898-da7ab6661980-template(2).xlsx", "Mi-Thar-Su-template-with-cash-balances.xlsx"],
-  [path.join(root, "shared/workbook-template/bizflow-template.xlsx"), "bizflow-template.xlsx"],
+  [path.join(root, "shared/workbook-template/shay-sett-template.xlsx"), "shay-sett-template.xlsx"],
 ];
 for (const [source, filename] of sources) {
   const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(source));
@@ -42,5 +42,5 @@ for (const [source, filename] of sources) {
     await fs.writeFile(path.join(folder, `${filename}-${suffix}.png`), new Uint8Array(await image.arrayBuffer()));
   }
   await (await SpreadsheetFile.exportXlsx(workbook)).save(path.join(folder, filename));
-  if (filename === "bizflow-template.xlsx") await fs.copyFile(path.join(folder, filename), source);
+  if (filename === "shay-sett-template.xlsx") await fs.copyFile(path.join(folder, filename), source);
 }

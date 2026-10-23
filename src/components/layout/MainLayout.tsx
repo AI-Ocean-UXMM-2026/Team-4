@@ -78,9 +78,6 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
         <div className="flex-1 overflow-x-hidden overflow-y-auto py-4">
           <Navigation collapsed />
         </div>
-        <p className="pointer-events-none w-64 border-t px-5 py-5 text-xs leading-6 text-muted-foreground opacity-0 transition-opacity duration-300 group-data-[expanded=true]/sidebar:opacity-100 motion-reduce:transition-none">
-          {t("Your workspace updates after each successful import.")}
-        </p>
         <div className="border-t p-3">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -144,7 +141,6 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
         </main>
         <footer className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 border-t px-4 py-6 text-xs text-muted-foreground sm:px-8">
           <span className="font-semibold text-primary">{t("ရှေ့ဆက် — Shay Sett")}</span>
-          <span>{t("Your workspace updates after each successful import.")}</span>
         </footer>
       </div>
     </div>

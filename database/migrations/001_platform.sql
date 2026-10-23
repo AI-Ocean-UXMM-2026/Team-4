@@ -1,4 +1,4 @@
--- BizFlow platform v1. Generated from SQLAlchemy metadata; apply once.
+-- Shay Sett platform v1. Generated from SQLAlchemy metadata; apply once.
 
 
 CREATE TABLE businesses (

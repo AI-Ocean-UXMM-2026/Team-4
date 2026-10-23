@@ -112,7 +112,7 @@ export function WorkingCapitalInputChoices({
       ) : (
         <button
           type="button"
-          className="bf-button-link text-sm font-semibold"
+          className="bf-button"
           aria-expanded={open}
           aria-controls="working-capital-manual-form"
           onClick={() => {

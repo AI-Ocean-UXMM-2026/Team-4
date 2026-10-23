@@ -115,7 +115,7 @@ for (const persona of [
   const notes = workbook.worksheets.add("ReadMe");
   notes.showGridLines = false;
   notes.getRange("A1:B9").values = [
-    ["BizFlow workbook", "Input instructions"],
+    ["Shay Sett workbook", "Input instructions"],
     [
       "Data source",
       persona.template
@@ -181,7 +181,7 @@ for (const persona of [
     path.join(
       root,
       persona.template
-        ? "shared/workbook-template/bizflow-template.xlsx"
+        ? "shared/workbook-template/shay-sett-template.xlsx"
         : `database/seed/${persona.id}.xlsx`,
     ),
   );

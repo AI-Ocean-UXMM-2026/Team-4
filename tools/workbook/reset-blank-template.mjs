@@ -16,6 +16,6 @@ workbook.recalculate();
 console.log((await workbook.inspect({kind: "table", range: "Settings!A1:E2", include: "values", tableMaxRows: 2, tableMaxCols: 5, maxChars: 700})).ndjson);
 const image = await workbook.render({sheetName: "Settings", range: "A1:E3", scale: 1, format: "png"});
 await fs.writeFile(path.join(folder, "blank-settings.png"), new Uint8Array(await image.arrayBuffer()));
-const output = path.join(folder, "BizFlow-blank-sample-template.xlsx");
+const output = path.join(folder, "Shay Sett-blank-sample-template.xlsx");
 await (await SpreadsheetFile.exportXlsx(workbook)).save(output);
-await fs.copyFile(output, path.join(root, "shared/workbook-template/bizflow-template.xlsx"));
+await fs.copyFile(output, path.join(root, "shared/workbook-template/shay-sett-template.xlsx"));
