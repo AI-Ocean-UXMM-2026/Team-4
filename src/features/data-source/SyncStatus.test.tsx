@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SyncStatus as Status } from "@/lib/contracts";
+import type { ImportResult, SyncStatus as Status } from "@/lib/contracts";
 import { translate } from "@/lib/i18n";
-import { SyncStatus } from "./SyncStatus";
+import { Issues, SyncStatus } from "./SyncStatus";
 
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
@@ -106,5 +106,62 @@ describe("SyncStatus History & Snapshot Switcher", () => {
     // Failed uploads summary header is present
     expect(screen.getByText(new RegExp("Failed upload attempts", "i"))).toBeInTheDocument();
     expect(screen.getByText("bad-records.xlsx")).toBeInTheDocument();
+  });
+});
+
+describe("Issues error presentation & consolidation", () => {
+  it("consolidates repetitive ownership mismatch errors into a single summary row", () => {
+    const repetitiveResult: ImportResult = {
+      status: "failed",
+      source_version: 0,
+      row_counts: {},
+      errors: [
+        { sheet: "Settings", row: 2, field: "business_id", reason: "Row belongs to another business" },
+        { sheet: "Products", row: 2, field: "business_id", reason: "Row belongs to another business" },
+        { sheet: "Products", row: 3, field: "business_id", reason: "Row belongs to another business" },
+        { sheet: "Purchases", row: 2, field: "business_id", reason: "Row belongs to another business" },
+      ],
+      warnings: [],
+    };
+
+    render(<Issues result={repetitiveResult} />);
+
+    // Renders the consolidated summary row
+    expect(screen.getByText("Settings (+2 other sheets)")).toBeInTheDocument();
+    expect(screen.getByText("Multiple rows (4)")).toBeInTheDocument();
+    expect(screen.getByText("Row belongs to another business")).toBeInTheDocument();
+
+    // Does not spam 4 separate table rows for business_id
+    const cells = screen.getAllByText("Row belongs to another business");
+    expect(cells).toHaveLength(1);
+
+    // Can toggle to view all rows if desired
+    const viewAllButton = screen.getByRole("button", { name: "View all 4 rows" });
+    fireEvent.click(viewAllButton);
+    expect(screen.getAllByText("Row belongs to another business")).toHaveLength(4);
+  });
+
+  it("prioritizes non-ownership issues and groups repetitive errors by field and sheet", () => {
+    const mixedResult: ImportResult = {
+      status: "failed",
+      source_version: 0,
+      row_counts: {},
+      errors: [
+        { sheet: "Products", row: 2, field: "quantity", reason: "Inventory would become negative on this date" },
+        { sheet: "Products", row: 3, field: "quantity", reason: "Inventory would become negative on this date" },
+        { sheet: "Settings", row: 2, field: "business_id", reason: "Row belongs to another business" },
+        { sheet: "Products", row: 2, field: "business_id", reason: "Row belongs to another business" },
+      ],
+      warnings: [],
+    };
+
+    render(<Issues result={mixedResult} />);
+
+    // Grouped non-ownership error
+    expect(screen.getByText("Row 2 (+1 more)")).toBeInTheDocument();
+    expect(screen.getByText("Inventory would become negative on this date")).toBeInTheDocument();
+
+    // Consolidated ownership error
+    expect(screen.getByText("Multiple rows (2)")).toBeInTheDocument();
   });
 });

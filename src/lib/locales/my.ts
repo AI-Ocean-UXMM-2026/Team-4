@@ -121,6 +121,14 @@ export const my: Record<string, string> = {
     "အပေါ်ရှိ လုပ်ငန်း ID ကို ရွေးချယ်ပြီး ကိုယ်တိုင် ကူးယူပါ။",
   "Starting a new workbook? Download the template above. It already contains your business ID in Settings.":
     "ဖိုင်အသစ် စတင်လိုပါက အပေါ်ရှိ ပုံစံဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပါ။ Settings တွင် သင့်လုပ်ငန်း ID ထည့်ထားပြီးဖြစ်ပါသည်။",
+  "Issues found ({0})": "တွေ့ရှိသော ပြဿနာများ ({0})",
+  "other sheets": "အခြားစာရွက်များ",
+  "Multiple rows ({0})": "အတန်းပေါင်းစုံ ({0})",
+  "Row {0} (+{1} more)": "အတန်း {0} (နောက်ထပ် +{1} တန်း)",
+  "Show all {0} issues": "ပြဿနာ {0} ခုလုံးကို ကြည့်ရန်",
+  "Show fewer issues": "အကျဉ်းချုပ်သာ ကြည့်ရန်",
+  "View all {0} rows": "အတန်း {0} ခုလုံးကို ကြည့်ရန်",
+  "Show summary view": "အကျဉ်းချုပ်ဖြင့် ပြရန်",
   "Loan product": "ချေးငွေအမျိုးအစား",
   "Agreed annual interest rate": "စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း",
   "Term (months)": "သက်တမ်း (လ)",
@@ -989,4 +997,21 @@ export const my: Record<string, string> = {
   "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.":
     "စနစ်အတွင်းရှိ ယခင်မှတ်တမ်းများသည် ဤဖိုင်၏ လုပ်ငန်းစတင်ရက်ထက် စောနေပါသည်။ ဤကာလအတွက် အသစ်အစားထိုးတင်သွင်းလိုပါက အထက်ပါ 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်၍ ထပ်မံကြိုးစားပါ။",
   "Enable complete replacement": "အသစ်အစားထိုးခြင်းကို ဖွင့်မည်",
+  "Workbook Guidelines": "Excel ဖိုင် ပြင်ဆင်ရန် လမ်းညွှန်",
+  "Structure your Excel file for accurate analysis":
+    "တိကျသော စီးပွားရေးဆန်းစစ်ချက်များ ရရှိရန် Excel ဖိုင်ကို သတ်မှတ်ပုံစံအတိုင်း ပြင်ဆင်ပါ",
+  "Your Business ID": "သင့်လုပ်ငန်း ID",
+  "Copy ID": "ID ကူးယူရန်",
+  "Copied": "ကူးယူပြီးပါပြီ",
+  "Must match the business_id in your Settings sheet and input rows.":
+    "Settings စာရွက်နှင့် မှတ်တမ်းအသီးသီးရှိ business_id နှင့် တူညီရပါမည်။",
+  "Core Sheets (Required)": "အဓိက စာရွက်များ (မဖြစ်မနေ လိုအပ်သည်)",
+  "Advanced & Credit Hub (Optional)":
+    "ချေးငွေနှင့် အဆင့်မြင့်ကဏ္ဍများ (ရွေးချယ်ထည့်သွင်းနိုင်သည်)",
+  "Pro Tip": "အကြံပြုချက်",
+  "Keep stable row IDs when updating existing records. When uploading a new accounting period, check 'This workbook is a complete replacement' to retire older records cleanly.":
+    "ယခင်မှတ်တမ်းများကို ပြင်ဆင်လိုပါက row ID များကို မပြောင်းလဲဘဲ ထားပါ။ စာရင်းကာလအသစ် တင်သွင်းပါက ယခင်မှတ်တမ်းဟောင်းများကို အသစ်လဲလှယ်ရန် 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်ပါ။",
+  "Excel workbook (.xlsx)": "Excel ဖိုင် (.xlsx)",
+  "Available datasets": "ရရှိနိုင်သော ဒေတာအတွဲများ",
+  "saved versions": "သိမ်းဆည်းထားသော ဗားရှင်းများ",
 };

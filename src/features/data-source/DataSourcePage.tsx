@@ -5,8 +5,8 @@ import { NextStepCard } from "@/components/NextStepCard";
 import { api, businessPath } from "@/lib/apiClient";
 import type { SyncStatus as Status } from "@/lib/contracts";
 import { ExcelUpload } from "./ExcelUpload";
-import { OneDriveConnect } from "./OneDriveConnect";
 import { SyncStatus } from "./SyncStatus";
+import { WorkbookGuideCard } from "./WorkbookGuideCard";
 export function DataSourcePage() {
   const { t } = useTranslation();
 
@@ -34,15 +34,15 @@ export function DataSourcePage() {
           {t(". Financial pages refresh after each successful import.")}
         </p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 items-start">
         <ExcelUpload key={business.id} maxBytes={query.data.max_upload_bytes} />
-        <OneDriveConnect status={query.data} />
+        <WorkbookGuideCard />
       </div>
       {hasConfirmedImport && (
         <NextStepCard
-          description="Your business records are ready. View your financial performance, cash balance, and outstanding payments."
-          action="View Financial Health"
-          to="/"
+          description="Your business records are ready. Analyze your financial data to discover business issues and recommended next actions."
+          action="Get AI Recommendations"
+          to="/ai"
         />
       )}
       <SyncStatus status={query.data} />
