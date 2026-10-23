@@ -141,6 +141,11 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
                 if cell.value == "business_id":
                     sheet.delete_cols(cell.column)
         if "ReadMe" in workbook.sheetnames:
+            notes = workbook["ReadMe"]
+            notes["A1"] = "Shay Sett workbook"
+            for row in reversed(list(notes.iter_rows())):
+                if str(row[0].value).strip().lower() == "onedrive":
+                    notes.delete_rows(row[0].row)
             for row in workbook["ReadMe"]:
                 for cell in row:
                     if isinstance(cell.value, str) and "business_id" in cell.value:

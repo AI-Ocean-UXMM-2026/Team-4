@@ -8,10 +8,14 @@ const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(path.join(
 for (const name of ["Loans", "LoanPayments"]) workbook.worksheets.getItem(name).delete();
 workbook.worksheets.getItem("Settings").getRange("A2:E2").clear({applyTo: "contents"});
 const notes = workbook.worksheets.getItem("ReadMe");
+notes.getRange("A1").values = [["Shay Sett workbook"]];
 notes.getRange("B2").values = [["Blank input template. No sample business data or transactions. Enter your own values. Currency: MMK."]];
 notes.getRange("A10:B10").values = [["Settings", "Enter business_id, business_name, currency (MMK), opening_date and opening_cash_mmk before importing. A blank amount is unknown, not zero."]];
 notes.getRange("A10:B10").format = {font: {name: "Arial", size: 10}, rowHeight: 44};
 notes.getRange("B10").format.wrapText = true;
+const instructions = notes.getRange("A1:B10").values.filter(([label]) => label !== "OneDrive");
+notes.getRange("A1:B10").clear({applyTo: "contents"});
+notes.getRange(`A1:B${instructions.length}`).values = instructions;
 workbook.recalculate();
 console.log((await workbook.inspect({kind: "table", range: "Settings!A1:E2", include: "values", tableMaxRows: 2, tableMaxCols: 5, maxChars: 700})).ndjson);
 const image = await workbook.render({sheetName: "Settings", range: "A1:E3", scale: 1, format: "png"});

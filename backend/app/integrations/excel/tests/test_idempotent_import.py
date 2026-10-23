@@ -147,6 +147,7 @@ def test_template_is_personalized_and_public_reset_removed(client, workbook_byte
     from io import BytesIO
     workbook = load_workbook(BytesIO(template.content), read_only=True)
     assert workbook["ReadMe"]["A1"].value == "Shay Sett workbook"
+    assert "OneDrive" not in [row[0].value for row in workbook["ReadMe"]]
     assert "due_date" in [cell.value for cell in workbook["Purchases"][1]]
     for sheet in workbook:
         assert "business_id" not in [cell.value for cell in sheet[1]]
