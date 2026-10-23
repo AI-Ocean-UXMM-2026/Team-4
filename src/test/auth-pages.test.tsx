@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { StrictMode, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  account: null as import("@/lib/contracts").AccountStatus | null,
   api: vi.fn(),
   signIn: vi.fn(),
   setSession: vi.fn(),
@@ -44,7 +45,7 @@ vi.mock("@/app/session", () => ({
     recoveryReady: mocks.recovery,
     setRecoveryReady: mocks.setRecovery,
   }),
-  useAccount: () => ({}),
+  useAccount: () => ({ data: mocks.account, isPending: false }),
   useConfig: () => ({
     data: {
       auth_configured: mocks.configured,
@@ -62,6 +63,7 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/app/providers", () => ({ Loading: () => <p>Loading</p> }));
 
 import {
+  OnboardingPage,
   EmailCallbackPage,
   ForgotPasswordPage,
   RegisterPage,
@@ -90,6 +92,8 @@ function validRegistration() {
 beforeEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  mocks.account = null;
+  sessionStorage.clear();
   mocks.recovery = false;
   mocks.configured = true;
   mocks.registrationReady = true;
@@ -414,5 +418,60 @@ describe("Account UI", () => {
     expect(await screen.findByRole("heading", { name: "Password updated" })).toBeInTheDocument();
     expect(mocks.update).toHaveBeenCalledWith({ password: "NewPassword1!" });
     expect(mocks.signOut).toHaveBeenCalled();
+  });
+});
+
+const pendingAccount = () => ({
+  user: { id: "new-owner", email: "owner@example.test", full_name: "Owner" },
+  onboarding_complete: false,
+  owned_business_id: null,
+  pending_business: {
+    name: "Trading Shop", industry: "Retail", city: "Yangon",
+    phone: "", address: "", currency: "MMK" as const,
+  },
+});
+describe("Automatic workspace setup", () => {
+  it("creates a workspace from signup details once, including after email verification", async () => {
+    mocks.account = pendingAccount();
+    mocks.api.mockResolvedValue({ business_id: "workspace-1", created: true });
+    render(<StrictMode><OnboardingPage /></StrictMode>);
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    expect(mocks.api).toHaveBeenCalledTimes(1);
+    expect(mocks.api).toHaveBeenCalledWith("/api/v1/auth/onboarding", {
+      method: "POST", body: JSON.stringify({ ...mocks.account.pending_business, full_name: "Owner" }),
+    });
+    expect(sessionStorage.getItem("bizflow-business")).toBe("workspace-1");
+    expect(mocks.invalidate).toHaveBeenCalledWith({ queryKey: ["businesses"] });
+    expect(screen.queryByRole("button", { name: "Create business workspace" })).not.toBeInTheDocument();
+  });
+  it("takes an existing completed account to the dashboard without creating anything", () => {
+    mocks.account = { ...pendingAccount(), onboarding_complete: true, owned_business_id: "existing" };
+    render(<OnboardingPage />);
+    expect(screen.getByText("Redirect: /")).toBeInTheDocument();
+    expect(mocks.api).not.toHaveBeenCalled();
+  });
+  it("keeps manual setup when registration details are missing", () => {
+    mocks.account = { ...pendingAccount(), pending_business: null };
+    render(<OnboardingPage />);
+    expect(screen.getByRole("button", { name: "Create business workspace" })).toBeEnabled();
+    expect(mocks.api).not.toHaveBeenCalled();
+  });
+  it("does not automatically submit incomplete business details", () => {
+    mocks.account = pendingAccount();
+    mocks.account.pending_business!.city = "";
+    render(<OnboardingPage />);
+    expect(screen.getByRole("button", { name: "Create business workspace" })).toBeEnabled();
+    expect(mocks.api).not.toHaveBeenCalled();
+  });
+  it("retains details and allows a manual retry after an automatic request fails", async () => {
+    mocks.account = pendingAccount();
+    mocks.api.mockRejectedValueOnce(new Error("Connection interrupted"));
+    render(<OnboardingPage />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Connection interrupted");
+    expect(screen.getByLabelText("Company or business name")).toHaveValue("Trading Shop");
+    mocks.api.mockResolvedValueOnce({ business_id: "workspace-1", created: false });
+    fireEvent.click(screen.getByRole("button", { name: "Create business workspace" }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/", replace: true }));
+    expect(sessionStorage.getItem("bizflow-business")).toBe("workspace-1");
   });
 });

@@ -6,7 +6,7 @@ import { api, ApiError } from "@/lib/apiClient";
 import { authClient, completeEmailCallback, requireAuthClient } from "@/lib/auth";
 import { useAccount, useAuth, useConfig } from "@/app/session";
 import { Loading } from "@/app/providers";
-import type { BusinessDetails } from "@/lib/contracts";
+import type { AccountStatus, BusinessDetails } from "@/lib/contracts";
 import { AuthShell, BusinessFields, Field, FormError, PasswordField, Requirements } from "./Fields";
 import { businessProblem, emptyBusiness, passwordProblem, validEmail } from "./validation";
 
@@ -698,13 +698,54 @@ export function OnboardingPage() {
   const account = useAccount();
   if (account.isPending || !account.data) return <Loading />;
   return (
-    <BusinessSetup
-      key={account.data.user.id}
-      initial={account.data.pending_business || emptyBusiness}
-      initialName={account.data.user.full_name}
-    />
+    <AutomaticBusinessSetup key={account.data.user.id} account={account.data} />
   );
 }
+function AutomaticBusinessSetup({ account }: { account: AccountStatus }) {
+  const queries = useQueryClient();
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const request = useRef<Promise<{ business_id: string }> | null>(null);
+  const business = account.pending_business;
+  const name = account.user.full_name.trim();
+  const canCreate = !account.owned_business_id && !!business && !!name && !businessProblem(business);
+
+  useEffect(() => {
+    if (account.onboarding_complete || !canCreate || !business) return;
+    let active = true;
+    // Reuse the request during StrictMode's effect replay. The API also returns
+    // the original workspace for retries, including requests from another tab.
+    request.current ??= api<{ business_id: string }>("/api/v1/auth/onboarding", {
+      method: "POST",
+      body: JSON.stringify({ ...business, full_name: name }),
+    });
+    void request.current
+      .then(async (result) => {
+        if (!active) return;
+        sessionStorage.setItem("bizflow-business", result.business_id);
+        await queries.invalidateQueries({ queryKey: ["account"] });
+        await queries.invalidateQueries({ queryKey: ["businesses"] });
+        if (active) await navigate({ to: "/", replace: true });
+      })
+      .catch((failure) => {
+        if (active) setError(message(failure));
+      });
+    return () => { active = false; };
+  }, [account.onboarding_complete, canCreate, business, name, queries, navigate]);
+
+  if (account.onboarding_complete) return <Navigate to="/" replace />;
+  if (canCreate && !error) return <Loading />;
+  return (
+    <>
+      {error && <p role="alert" className="mx-auto max-w-lg p-4 text-destructive">{error}</p>}
+      <BusinessSetup
+        initial={business || emptyBusiness}
+        initialName={account.user.full_name}
+      />
+    </>
+  );
+}
+
 function BusinessSetup({
   initial,
   initialName,
