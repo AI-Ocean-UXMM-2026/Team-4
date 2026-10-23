@@ -1,0 +1,9 @@
+Use the attached Shay Sett project brief as the source of truth.
+
+Write a detailed project proposal in natural Burmese, retaining English feature names where useful. Include the executive summary, problems, target users, objectives, all major workflows, features, architecture, data requirements, security/privacy controls, proposed subscription model, sustainability, proposed roadmap, evaluation, limitations and conclusion.
+
+Describe all five connected areas: Data Source, Financial Health, Working Capital, Credit Hub and AI Analyzer. Include registration/onboarding/recovery; workbook creation and validation; stable-ID updates; unchanged uploads; omitted rows versus full replacement; opening-date conflicts; historical workbook activation; inventory and reserve scenarios; imported versus manually recorded loans; payment reminders; credit document preparation; AI consent, evidence, fallback and stale reports; optional explicit OneDrive sync; and profile/preferences.
+
+Separate implemented capabilities, data/integration-dependent capabilities and proposed features. The team's first-month-free/later-paid model is a commercial plan; do not imply billing is implemented. Do not invent statistics, prices, users, results, partnerships, public deployment, verified documents or loan approval guarantees. Use placeholders for missing facts and list what is needed before submission.
+
+For presentation scripts, confirm the total duration because previous timing requests conflicted.
