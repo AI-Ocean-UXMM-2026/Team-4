@@ -177,7 +177,7 @@ describe("Account UI", () => {
       password: "StrongPassword1!",
     });
     expect(mocks.setSession).not.toHaveBeenCalled();
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" });
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/onboarding" });
     expect(screen.queryByRole("heading", { name: "Check your email" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -354,7 +354,7 @@ describe("Account UI", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("If an account exists");
     expect(mocks.api).toHaveBeenCalledWith("/api/v1/auth/forgot-password", expect.anything());
   });
-  it("validates account and business steps, then signs in and opens data source", async () => {
+  it("validates account and business steps, then signs in and opens workspace setup", async () => {
     render(<RegisterPage />);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter your full name");
@@ -379,7 +379,7 @@ describe("Account UI", () => {
     fill("Business type or industry", "Retail");
     fill("City or township", "Yangon");
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/onboarding" }));
     const payload = JSON.parse(mocks.api.mock.calls[0]![1].body);
     expect(payload.password).toBe(" StrongPassword1! ");
     expect(payload.business.currency).toBe("MMK");
@@ -432,11 +432,15 @@ const pendingAccount = () => ({
     phone: "", address: "", currency: "MMK" as const,
   },
 });
-describe("Automatic workspace setup", () => {
-  it("creates a workspace from signup details once, including after email verification", async () => {
+describe("Manual workspace setup", () => {
+  it("waits for the workspace button, then creates it once and opens data source", async () => {
     mocks.account = pendingAccount();
     mocks.api.mockResolvedValue({ business_id: "workspace-1", created: true });
     render(<StrictMode><OnboardingPage /></StrictMode>);
+    expect(mocks.api).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Company or business name")).toHaveValue("Trading Shop");
+    fireEvent.click(screen.getByRole("button", { name: "Create business workspace" }));
+    fireEvent.click(screen.getByRole("button", { name: "Saving workspace…" }));
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source", replace: true }));
     expect(mocks.api).toHaveBeenCalledTimes(1);
     expect(mocks.api).toHaveBeenCalledWith("/api/v1/auth/onboarding", {
@@ -444,7 +448,6 @@ describe("Automatic workspace setup", () => {
     });
     expect(sessionStorage.getItem("bizflow-business")).toBe("workspace-1");
     expect(mocks.invalidate).toHaveBeenCalledWith({ queryKey: ["businesses"] });
-    expect(screen.queryByRole("button", { name: "Create business workspace" })).not.toBeInTheDocument();
   });
   it("takes an existing completed account to data source without creating anything", () => {
     mocks.account = { ...pendingAccount(), onboarding_complete: true, owned_business_id: "existing" };
@@ -465,10 +468,11 @@ describe("Automatic workspace setup", () => {
     expect(screen.getByRole("button", { name: "Create business workspace" })).toBeEnabled();
     expect(mocks.api).not.toHaveBeenCalled();
   });
-  it("retains details and allows a manual retry after an automatic request fails", async () => {
+  it("retains details and allows retry after workspace creation fails", async () => {
     mocks.account = pendingAccount();
     mocks.api.mockRejectedValueOnce(new Error("Connection interrupted"));
     render(<OnboardingPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Create business workspace" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Connection interrupted");
     expect(screen.getByLabelText("Company or business name")).toHaveValue("Trading Shop");
     mocks.api.mockResolvedValueOnce({ business_id: "workspace-1", created: false });
