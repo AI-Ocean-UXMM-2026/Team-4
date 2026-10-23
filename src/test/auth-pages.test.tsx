@@ -172,11 +172,12 @@ describe("Account UI", () => {
         session: { access_token: "access", refresh_token: "refresh" },
       }),
     );
-    expect(mocks.setSession).toHaveBeenCalledWith({
-      access_token: "access",
-      refresh_token: "refresh",
+    expect(mocks.signIn).toHaveBeenCalledWith({
+      email: "owner@example.test",
+      password: "StrongPassword1!",
     });
-    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/onboarding" });
+    expect(mocks.setSession).not.toHaveBeenCalled();
+    expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" });
     expect(screen.queryByRole("heading", { name: "Check your email" })).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
@@ -218,6 +219,7 @@ describe("Account UI", () => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Try again in 60s" })).toBeDisabled();
       expect(mocks.setSession).not.toHaveBeenCalled();
+      expect(mocks.signIn).not.toHaveBeenCalled();
       expect(mocks.navigate).not.toHaveBeenCalled();
       if (status === "check_email")
         expect(screen.getByRole("link", { name: "Reset password" })).toHaveAttribute(
@@ -241,7 +243,7 @@ describe("Account UI", () => {
     );
   });
   it("shows an automatic sign-in failure without pretending registration failed", async () => {
-    mocks.setSession.mockResolvedValue({ error: { message: "failed" } });
+    mocks.signIn.mockResolvedValue({ error: { message: "failed" } });
     fireEvent.submit(validRegistration());
     expect(await screen.findByRole("alert")).toHaveTextContent("Your account was created");
     expect(mocks.navigate).not.toHaveBeenCalled();
@@ -352,7 +354,7 @@ describe("Account UI", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("If an account exists");
     expect(mocks.api).toHaveBeenCalledWith("/api/v1/auth/forgot-password", expect.anything());
   });
-  it("validates account and business steps, then starts onboarding immediately", async () => {
+  it("validates account and business steps, then signs in and opens data source", async () => {
     render(<RegisterPage />);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter your full name");
@@ -377,11 +379,11 @@ describe("Account UI", () => {
     fill("Business type or industry", "Retail");
     fill("City or township", "Yangon");
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/onboarding" }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/data-source" }));
     const payload = JSON.parse(mocks.api.mock.calls[0]![1].body);
     expect(payload.password).toBe(" StrongPassword1! ");
     expect(payload.business.currency).toBe("MMK");
-    expect(mocks.setSession).toHaveBeenCalled();
+    expect(mocks.signIn).toHaveBeenCalledWith({ email: "owner@example.test", password: " StrongPassword1! " });
   });
   it("does not reveal whether a reset email exists", async () => {
     mocks.api.mockResolvedValue({ status: "check_email", cooldown_seconds: 60 });
