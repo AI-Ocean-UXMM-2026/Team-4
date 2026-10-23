@@ -88,6 +88,7 @@ function validRegistration() {
   return screen.getByRole("button", { name: "Create account" }).closest("form")!;
 }
 beforeEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
   mocks.recovery = false;
   mocks.configured = true;
@@ -123,20 +124,23 @@ describe("Account UI", () => {
     expect(screen.getByRole("button", { name: "Create account" })).toBeEnabled();
     expect(mocks.api).not.toHaveBeenCalled();
   });
-  it.each([
-    [SignInPage, "Sign in"],
-    [ForgotPasswordPage, "Send reset link"],
-  ] as const)("shows a service error after submitting %s", (Page, button) => {
+  it("allows direct provider sign-in while server configuration is unavailable", async () => {
     mocks.configured = false;
-    render(<Page />);
+    render(<SignInPage />);
     fill("Email address", "owner@example.test");
-    if (Page === SignInPage) fill("Password", "StrongPassword1!");
-    fireEvent.click(screen.getByRole("button", { name: button }));
+    fill("Password", "StrongPassword1!");
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(mocks.signIn).toHaveBeenCalledTimes(1));
+  });
+  it("shows a service error before submitting a password recovery request", () => {
+    mocks.configured = false;
+    render(<ForgotPasswordPage />);
+    fill("Email address", "owner@example.test");
+    fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Account access is temporarily unavailable",
     );
     expect(mocks.api).not.toHaveBeenCalled();
-    expect(mocks.signIn).not.toHaveBeenCalled();
   });
   it("shows input validation while provider configuration is pending", () => {
     mocks.configured = false;
@@ -276,6 +280,20 @@ describe("Account UI", () => {
     fill("Password", "correct password");
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/" }));
+  });
+  it("stops waiting and allows another attempt when sign-in stalls", async () => {
+    vi.useFakeTimers();
+    mocks.signIn.mockReturnValue(new Promise(() => undefined));
+    render(<SignInPage />);
+    fill("Email address", "owner@example.test");
+    fill("Password", "StrongPassword1!");
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    expect(screen.getByRole("button", { name: "Signing in…" })).toBeDisabled();
+
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Sign in is taking too long");
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
   });
   it.each([
     { name: "AuthRetryableFetchError", status: 0 },

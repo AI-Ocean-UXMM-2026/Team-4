@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { importedApplication } from "../importedApplication";
-import { BankLoanGuide } from "../components/BankLoanGuide";
+import { ApplicationSelector, BankLoanGuide } from "../components/BankLoanGuide";
 import { CreditPrintReport } from "../components/CreditPrintReport";
 import type { CreditSummary, Loan } from "../types";
 
@@ -17,8 +17,26 @@ afterEach(cleanup);
 it("reopens a saved document application with the matching bank and product", () => {
   const change = vi.fn();
   render(<BankLoanGuide preparationOnly onViewRecords={() => {}} onSelectionChange={change} savedSelections={[{id:"yoma:yoma-od",label:"Yoma Bank · Business Overdraft · 2 files",selection:{bank:"yoma",productId:"od"}}]} />);
-  fireEvent.change(screen.getByLabelText("Saved applications"), {target:{value:"yoma:yoma-od"}});
+  fireEvent.click(screen.getByRole("button", {name: "Continue application"}));
   expect(change).toHaveBeenCalledWith({bank:"yoma",productId:"od"});
+});
+
+it("removes a saved application only after confirmation", async () => {
+  const remove = vi.fn().mockResolvedValue(undefined);
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  render(<ApplicationSelector selection={{bank:"kbz",productId:"term"}} onSelectionChange={() => {}} onRemoveSaved={remove} savedSelections={[{id:"kbz:kbz-term",label:"KBZ Bank · SME Term Loan · 1 files",selection:{bank:"kbz",productId:"term"},fileCount:1}]} />);
+  fireEvent.click(screen.getByRole("button", {name: "Remove saved application"}));
+  expect(window.confirm).toHaveBeenCalled();
+  expect(remove).toHaveBeenCalledWith({bank:"kbz",productId:"term"});
+});
+
+it("collapses the saved application cards when there are three or more", () => {
+  const saved = ["term", "jica", "hire-purchase"].map((productId, index) => ({id:`kbz:kbz-${productId}`,label:`KBZ Bank · Product ${index + 1} · 1 files`,selection:{bank:"kbz",productId}}));
+  render(<ApplicationSelector selection={{bank:"kbz",productId:"term"}} onSelectionChange={() => {}} savedSelections={saved} />);
+  const disclosure = screen.getByText("Saved applications").closest("details");
+  expect(disclosure).not.toBeNull();
+  expect(disclosure).not.toHaveAttribute("open");
+  expect(screen.getByText("(3)")).toBeInTheDocument();
 });
 
 it("prints the imported Yoma product requirements instead of a generic checklist", () => {
