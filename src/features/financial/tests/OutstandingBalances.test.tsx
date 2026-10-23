@@ -93,8 +93,10 @@ describe("OutstandingBalances", () => {
       />,
     );
     expect(
-      screen.getByText("Cash after recorded obligations due by 30 days").parentElement?.textContent,
+      screen.getByText("Cash remaining after payments due within 30 days").parentElement
+        ?.textContent,
     ).toContain("500 MMK");
+    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
     rerender(
       <OutstandingBalances
         obligations={datedObligations}
@@ -103,18 +105,80 @@ describe("OutstandingBalances", () => {
         loanPrincipalOutstanding="0"
       />,
     );
+    const warning = screen.getByRole("note", { name: "Payment date information" });
+    expect(warning.className).toContain("bg-[#35231c]");
     expect(
-      screen.getByText(/Obligations without recorded due dates remain outstanding/),
+      within(warning).getByText(
+        "Some payment dates are missing. These payments remain outstanding but cannot be included in upcoming payment totals.",
+      ),
     ).toBeTruthy();
+    expect(within(warning).queryByText(/marked overdue/)).toBeNull();
     expect(
-      screen
-        .getByRole("link", { name: "Review the Excel template in Data Source" })
+      within(warning)
+        .getByRole("link", { name: "Review Data Source" })
         .getAttribute("href"),
     ).toBe("/data-source");
+    expect(within(warning).queryByText(/Loan instalment dates are missing/)).toBeNull();
     const coverage = screen.getByText(
-      "Cash after recorded obligations due by 30 days",
+      "Cash remaining after payments due within 30 days",
     ).parentElement;
     expect(coverage?.textContent).toContain("Unavailable");
+    expect(within(coverage!).getByText("Due dates for outstanding payments.")).toBeTruthy();
+    expect(coverage?.textContent).not.toContain("500 MMK");
+  });
+
+  it("names missing cash and loan balance without showing a coverage figure", () => {
+    render(
+      <OutstandingBalances
+        obligations={datedObligations.slice(1, 3)}
+        asAt="2026-10-22"
+        cashAvailable={null}
+        loanPrincipalOutstanding={null}
+      />,
+    );
+    const coverage = screen.getByText(
+      "Cash remaining after payments due within 30 days",
+    ).parentElement;
+    expect(coverage?.textContent).toContain("Unavailable");
+    expect(within(coverage!).getByText("Cash balance for this reporting date.")).toBeTruthy();
+    expect(within(coverage!).getByText("Recorded loan balance.")).toBeTruthy();
+    expect(coverage?.textContent).not.toContain("500 MMK");
+  });
+
+  it("identifies a missing loan schedule without treating principal as immediately due", () => {
+    const obligations: Obligation[] = [
+      { kind: "loan", reference_id: "LN-1", due_date: "2026-10-29", amount_mmk: "300" },
+    ];
+    const { rerender } = render(
+      <OutstandingBalances
+        obligations={obligations}
+        asAt="2026-10-22"
+        cashAvailable="1000"
+        loanPrincipalOutstanding="5000"
+      />,
+    );
+    const coverage = screen.getByText(
+      "Cash remaining after payments due within 30 days",
+    ).parentElement;
+    expect(coverage?.textContent).toContain("Unavailable");
+    expect(within(coverage!).getByText("Loan instalment dates.")).toBeTruthy();
+    expect(coverage?.textContent).not.toContain("-4,300 MMK");
+    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
+
+    rerender(
+      <OutstandingBalances
+        obligations={obligations}
+        asAt="2026-10-22"
+        cashAvailable="1000"
+        loanPrincipalOutstanding="5000"
+        loanScheduleAvailable
+      />,
+    );
+    expect(
+      screen.getByText("Cash remaining after payments due within 30 days").parentElement
+        ?.textContent,
+    ).toContain("700 MMK");
+    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
   });
 
   it("filters by recorded date, status, type, and minimum balance and can sort by amount", () => {
@@ -130,21 +194,27 @@ describe("OutstandingBalances", () => {
             original_amount_mmk: 800,
             amount_paid_mmk: 200,
           },
+          { kind: "expense", reference_id: "Expense A", due_date: "2026-10-26", amount_mmk: 700 },
         ]}
         asAt="2026-10-22"
         cashAvailable={null}
         loanPrincipalOutstanding="800"
       />,
     );
-    fireEvent.change(screen.getByRole("combobox", { name: "Filter by type" }), {
-      target: { value: "loan" },
-    });
+    const typeFilter = screen.getByRole("combobox", { name: "Filter by type" });
+    expect(within(typeFilter).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "All types",
+      "Supplier",
+    ]);
     let table = screen.getByRole("table", { name: /outstanding business obligations/i });
-    expect(within(table).getByText("Loan A")).toBeTruthy();
-    expect(within(table).queryByText("OVERDUE")).toBeNull();
-    fireEvent.change(screen.getByRole("combobox", { name: "Filter by type" }), {
-      target: { value: "all" },
+    expect(within(table).queryByText("Loan A")).toBeNull();
+    expect(within(table).queryByText("Expense A")).toBeNull();
+    expect(screen.getByText("Showing 1–5 of 5 payments")).toBeTruthy();
+    fireEvent.change(typeFilter, {
+      target: { value: "supplier" },
     });
+    expect(within(table).getByText("OVERDUE")).toBeTruthy();
+    expect(screen.getByText("Showing 1–5 of 5 payments")).toBeTruthy();
     fireEvent.change(screen.getByRole("combobox", { name: "Filter by due date" }), {
       target: { value: "unavailable" },
     });
@@ -172,13 +242,11 @@ describe("OutstandingBalances", () => {
       target: { value: "amount" },
     });
     table = screen.getByRole("table", { name: /outstanding business obligations/i });
-    expect(within(table).getAllByRole("row")[1]?.textContent).toContain("Loan A");
-    expect(within(table).getAllByRole("row")[2]?.textContent).toContain("UNDATED");
-    expect(
-      screen.getByText(
-        "Loan principal is shown separately; no recorded installment schedule is available.",
-      ),
-    ).toBeTruthy();
+    expect(within(table).getAllByRole("row")[1]?.textContent).toContain("UNDATED");
+    expect(within(table).getAllByRole("row")[2]?.textContent).toContain("LATER");
+    const warning = screen.getByRole("note", { name: "Payment date information" });
+    expect(within(warning).getByText(/Some payment dates are missing/)).toBeTruthy();
+    expect(within(warning).queryByText(/Loan instalment dates are missing/)).toBeNull();
   });
 
   it("adds money values without floating-point rounding", () => {
@@ -197,11 +265,12 @@ describe("OutstandingBalances", () => {
       "0.3 MMK",
     );
     expect(
-      screen.getByText("Cash after recorded obligations due by 30 days").parentElement?.textContent,
+      screen.getByText("Cash remaining after payments due within 30 days").parentElement
+        ?.textContent,
     ).toContain("0.7 MMK");
   });
 
-  it("uses recorded installment dates only when a schedule is available", () => {
+  it("uses recorded installment dates for coverage without listing loans as supplier payments", () => {
     render(
       <OutstandingBalances
         obligations={[
@@ -221,12 +290,14 @@ describe("OutstandingBalances", () => {
       />,
     );
     expect(
-      screen.getByText("Cash after recorded obligations due by 30 days").parentElement?.textContent,
+      screen.getByText("Cash remaining after payments due within 30 days").parentElement
+        ?.textContent,
     ).toContain("700 MMK");
-    expect(screen.getByText("LN-1 installment 1")).toBeTruthy();
+    expect(screen.getByText("No supplier payments in available records")).toBeTruthy();
+    expect(screen.queryByRole("table", { name: /outstanding business obligations/i })).toBeNull();
   });
 
-  it("searches case-insensitive references and available supplier or lender names", () => {
+  it("searches supplier references and names without exposing loan or expense records", () => {
     render(
       <OutstandingBalances
         obligations={[
@@ -255,10 +326,12 @@ describe("OutstandingBalances", () => {
     expect(within(table).getByText("PUR-204")).toBeTruthy();
     expect(within(table).queryByText("LN-19")).toBeNull();
     fireEvent.change(search, { target: { value: "ln-19" } });
-    expect(within(table).getByText("City Bank")).toBeTruthy();
+    expect(within(table).queryByText("City Bank")).toBeNull();
     expect(within(table).queryByText("PUR-204")).toBeNull();
+    expect(within(table).getByText("No payments match these filters.")).toBeTruthy();
     fireEvent.change(search, { target: { value: "exp-71" } });
-    expect(within(table).getByText("EXP-71")).toBeTruthy();
+    expect(within(table).queryByText("EXP-71")).toBeNull();
+    expect(within(table).getByText("No payments match these filters.")).toBeTruthy();
   });
 
   it("sorts exact balances in both directions, references, and known dates before missing dates", () => {
@@ -297,13 +370,20 @@ describe("OutstandingBalances", () => {
     }));
     const { rerender } = render(
       <OutstandingBalances
-        obligations={obligations}
+        obligations={[
+          ...obligations,
+          { kind: "loan", reference_id: "LOAN-24", due_date: null, amount_mmk: "900" },
+          { kind: "expense", reference_id: "EXP-25", due_date: null, amount_mmk: "1000" },
+        ]}
         asAt="2026-10-22"
         loanPrincipalOutstanding="0"
       />,
     );
     const table = screen.getByRole("table", { name: /outstanding business obligations/i });
     expect(within(table).getAllByRole("row")).toHaveLength(11);
+    expect(screen.getByText("Showing 1–10 of 23 payments")).toBeTruthy();
+    expect(within(table).queryByText("LOAN-24")).toBeNull();
+    expect(within(table).queryByText("EXP-25")).toBeNull();
     expect(screen.getByText("Outstanding supplier payments").parentElement?.textContent).toContain(
       "2,300 MMK",
     );
@@ -331,9 +411,9 @@ describe("OutstandingBalances", () => {
         loanPrincipalOutstanding="50"
       />,
     );
-    expect(screen.getByText("Page 1 of 1")).toBeTruthy();
-    expect(within(table).getByText("OTHER-BUSINESS")).toBeTruthy();
-    expect(within(table).queryByText("BILL-11")).toBeNull();
+    expect(screen.getByText("No supplier payments in available records")).toBeTruthy();
+    expect(screen.queryByRole("table", { name: /outstanding business obligations/i })).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Outstanding payments pages" })).toBeNull();
   });
 
   it("keeps an undated 100 MMK payment distinct from overdue and shows exact paid and remaining amounts", () => {

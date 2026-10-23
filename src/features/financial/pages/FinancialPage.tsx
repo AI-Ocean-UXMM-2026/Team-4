@@ -1,5 +1,6 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
+import { NextStepCard } from "@/components/NextStepCard";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, CalendarDays, Database, RefreshCw, UploadCloud } from "lucide-react";
 import { FinancialKpiCards } from "../components/FinancialKpiCards";
@@ -232,6 +233,13 @@ export function FinancialPage({
             <div className="min-w-0 w-full">
               {state.trends && <CashflowTrendChart trends={state.trends} />}
             </div>
+            <NextStepCard
+              heading="Explore ways to improve your cash flow"
+              description="Discover opportunities to collect customer payments, manage inventory, and prepare for cash shortages."
+              action="Explore Working Capital"
+              to="/working-capital"
+              secondary={{ label: "Get AI Recommendations", to: "/ai" }}
+            />
             <div className="min-w-0 w-full">
               <OutstandingBalances
                 obligations={state.snapshot.upcoming_obligations}

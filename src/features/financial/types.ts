@@ -44,7 +44,9 @@ export type Trends = {
   points: {
     period: Period;
     revenue_mmk: Money;
+    cogs_mmk: Money;
     operating_expenses_mmk: Money;
+    total_costs_mmk: Money;
     revenue_record_count: number | null;
     operating_expense_record_count: number | null;
     is_partial?: boolean;

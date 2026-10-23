@@ -211,7 +211,10 @@ class PlatformFinancialService:
             points.append(TrendPoint(
                 period=period,
                 revenue_mmk=snapshot.actual.revenue_mmk,
+                cogs_mmk=snapshot.actual.cogs_mmk,
                 operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                total_costs_mmk=(snapshot.actual.cogs_mmk + snapshot.actual.operating_expenses_mmk
+                    if snapshot.actual.cogs_mmk is not None and snapshot.actual.operating_expenses_mmk is not None else None),
                 revenue_record_count=revenue_count,
                 operating_expense_record_count=expense_count,
                 is_partial=period.start.day != 1 or period.end.day != (date(period.end.year + (period.end.month == 12), period.end.month % 12 + 1, 1) - timedelta(days=1)).day,
@@ -242,7 +245,10 @@ class PlatformFinancialService:
             points.append(TrendPoint(
                 period=period,
                 revenue_mmk=snapshot.actual.revenue_mmk,
+                cogs_mmk=snapshot.actual.cogs_mmk,
                 operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                total_costs_mmk=(snapshot.actual.cogs_mmk + snapshot.actual.operating_expenses_mmk
+                    if snapshot.actual.cogs_mmk is not None and snapshot.actual.operating_expenses_mmk is not None else None),
                 revenue_record_count=revenue_count,
                 operating_expense_record_count=expense_count,
                 is_partial=partial,

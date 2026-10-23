@@ -11,7 +11,7 @@ from app.db.models import Base, Business, ImportedRow, PROJECTIONS, WorkbookSour
 from app.integrations.excel.tests.conftest import ROOT, client, edit_workbook, workbook_bytes, upload
 from app.integrations.excel.import_service import import_validated_snapshot
 from app.integrations.excel.router import snapshot as data_snapshot
-from app.features.financial.platform import calculate_platform_snapshot
+from app.features.financial.platform import PlatformFinancialService, calculate_platform_snapshot
 from app.features.financial.platform_repository import Ledger, SqlFinancialRepository
 from app.features.financial.schemas import Period
 from datetime import date
@@ -75,6 +75,9 @@ def test_real_import_summary_and_idempotency(client, workbook_bytes):
     assert september["revenue_record_count"] == september["operating_expense_record_count"] == 0
     assert october["revenue_record_count"] == len(sales) == 3
     assert october["operating_expense_record_count"] == 2
+    assert october["cogs_mmk"] is None
+    assert october["total_costs_mmk"] is None
+    assert august["cogs_mmk"] == august["total_costs_mmk"] == "0.00"
     assert october["period"] == {"start": "2026-10-01", "end": "2026-10-20"}
     selected = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-01&end=2026-10-20&granularity=weekly")
     assert selected.status_code == 200, selected.text
@@ -88,6 +91,7 @@ def test_real_import_summary_and_idempotency(client, workbook_bytes):
     assert [point["is_partial"] for point in payload["points"]] == [False, False, True]
     assert sum(Decimal(point["revenue_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["revenue_mmk"])
     assert sum(Decimal(point["operating_expenses_mmk"]) for point in payload["points"]) == Decimal(summary["actual"]["operating_expenses_mmk"])
+    assert all(point["total_costs_mmk"] is None for point in payload["points"] if point["revenue_record_count"])
     assert sum(point["revenue_record_count"] for point in payload["points"]) == len(sales)
     assert client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-10-20&end=2026-10-01&granularity=weekly").status_code == 400
     monthly = client.get("/api/v1/financial/trends?business_id=tea-shop&start=2026-08-22&end=2026-10-20&granularity=monthly")
@@ -220,6 +224,35 @@ def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client
     snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()["tables"]
     assert snapshot["Sales"][0]["unit_cost_at_sale_mmk"] is not None
     assert snapshot["Sales"][0]["cogs_mmk"] is not None
+    weekly = client.get(
+        "/api/v1/financial/trends?business_id=tea-shop&start=2026-10-01&end=2026-10-21&granularity=weekly"
+    )
+    assert weekly.status_code == 200, weekly.text
+    points = weekly.json()["points"]
+    assert [point["period"] for point in points] == [
+        {"start": "2026-10-01", "end": "2026-10-07"},
+        {"start": "2026-10-08", "end": "2026-10-14"},
+        {"start": "2026-10-15", "end": "2026-10-21"},
+    ]
+    for point in points:
+        start, end = point["period"]["start"], point["period"]["end"]
+        sales = [row for row in snapshot["Sales"] if start <= row["date"] <= end]
+        expenses = [row for row in snapshot["Expenses"] if start <= row["date"] <= end]
+        expected_cogs = sum((Decimal(row["cogs_mmk"]) for row in sales), Decimal(0))
+        expected_opex = sum((Decimal(row["amount_mmk"]) for row in expenses), Decimal(0))
+        assert Decimal(point["cogs_mmk"]) == expected_cogs
+        assert Decimal(point["total_costs_mmk"]) == expected_cogs + expected_opex
+    assert sum(Decimal(point["cogs_mmk"]) for point in points) == Decimal(actual["cogs_mmk"])
+    assert sum(Decimal(point["total_costs_mmk"]) for point in points) == Decimal(actual["cogs_mmk"]) + Decimal(actual["operating_expenses_mmk"])
+    monthly = client.get(
+        "/api/v1/financial/trends?business_id=tea-shop&start=2026-09-01&end=2026-10-21&granularity=monthly"
+    )
+    assert monthly.status_code == 200, monthly.text
+    september, october = monthly.json()["points"]
+    assert september["revenue_record_count"] == september["operating_expense_record_count"] == 0
+    assert october["period"] == {"start": "2026-10-01", "end": "2026-10-21"}
+    assert october["is_partial"] is True
+    assert Decimal(october["total_costs_mmk"]) == Decimal(actual["cogs_mmk"]) + Decimal(actual["operating_expenses_mmk"])
     partial = next(row for row in snapshot["Expenses"] if row["payment_status"] == "partial")
     assert partial["paid_date"] is not None
     assert Decimal(partial["amount_paid_mmk"]) < Decimal(partial["amount_mmk"])
@@ -283,8 +316,11 @@ def test_edit_expense_reimports_once(client, workbook_bytes):
 def test_authorization_and_no_import(client):
     assert client.get(URL).json()["data_quality"]["status"] == "missing_data"
     assert client.get(URL.replace("tea-shop", "private")).status_code == 403
+    trends_url = "/api/v1/financial/trends?business_id=private&start=2026-10-01&end=2026-10-20&granularity=weekly"
+    assert client.get(trends_url).status_code == 403
     client.headers.pop("Authorization")
     assert client.get(URL).status_code == 401
+    assert client.get(trends_url.replace("private", "tea-shop")).status_code == 401
 
 
 def test_trends_and_undated_obligations(client, workbook_bytes):
@@ -321,6 +357,12 @@ def test_cogs_falls_back_to_historical_unit_cost_once():
     snap = calculate_platform_snapshot(Ledger("A", 1, tables, None, "batch"), Period(start=d, end=d))
     assert snap.actual.cogs_mmk == Decimal("60.00")
     assert snap.actual.operating_profit_mmk == Decimal("140.00")
+    class Repository:
+        def load_ledger(self, business_id):
+            return Ledger("A", 1, tables, None, "batch")
+    point = PlatformFinancialService(Repository()).trends("A", d, start=d, granularity="weekly")["points"][0]
+    assert point.cogs_mmk == Decimal("60.00")
+    assert point.total_costs_mmk == Decimal("60.00")
 
 
 def test_future_unpaid_expense_does_not_invalidate_earlier_cash_balance():

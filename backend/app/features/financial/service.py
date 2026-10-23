@@ -44,7 +44,10 @@ class FinancialService:
                 revenue_count = sum(1 for row in records.sales if in_period(row)) if "Sales" in records.available_sheets else None
                 expense_count = sum(1 for row in records.expenses if in_period(row)) if "Expenses" in records.available_sheets else None
                 points.append(TrendPoint(period=period, revenue_mmk=snapshot.actual.revenue_mmk,
+                    cogs_mmk=snapshot.actual.cogs_mmk,
                     operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                    total_costs_mmk=(snapshot.actual.cogs_mmk + snapshot.actual.operating_expenses_mmk
+                        if snapshot.actual.cogs_mmk is not None and snapshot.actual.operating_expenses_mmk is not None else None),
                     revenue_record_count=revenue_count, operating_expense_record_count=expense_count,
                     is_partial=partial))
                 cursor = stop + timedelta(days=1)
@@ -67,7 +70,10 @@ class FinancialService:
             points.append(TrendPoint(
                 period=snapshot.period,
                 revenue_mmk=snapshot.actual.revenue_mmk,
+                cogs_mmk=snapshot.actual.cogs_mmk,
                 operating_expenses_mmk=snapshot.actual.operating_expenses_mmk,
+                total_costs_mmk=(snapshot.actual.cogs_mmk + snapshot.actual.operating_expenses_mmk
+                    if snapshot.actual.cogs_mmk is not None and snapshot.actual.operating_expenses_mmk is not None else None),
                 revenue_record_count=revenue_count,
                 operating_expense_record_count=expense_count,
                 is_partial=start.day != 1 or stop.day != (date(stop.year + (stop.month == 12), stop.month % 12 + 1, 1) - timedelta(days=1)).day,

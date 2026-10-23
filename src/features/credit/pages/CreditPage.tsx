@@ -1,5 +1,6 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
+import { NextStepCard } from "@/components/NextStepCard";
 import { CreditPrintReport } from "../components/CreditPrintReport";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -282,6 +283,12 @@ export function CreditPage() {
           "Schedules are model estimates and may differ from lender statements because of fees, grace periods, day-count rules or variable rates.",
         )}
       </p>
+      <NextStepCard
+        heading="Get a clearer picture of your business"
+        description="Review your financial records together and discover evidence-based recommendations."
+        action="Open AI Analyzer"
+        to="/ai"
+      />
     </div>
   );
 }
