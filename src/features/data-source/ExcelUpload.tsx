@@ -39,6 +39,9 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const businessMismatch = result?.errors.some(
     (issue) => issue.field === "business_id" && issue.reason === "Row belongs to another business",
   );
+  const predatingError = result?.errors.some(
+    (issue) => issue.reason === "Transaction predates the opening date",
+  );
   const download = async () => {
     try {
       const blob = await api<Blob>(businessPath("template", business.id));
@@ -117,10 +120,11 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           className="mt-0.5"
         />
         <span>
-          <span className="block font-semibold">This workbook is a complete replacement</span>
+          <span className="block font-semibold">{t("This workbook is a complete replacement")}</span>
           <span className="text-muted-foreground">
-            Records missing from this file will be removed from current reports. Their import
-            history is retained.
+            {t(
+              "Records missing from this file will be removed from current reports. Their import history is retained.",
+            )}
           </span>
         </span>
       </label>
@@ -178,6 +182,25 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
         </p>
       )}
       {businessMismatch && <WorkbookBusinessHelp business={business} />}
+      {predatingError && !replaceOmitted && (
+        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs">
+          <p className="font-semibold text-amber-700 dark:text-amber-400">
+            {t("Transactions predate the opening date")}
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            {t(
+              "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.",
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={() => setReplaceOmitted(true)}
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white hover:bg-amber-700 transition"
+          >
+            {t("Enable complete replacement")}
+          </button>
+        </div>
+      )}
       {result && (
         <div aria-live="polite" className="mt-4 text-sm">
           {result.status !== "failed" && (
