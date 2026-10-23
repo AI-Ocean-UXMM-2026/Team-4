@@ -3,6 +3,14 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ConnectedFinancialPage } from "../pages/ConnectedFinancialPage";
 import { formatMmk } from "../types";
 
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ to, children, ...props }: { to: string; children: React.ReactNode }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   state: {
@@ -41,7 +49,9 @@ beforeEach(() => {
           {
             period: { start: url.searchParams.get("start"), end: url.searchParams.get("end") },
             revenue_mmk: "0.00",
+            cogs_mmk: "0.00",
             operating_expenses_mmk: "0.00",
+            total_costs_mmk: "0.00",
             revenue_record_count: 0,
             operating_expense_record_count: 0,
           },

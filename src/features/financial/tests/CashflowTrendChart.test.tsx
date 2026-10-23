@@ -26,21 +26,27 @@ const trends: Trends = {
     {
       period: { start: "2026-08-01", end: "2026-08-31" },
       revenue_mmk: 0,
+      cogs_mmk: 0,
       operating_expenses_mmk: 0,
+      total_costs_mmk: 0,
       revenue_record_count: 0,
       operating_expense_record_count: 0,
     },
     {
       period: { start: "2026-09-01", end: "2026-09-30" },
       revenue_mmk: 0,
+      cogs_mmk: 0,
       operating_expenses_mmk: 0,
+      total_costs_mmk: 0,
       revenue_record_count: 1,
       operating_expense_record_count: 0,
     },
     {
       period: { start: "2026-10-01", end: "2026-10-22" },
       revenue_mmk: "150.75",
+      cogs_mmk: "50.25",
       operating_expenses_mmk: "20.10",
+      total_costs_mmk: "70.35",
       revenue_record_count: 2,
       operating_expense_record_count: 1,
     },
@@ -55,14 +61,15 @@ describe("CashflowTrendChart", () => {
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(4);
     expect(within(rows[1]!).getAllByText("No records")).toHaveLength(2);
-    expect(within(rows[2]!).getByText("0 MMK")).toBeTruthy();
+    expect(within(rows[2]!).getAllByText("0 MMK")).toHaveLength(2);
     expect(within(rows[2]!).getByText("1 record")).toBeTruthy();
-    expect(within(rows[2]!).getByText("No records")).toBeTruthy();
     expect(within(rows[3]!).getByText("Partial")).toBeTruthy();
     expect(within(rows[3]!).getByText("150.75 MMK")).toBeTruthy();
-    expect(within(rows[3]!).getByText("20.1 MMK")).toBeTruthy();
+    expect(within(rows[3]!).getByText("70.35 MMK")).toBeTruthy();
+    expect(screen.getByText("Revenue vs Total Costs")).toBeTruthy();
+    expect(within(table).getByRole("columnheader", { name: "Total costs" })).toBeTruthy();
     expect(screen.getByText(/latest period, 2026-10-01–2026-10-22, is partial/i)).toBeTruthy();
-    expect(screen.getByText(/exclude cost of goods sold \(COGS\)/i)).toBeTruthy();
+    expect(screen.getByText(/total costs include cost of goods sold \(COGS\)/i)).toBeTruthy();
     expect(screen.getByText(/revenue is not profit/i)).toBeTruthy();
   });
 
@@ -80,7 +87,25 @@ describe("CashflowTrendChart", () => {
     render(<CashflowTrendChart trends={unavailable} />);
 
     expect(within(screen.getByRole("table")).getByText("Unavailable")).toBeTruthy();
-    expect(within(screen.getByRole("table")).getByText("20.1 MMK")).toBeTruthy();
+    expect(within(screen.getByRole("table")).getByText("70.35 MMK")).toBeTruthy();
+  });
+
+  it("leaves total costs unavailable when historical sale cost is missing", () => {
+    render(
+      <CashflowTrendChart
+        trends={{
+          ...trends,
+          points: [{ ...trends.points[2]!, cogs_mmk: null, total_costs_mmk: null }],
+        }}
+      />,
+    );
+    const row = within(screen.getByRole("table")).getAllByRole("row")[1]!;
+    expect(within(row).getByText("150.75 MMK")).toBeTruthy();
+    expect(within(row).getByText("Unavailable")).toBeTruthy();
+    expect(
+      within(row).getByText("Historical sale costs are missing for this period."),
+    ).toBeTruthy();
+    expect(within(row).queryByText("0 MMK")).toBeNull();
   });
 
   it("keeps the empty-activity state when all months have no records", () => {
@@ -89,15 +114,15 @@ describe("CashflowTrendChart", () => {
       points: trends.points.map((point) => ({
         ...point,
         revenue_mmk: 0,
+        cogs_mmk: 0,
         operating_expenses_mmk: 0,
+        total_costs_mmk: 0,
         revenue_record_count: 0,
         operating_expense_record_count: 0,
       })),
     };
     render(<CashflowTrendChart trends={noActivity} />);
-    expect(screen.getByRole("status").textContent).toMatch(
-      /no revenue or operating expense records/i,
-    );
+    expect(screen.getByRole("status").textContent).toMatch(/no revenue or cost records/i);
   });
 
   it("does not describe unavailable record counts as zero activity", () => {
@@ -107,7 +132,9 @@ describe("CashflowTrendChart", () => {
         {
           ...trends.points[0]!,
           revenue_mmk: null,
+          cogs_mmk: null,
           operating_expenses_mmk: null,
+          total_costs_mmk: null,
           revenue_record_count: null,
           operating_expense_record_count: null,
         },

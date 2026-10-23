@@ -1,6 +1,7 @@
 import { useTranslation } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Loading, usePlatform } from "@/app/providers";
+import { NextStepCard } from "@/components/NextStepCard";
 import { api, businessPath } from "@/lib/apiClient";
 import type { SyncStatus as Status } from "@/lib/contracts";
 import { ExcelUpload } from "./ExcelUpload";
@@ -16,6 +17,11 @@ export function DataSourcePage() {
   });
   if (query.isPending) return <Loading />;
   if (query.isError) return <p role="alert">{t(query.error.message)}</p>;
+  const hasConfirmedImport =
+    !query.isFetching &&
+    Boolean(query.data.source_id) &&
+    query.data.source_version > 0 &&
+    Boolean(query.data.last_import_at);
   return (
     <div className="space-y-6">
       <div>
@@ -32,6 +38,13 @@ export function DataSourcePage() {
         <ExcelUpload key={business.id} maxBytes={query.data.max_upload_bytes} />
         <OneDriveConnect status={query.data} />
       </div>
+      {hasConfirmedImport && (
+        <NextStepCard
+          description="Your business records are ready. View your financial performance, cash balance, and outstanding payments."
+          action="View Financial Health"
+          to="/"
+        />
+      )}
       <SyncStatus status={query.data} />
     </div>
   );

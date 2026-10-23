@@ -1,5 +1,6 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
+import { NextStepCard } from "@/components/NextStepCard";
 import { InventoryRiskTable } from "../components/InventoryRiskTable";
 import { WorkingCapitalToolTabs } from "../components/WorkingCapitalToolTabs";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
@@ -132,6 +133,12 @@ export function WorkingCapitalPage() {
         manualInputs={manualInputs}
         simulate={simulate}
         planReserve={planReserve}
+      />
+      <NextStepCard
+        heading="Plan your next financial move"
+        description="Review your loan situation or explore how to prepare your business for future borrowing."
+        action="Open Credit Hub"
+        to="/credit"
       />
     </main>
   );

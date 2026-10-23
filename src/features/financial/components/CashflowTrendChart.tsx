@@ -37,9 +37,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
   if (!trends.points.length)
     return (
       <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="text-lg font-semibold text-foreground">
-          {t("Revenue and operating expenses")}
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("Revenue vs Total Costs")}</h2>
         <div className="mt-5 rounded-xl bg-muted px-5 py-8 text-center">
           <p className="text-sm font-medium text-muted-foreground">
             {t("No reporting periods available.")}
@@ -59,10 +57,12 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
       point.revenue_record_count == null || point.revenue_record_count === 0
         ? null
         : plotValue(point.revenue_mmk),
-    operating_expenses_mmk:
-      point.operating_expense_record_count == null || point.operating_expense_record_count === 0
+    total_costs_mmk:
+      point.revenue_record_count == null ||
+      point.operating_expense_record_count == null ||
+      (point.revenue_record_count === 0 && point.operating_expense_record_count === 0)
         ? null
-        : plotValue(point.operating_expenses_mmk),
+        : plotValue(point.total_costs_mmk),
     label: shortPeriod(point.period.start, trends.granularity),
     range: `${point.period.start} – ${point.period.end}`,
   }));
@@ -91,7 +91,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
   return (
     <section
       className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5"
-      aria-label={t("Revenue and operating expense trends")}
+      aria-label={t("Revenue and total cost trends")}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -99,11 +99,13 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
             {t("Performance over time")}
           </p>
           <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-            {t("Revenue and operating expenses")}
+            {t("Revenue vs Total Costs")}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("Recorded amounts by period. These are not cash movements.")}{" "}
-            {t("Operating expenses exclude cost of goods sold (COGS); revenue is not profit.")}
+            {t(
+              "Total costs include cost of goods sold (COGS) and operating expenses; revenue is not profit.",
+            )}
           </p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">
@@ -145,7 +147,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
                 formatMmk(
                   item.dataKey === "revenue_mmk"
                     ? item.payload.exact.revenue_mmk
-                    : item.payload.exact.operating_expenses_mmk,
+                    : item.payload.exact.total_costs_mmk,
                 )
               }
               contentStyle={{
@@ -170,9 +172,9 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
             />
             <Line
               type="monotone"
-              dataKey="operating_expenses_mmk"
+              dataKey="total_costs_mmk"
               isAnimationActive={false}
-              name={t("Operating expenses")}
+              name={t("Total costs")}
               stroke="var(--chart-expenses)"
               strokeDasharray="5 4"
               strokeWidth={2.5}
@@ -186,7 +188,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
       {!hasRecordedActivity && (
         <p role="status" className="mt-3 text-sm text-muted-foreground">
           {recordCountsAvailable
-            ? t("No revenue or operating expense records in these periods.")
+            ? t("No revenue or cost records in these periods.")
             : t(
                 "Trend data is unavailable for these periods; the available data cannot confirm whether there was no activity.",
               )}
@@ -206,7 +208,7 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
                 {t("Revenue")}
               </th>
               <th scope="col" className="px-3 py-2.5">
-                {t("Operating expenses")}
+                {t("Total costs")}
               </th>
             </tr>
           </thead>
@@ -249,16 +251,18 @@ export function CashflowTrendChart({ trends }: { trends: Trends }) {
                     )}
                   </td>
                   <td className="px-3 py-2.5 font-medium text-cyan-800 dark:text-cyan-200">
-                    {point.operating_expense_record_count == null
+                    {point.revenue_record_count == null ||
+                    point.operating_expense_record_count == null
                       ? t("Unavailable")
-                      : point.operating_expense_record_count === 0
+                      : point.revenue_record_count === 0 &&
+                          point.operating_expense_record_count === 0
                         ? t("No records")
-                        : formatMmk(point.operating_expenses_mmk)}
-                    {point.operating_expense_record_count != null &&
-                      point.operating_expense_record_count > 0 && (
+                        : formatMmk(point.total_costs_mmk)}
+                    {point.revenue_record_count != null &&
+                      point.revenue_record_count > 0 &&
+                      point.cogs_mmk === null && (
                         <span className="block text-xs font-normal text-muted-foreground">
-                          {point.operating_expense_record_count}{" "}
-                          {t(point.operating_expense_record_count === 1 ? "record" : "records")}
+                          {t("Historical sale costs are missing for this period.")}
                         </span>
                       )}
                   </td>

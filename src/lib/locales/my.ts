@@ -217,6 +217,21 @@ export const my: Record<string, string> = {
   "Unknown start": "စတင်ရက် မသိရပါ",
   "Upcoming repayment": "မကြာမီ ပြန်ဆပ်ရမည့်ငွေ",
   "Your data starts here.": "သင့်အချက်အလက်များကို ဤနေရာမှ စတင်ပါ။",
+  "Your business records are ready. View your financial performance, cash balance, and outstanding payments.":
+    "သင့်လုပ်ငန်းမှတ်တမ်းများ အသင့်ဖြစ်ပါပြီ။ ငွေကြေးဆိုင်ရာ စွမ်းဆောင်ရည်၊ လက်ကျန်ငွေနှင့် ပေးရန်ကျန်ငွေများကို ကြည့်ရှုပါ။",
+  "View Financial Health": "ငွေကြေးအခြေအနေကို ကြည့်ရှုရန်",
+  "Explore ways to improve your cash flow": "ငွေဝင်ငွေထွက် ပိုကောင်းစေမည့် နည်းလမ်းများကို လေ့လာပါ",
+  "Discover opportunities to collect customer payments, manage inventory, and prepare for cash shortages.":
+    "ဖောက်သည်များထံမှ ငွေကောက်ခံခြင်း၊ ကုန်ပစ္စည်းလက်ကျန် စီမံခြင်းနှင့် ငွေသားမလုံလောက်မှုအတွက် ကြိုတင်ပြင်ဆင်ခြင်းတို့ကို လေ့လာပါ။",
+  "Explore Working Capital": "လုပ်ငန်းလည်ပတ်ငွေကို လေ့လာရန်",
+  "Get AI Recommendations": "AI အကြံပြုချက်များကို ကြည့်ရန်",
+  "Plan your next financial move": "နောက်ထပ် ငွေကြေးဆိုင်ရာ အစီအစဉ်ကို ရေးဆွဲပါ",
+  "Review your loan situation or explore how to prepare your business for future borrowing.":
+    "လက်ရှိချေးငွေအခြေအနေကို ကြည့်ရှုပါ၊ သို့မဟုတ် အနာဂတ်ချေးငွေအတွက် လုပ်ငန်းကို မည်သို့ပြင်ဆင်ရမည်ကို လေ့လာပါ။",
+  "Get a clearer picture of your business": "သင့်လုပ်ငန်းအခြေအနေကို ပိုမိုရှင်းလင်းစွာ သိရှိပါ",
+  "Review your financial records together and discover evidence-based recommendations.":
+    "ငွေကြေးမှတ်တမ်းများကို စုစည်းကြည့်ရှုပြီး အချက်အလက်အခြေပြု အကြံပြုချက်များကို လေ့လာပါ။",
+  "Open AI Analyzer": "AI လေ့လာသုံးသပ်မှုကို ဖွင့်ရန်",
   present: "ရှိပါသည်",
   missing: "လိုအပ်နေသည်",
   partial: "တစ်စိတ်တစ်ပိုင်း",
@@ -750,6 +765,7 @@ export const my: Record<string, string> = {
   "Recorded balances through": "မှတ်တမ်းရှိ လက်ကျန်၊ ရက်စွဲ",
   ". Due dates may be unavailable.": "။ ပေးချေရမည့်ရက်အချို့ မရှိနိုင်ပါ။",
   "No obligations in available records": "ရှိသောမှတ်တမ်းများတွင် ပေးရန်တာဝန် မတွေ့ပါ",
+  "No supplier payments in available records": "ရှိသောမှတ်တမ်းများတွင် ပေးရန်ကျန်သော ပေးသွင်းသူငွေများ မတွေ့ပါ",
   "Outstanding business obligations and due dates": "လုပ်ငန်း၏ ပေးရန်တာဝန်များနှင့် ရက်ချိန်းများ",
   Reference: "ရည်ညွှန်းအမှတ်",
   "Due date": "ပေးချေရမည့်ရက်",

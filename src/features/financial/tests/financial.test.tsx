@@ -6,6 +6,14 @@ import { useFinancialSummary } from "../hooks/useFinancialSummary";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FinancialClient, FinancialSnapshot } from "../types";
 
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ to, children, ...props }: { to: string; children: React.ReactNode }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 afterEach(cleanup);
 
 function snapshot(batch = "batch-1"): FinancialSnapshot {
@@ -41,7 +49,9 @@ function client(batch = "batch-1"): FinancialClient {
         {
           period: { start: "2026-10-01", end: "2026-10-20" },
           revenue_mmk: 0,
+          cogs_mmk: 0,
           operating_expenses_mmk: 0,
+          total_costs_mmk: 0,
           revenue_record_count: 0,
           operating_expense_record_count: 0,
         },
@@ -130,6 +140,9 @@ describe("Financial reporting", () => {
     expect(screen.getByRole("link", { name: "Set up my data" }).getAttribute("href")).toBe(
       "/data-source",
     );
+    expect(
+      screen.queryByRole("region", { name: "Explore ways to improve your cash flow" }),
+    ).toBeNull();
   });
 
   it("clears previous cards during a new import and ignores late responses", async () => {
@@ -150,7 +163,9 @@ describe("Financial reporting", () => {
         {
           period: { start: "2026-10-01", end: "2026-10-20" },
           revenue_mmk: 0,
+          cogs_mmk: 0,
           operating_expenses_mmk: 0,
+          total_costs_mmk: 0,
           revenue_record_count: 0,
           operating_expense_record_count: 0,
         },
@@ -199,6 +214,15 @@ describe("Financial reporting", () => {
       />,
     );
     expect(await screen.findByText("150,000 MMK")).toBeTruthy();
+    const nextStep = screen.getByRole("region", { name: "Explore ways to improve your cash flow" });
+    expect(within(nextStep).getByRole("link", { name: "Explore Working Capital" })).toHaveAttribute(
+      "href",
+      "/working-capital",
+    );
+    expect(within(nextStep).getByRole("link", { name: "Get AI Recommendations" })).toHaveAttribute(
+      "href",
+      "/ai",
+    );
     expect(screen.queryByText("Please note about this report")).toBeNull();
     expect(screen.queryByText("Interest uses cash-paid amounts.")).toBeNull();
     expect(screen.getByText(/2026-10-01 – 2026-10-20 · Yangon time/)).toBeTruthy();
@@ -213,12 +237,14 @@ describe("Financial reporting", () => {
       screen.getByRole("table", { name: "Exact trend figures; unavailable values are not zero" }),
     ).toBeTruthy();
     expect(screen.queryByText("No reporting periods available.")).toBeNull();
-    const chart = screen.getByRole("region", { name: "Revenue and operating expense trends" });
+    const chart = screen.getByRole("region", { name: "Revenue and total cost trends" });
     const obligations = screen.getByRole("region", { name: "Outstanding obligations" });
     const chartPanel = chart.parentElement;
     const obligationsPanel = obligations.parentElement;
     expect(chartPanel?.parentElement).toBe(obligationsPanel?.parentElement);
-    expect(chartPanel?.nextElementSibling).toBe(obligationsPanel);
+    expect(chartPanel?.nextElementSibling).toBe(nextStep);
+    expect(nextStep.nextElementSibling).toBe(obligationsPanel);
+    expect(screen.getAllByRole("region", { name: "Explore ways to improve your cash flow" })).toHaveLength(1);
     expect(chartPanel?.parentElement?.className).toContain("flex-col");
   });
 
@@ -246,7 +272,9 @@ describe("Financial reporting", () => {
         {
           period,
           revenue_mmk: 0,
+          cogs_mmk: 0,
           operating_expenses_mmk: 0,
+          total_costs_mmk: 0,
           revenue_record_count: 0,
           operating_expense_record_count: 0,
         },
@@ -307,7 +335,9 @@ describe("Financial reporting", () => {
         {
           period,
           revenue_mmk: 0,
+          cogs_mmk: 0,
           operating_expenses_mmk: 0,
+          total_costs_mmk: 0,
           revenue_record_count: 0,
           operating_expense_record_count: 0,
         },

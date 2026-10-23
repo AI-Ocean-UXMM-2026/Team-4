@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import {
+  ArrowRight,
   CalendarClock,
   CalendarDays,
   CircleDollarSign,
@@ -141,11 +142,13 @@ export function OutstandingBalances({
   const hasUndated = classified.some(({ status }) => status === "Due date unavailable");
   const loanPrincipal = loanPrincipalOutstanding == null ? null : String(loanPrincipalOutstanding);
   const cash = cashAvailable == null ? null : String(cashAvailable);
+  const missingLoanSchedule =
+    loanPrincipal !== null && compareMmk(loanPrincipal, 0) > 0 && !loanScheduleAvailable;
   const coverageUnavailable =
     cash === null ||
     loanPrincipal === null ||
     hasUndated ||
-    (compareMmk(loanPrincipal, 0) > 0 && !loanScheduleAvailable) ||
+    missingLoanSchedule ||
     dueBy30Total === null;
   const cashAfterKnownDues =
     coverageUnavailable || dueBy30Total === null ? null : subtractMmk(cash!, dueBy30Total);
@@ -158,7 +161,8 @@ export function OutstandingBalances({
   const minAmount = minimumAmount.trim() === "" ? null : minimumAmount.trim();
   const query = search.trim().toLocaleLowerCase();
 
-  const rows = classified
+  const supplierPayments = classified.filter(({ item }) => item.kind === "supplier");
+  const rows = supplierPayments
     .filter(
       ({ item }) =>
         query === "" ||
@@ -288,38 +292,32 @@ export function OutstandingBalances({
           </div>
         ))}
       </dl>
-      {(hasUndated ||
-        (loanPrincipal !== null && compareMmk(loanPrincipal, 0) > 0 && !loanScheduleAvailable)) && (
-        <div className="mt-3 flex min-w-0 items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm leading-5 text-amber-950">
-          <CalendarClock size={18} className="mt-0.5 shrink-0 text-amber-700" aria-hidden="true" />
-          <p className="min-w-0">
-            {hasUndated && (
-              <span>
-                {t(
-                  "Obligations without recorded due dates remain outstanding but are not marked overdue or included in due-date totals.",
-                )}{" "}
-                <a
-                  href="/data-source"
-                  className="font-semibold text-primary underline underline-offset-2"
-                >
-                  {t("Review the Excel template in Data Source")}
-                </a>
-                .{" "}
-              </span>
-            )}
-            {loanPrincipal !== null &&
-              compareMmk(loanPrincipal, 0) > 0 &&
-              !loanScheduleAvailable &&
-              t(
-                "Loan principal is shown separately; no recorded installment schedule is available.",
+      {hasUndated && (
+        <div
+          role="note"
+          aria-label={t("Payment date information")}
+          className="mt-3 flex min-w-0 items-start gap-3 rounded-2xl border border-[#866e60] bg-[#35231c] p-4 text-sm leading-5 text-[#fff8f0]"
+        >
+          <CalendarClock size={18} className="mt-0.5 shrink-0 text-[#ffd199]" aria-hidden="true" />
+          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="min-w-0">
+              {t(
+                "Some payment dates are missing. These payments remain outstanding but cannot be included in upcoming payment totals.",
               )}
-          </p>
+            </p>
+            <a
+              href="/data-source"
+              className="bf-button inline-flex shrink-0 items-center gap-2 self-start sm:self-auto"
+            >
+              {t("Review Data Source")} <ArrowRight size={16} aria-hidden="true" />
+            </a>
+          </div>
         </div>
       )}
 
       <div className="bf-metric-card mt-4 min-w-0">
         <p className="min-w-0 pr-12 text-sm font-medium text-muted-foreground">
-          {t("Cash after recorded obligations due by 30 days")}
+          {t("Cash remaining after payments due within 30 days")}
         </p>
         <span className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary ring-1 ring-border">
           <Wallet size={17} aria-hidden="true" />
@@ -327,22 +325,31 @@ export function OutstandingBalances({
         <p className="mt-4 break-words text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">
           {cashAfterKnownDues === null ? t("Unavailable") : formatMmk(cashAfterKnownDues)}
         </p>
-        <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-          {cash === null
-            ? t("Recorded cash balance is unavailable for this reporting date.")
-            : coverageUnavailable
-              ? t(
-                  "A complete coverage estimate needs recorded due dates, loan installments, and cash for this date.",
-                )
-              : `${t("Cash available as of")} ${asAt}: ${formatMmk(cash)}. ${t("Includes overdue balances and obligations with recorded due dates through")} ${addDays(asAt, 30)}. ${t("This is a simple coverage estimate, not a forecast; future sales, expenses, and other cash movements are excluded.")}`}
-        </p>
+        {cashAfterKnownDues === null ? (
+          <div className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            <p>{t("To calculate this amount, the following information is needed:")}</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4">
+              {cash === null && <li>{t("Cash balance for this reporting date.")}</li>}
+              {loanPrincipal === null && <li>{t("Recorded loan balance.")}</li>}
+              {hasUndated && <li>{t("Due dates for outstanding payments.")}</li>}
+              {missingLoanSchedule && <li>{t("Loan instalment dates.")}</li>}
+              {dueBy30Total === null && <li>{t("Amounts for dated payments.")}</li>}
+              {!coverageUnavailable && <li>{t("Valid recorded cash and payment amounts.")}</li>}
+            </ul>
+          </div>
+        ) : (
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            {t("Recorded cash as of")} {asAt} {t("less overdue payments and payments due through")}{" "}
+            {addDays(asAt, 30)}. {t("Future cash movements are not included.")}
+          </p>
+        )}
       </div>
 
-      {obligations.length === 0 ? (
+      {supplierPayments.length === 0 ? (
         <div className="mt-5 rounded-xl bg-muted px-4 py-7 text-center">
           <CalendarClock size={22} className="mx-auto text-slate-400" aria-hidden="true" />
           <p className="mt-2 text-sm font-medium text-muted-foreground">
-            {t("No obligations in available records")}
+            {t("No supplier payments in available records")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("This list reflects imported records and may be incomplete.")}
@@ -378,8 +385,6 @@ export function OutstandingBalances({
               >
                 <option value="all">{t("All types")}</option>
                 <option value="supplier">{t("Supplier")}</option>
-                <option value="loan">{t("Loan")}</option>
-                <option value="expense">{t("Expense")}</option>
               </select>
             </label>
             <label className="min-w-0 flex-[1_1_11rem] text-xs font-medium text-muted-foreground">
@@ -497,13 +502,7 @@ export function OutstandingBalances({
                     className="border-t border-border align-top"
                   >
                     <td className="px-3 py-3 font-medium text-muted-foreground">
-                      {t(
-                        item.kind === "supplier"
-                          ? "Supplier"
-                          : item.kind === "loan"
-                            ? "Loan"
-                            : "Expense",
-                      )}
+                      {t("Supplier")}
                     </td>
                     <td className="max-w-48 break-words px-3 py-3 text-foreground">
                       <span className="font-medium">{item.name || item.reference_id}</span>
