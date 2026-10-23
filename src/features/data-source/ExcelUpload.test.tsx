@@ -24,6 +24,15 @@ vi.mock("@/app/providers", () => ({
 }));
 
 const mismatchHeading = "This workbook uses a different business ID.";
+it("keeps standard uploads without offering complete replacement", async () => {
+  mocks.api.mockResolvedValue({ status: "success", source_version: 3, row_counts: {}, errors: [], warnings: [] });
+  render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
+
+  expect(screen.queryByRole("checkbox", { name: /complete replacement/i })).not.toBeInTheDocument();
+  await submitWorkbook();
+
+  expect(mocks.api.mock.calls[0]![0]).toBe("/api/v1/data/upload?business_id=my-shop-123");
+});
 it("shows the last successful workbook after reopening without enabling another import", async () => {
   mocks.api.mockResolvedValue({ status: "success", source_version: 3, row_counts: {}, errors: [], warnings: [] });
   const view = render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);

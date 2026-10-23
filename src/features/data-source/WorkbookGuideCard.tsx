@@ -5,10 +5,6 @@ import { api, businessPath } from "@/lib/apiClient";
 import {
   BookOpen,
   Download,
-  FileSpreadsheet,
-  HelpCircle,
-  Layers,
-  Sparkles,
 } from "lucide-react";
 
 export function WorkbookGuideCard() {
@@ -32,11 +28,11 @@ export function WorkbookGuideCard() {
   };
 
   return (
-    <section className="bf-card flex flex-col justify-between space-y-5">
+    <section className="bf-card h-full">
       <div>
         {/* Header */}
-        <div className="mb-4 flex items-center justify-between gap-3 border-b border-border/40 pb-3">
-          <div className="flex items-center gap-2.5">
+        <div className="mb-4 flex flex-wrap items-center gap-3 border-b border-border/40 pb-3">
+          <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <BookOpen size={18} />
             </div>
@@ -47,25 +43,25 @@ export function WorkbookGuideCard() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            disabled={downloading}
-            onClick={() => void downloadTemplate()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
-            title={t("Download template")}
-          >
-            <Download size={13} />
-            <span className="hidden sm:inline">{t("Download template")}</span>
-          </button>
         </div>
 
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 text-xs text-muted-foreground">
-          {t("Uploads are assigned to your selected workspace automatically. You do not need to add or change business_id in Excel.")}
-        </div>
+        <button
+          type="button"
+          disabled={downloading}
+          onClick={() => void downloadTemplate()}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+        >
+          <Download size={13} />
+          <span>{t("Download template")}</span>
+        </button>
+
+        <p className="mt-4 text-sm text-muted-foreground">
+          {t("Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.")}
+        </p>
 
         {/* Sheet Coverage Breakdown */}
         <div className="mt-4 space-y-3">
-          <div>
+          <div role="group" aria-label={t("Core Sheets (Required)")}>
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {t("Core Sheets (Required)")}
             </p>
@@ -80,7 +76,13 @@ export function WorkbookGuideCard() {
                 Sales
               </span>
               <span className="rounded-lg bg-muted px-2.5 py-1 font-medium text-foreground">
+                CustomerReceipts
+              </span>
+              <span className="rounded-lg bg-muted px-2.5 py-1 font-medium text-foreground">
                 Purchases
+              </span>
+              <span className="rounded-lg bg-muted px-2.5 py-1 font-medium text-foreground">
+                SupplierPayments
               </span>
               <span className="rounded-lg bg-muted px-2.5 py-1 font-medium text-foreground">
                 Expenses
@@ -88,9 +90,9 @@ export function WorkbookGuideCard() {
             </div>
           </div>
 
-          <div>
+          <div role="group" aria-label={t("Optional Sheets")}>
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {t("Advanced & Credit Hub (Optional)")}
+              {t("Optional Sheets")}
             </p>
             <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
               <span className="rounded-lg border border-border/70 px-2 py-0.5 text-muted-foreground">
@@ -100,10 +102,7 @@ export function WorkbookGuideCard() {
                 LoanPayments
               </span>
               <span className="rounded-lg border border-border/70 px-2 py-0.5 text-muted-foreground">
-                CustomerReceipts
-              </span>
-              <span className="rounded-lg border border-border/70 px-2 py-0.5 text-muted-foreground">
-                SupplierPayments
+                CashBalances
               </span>
               <span className="rounded-lg border border-border/70 px-2 py-0.5 text-muted-foreground">
                 CashAdjustments
@@ -113,18 +112,6 @@ export function WorkbookGuideCard() {
         </div>
       </div>
 
-      {/* Helpful Best Practice Tip */}
-      <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground">
-        <p className="flex items-center gap-1.5 font-semibold text-foreground">
-          <Sparkles size={13} className="text-primary" />
-          {t("Pro Tip")}
-        </p>
-        <p className="mt-1 leading-relaxed">
-          {t(
-            "Keep stable row IDs when updating existing records. When uploading a new accounting period, check 'This workbook is a complete replacement' to retire older records cleanly.",
-          )}
-        </p>
-      </div>
     </section>
   );
 }
