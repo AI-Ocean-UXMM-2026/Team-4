@@ -7,7 +7,6 @@ The shared demo-password login and public demo reset have been removed. Registra
 ## Website and video
 
 - Live website: [Shay Sett](https://shaysett-team4.vercel.app/)
-- Credentials to test: "myathan9182@gmail.com" , "Myat@10!"
 - Video: [Video](Video.MOV) (original file stored with Git LFS).
 
 ## Repository structure
