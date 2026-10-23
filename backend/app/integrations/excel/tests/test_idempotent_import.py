@@ -58,9 +58,14 @@ def test_invalid_financial_state_rejected(client, workbook_bytes, sheet, cell, v
 
 def test_no_cross_business_access(client, workbook_bytes):
     assert client.get("/api/v1/data/snapshot?business_id=private").status_code == 403
+    assert client.post("/api/v1/data/upload?business_id=private", files={"file": ("book.xlsx", workbook_bytes)}).status_code == 403
     data = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["B2"], "value", "private"))
-    assert upload(client, data).status_code == 400
-    assert snapshot(client)["source_version"] == 0
+    result = upload(client, data)
+    assert result.status_code == 200, result.text
+    with client.app.state.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(ImportedRow).where(ImportedRow.business_id == "private")) == 0
+        assert session.get(Business, "private").version == 0
+    assert snapshot(client)["tables"]["Expenses"][0]["business_id"] == "tea-shop"
 
 
 def test_missing_rows_retained_and_checked(client, workbook_bytes):
@@ -157,3 +162,36 @@ def test_auth_and_upload_limits(client):
     assert client.post("/api/v1/data/upload?business_id=tea-shop", files={"file": ("book.xlsx", b"123")}).status_code == 400
     client.headers.pop("Authorization")
     assert client.get("/api/v1/data/snapshot?business_id=tea-shop").status_code == 401
+
+
+@pytest.mark.parametrize("mode", ["missing", "blank", "stale", "mixed"])
+def test_workbook_business_id_is_assigned_by_authorized_workspace(client, workbook_bytes, mode):
+    def change(workbook):
+        for sheet in workbook:
+            header = [cell.value for cell in sheet[1]]
+            if "business_id" not in header:
+                continue
+            col = header.index("business_id") + 1
+            if mode == "missing":
+                sheet.delete_cols(col)
+            else:
+                for row in range(2, sheet.max_row + 1):
+                    sheet.cell(row, col).value = None if mode == "blank" else ("private" if mode == "stale" or row % 2 else "copied-workbook")
+    content = edit_workbook(workbook_bytes, change)
+    result = upload(client, content)
+    assert result.status_code == 200, result.text
+    assert upload(client, content).json()["status"] == "up_to_date"
+    with client.app.state.sessions() as session:
+        rows = session.scalars(select(ImportedRow)).all()
+        assert rows
+        assert all(row.business_id == "tea-shop" and row.payload["business_id"] == "tea-shop" for row in rows)
+        assert session.get(Business, "private").version == 0
+
+
+def test_rows_containing_only_copied_business_ids_are_ignored(client, workbook_bytes):
+    def change(workbook):
+        sheet = workbook["Loans"]
+        header = [cell.value for cell in sheet[1]]
+        sheet.cell(2, header.index("business_id") + 1).value = "old-business"
+    result = upload(client, edit_workbook(workbook_bytes, change))
+    assert result.status_code == 200, result.text

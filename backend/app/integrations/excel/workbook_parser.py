@@ -53,8 +53,9 @@ def _value(value, kind):
     return text
 
 
-def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
+def parse_workbook(uploaded_bytes: bytes, *, business_id: str | None = None) -> ParsedWorkbook:
     parsed = ParsedWorkbook()
+    server_fields = {"business_id"} if business_id is not None else set()
     try:
         with ZipFile(BytesIO(uploaded_bytes)) as archive:
             files = archive.infolist()
@@ -80,7 +81,7 @@ def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
                 if len([h for h in header if h]) != len(set(h for h in header if h)):
                     parsed.errors.append(issue(name, 1, "header", "Duplicate column headers"))
                 optional_fields = set(spec.get("optional_fields", []))
-                missing = set(spec["fields"]) - optional_fields - set(header)
+                missing = set(spec["fields"]) - optional_fields - server_fields - set(header)
                 for key in sorted(missing):
                     parsed.errors.append(issue(name, 1, key, "Required column is missing"))
                 parsed.sheets[name] = []
@@ -89,13 +90,18 @@ def parse_workbook(uploaded_bytes: bytes) -> ParsedWorkbook:
                 for number, cells in enumerate(rows, start=2):
                     if number > MAX_ROWS + 1:
                         raise ValueError(f"{name} exceeds the row limit")
-                    if not any(c.value is not None for c in cells):
+                    if not any(c.value is not None and header[i] not in server_fields
+                               for i, c in enumerate(cells)):
                         continue
                     total += 1
                     if total > MAX_TOTAL_ROWS:
                         raise ValueError("Workbook exceeds the total row limit")
                     values = {}
                     for key, kind in spec["fields"].items():
+                        if key in server_fields:
+                            # Only the authorized request selects the destination workspace.
+                            values[key] = business_id
+                            continue
                         if key not in header:
                             values[key] = None
                             continue

@@ -55,7 +55,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
         )}
       </p>
       <p className="mb-5 text-sm text-muted-foreground">
-        {t("Before importing, complete one Settings row: business_id, business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
+        {t("Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
       </p>
       <div role="group" aria-label={t("Paste Excel file here")} tabIndex={0}
         className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

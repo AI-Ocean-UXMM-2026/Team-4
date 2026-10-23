@@ -31,7 +31,7 @@ def typed_values(sheet, payload):
 
 def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False, filename=None):
     digest = hashlib.sha256(content).hexdigest()
-    parsed = parse_workbook(content)
+    parsed = parse_workbook(content, business_id=business_id)
     result = None
     with sessions.begin() as session:
         business = lock_business(session, business_id)
