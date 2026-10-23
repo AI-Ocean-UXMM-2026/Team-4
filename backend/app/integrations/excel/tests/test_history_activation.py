@@ -41,3 +41,25 @@ def test_history_activation_and_download(client, unscoped_workbook_bytes):
     assert download_res.status_code == 200
     assert download_res.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     assert download_res.content == workbook_bytes
+
+
+def test_missing_historical_file_does_not_replace_current_records(client, unscoped_workbook_bytes, monkeypatch):
+    initial = upload(client, unscoped_workbook_bytes)
+    assert initial.status_code == 200
+    historical_batch_id = initial.json()["import_batch_id"]
+    changed = edit_workbook(unscoped_workbook_bytes, lambda workbook: setattr(workbook["Expenses"]["D2"], "value", 95000))
+    assert upload(client, changed).status_code == 200
+    snapshot_url = "/api/v1/data/snapshot?business_id=tea-shop"
+    before = client.get(snapshot_url).json()
+    history_before = client.get("/api/v1/data/sync-status?business_id=tea-shop").json()["imports"]
+
+    monkeypatch.setattr("app.integrations.excel.router.get_batch_workbook", lambda *_args: None)
+    activation = client.post(f"/api/v1/data/activate-history?business_id=tea-shop&batch_id={historical_batch_id}")
+    assert activation.status_code == 404, activation.text
+    assert activation.json()["error"]["code"] == "WORKBOOK_FILE_NOT_FOUND"
+    assert client.get(snapshot_url).json() == before
+    assert client.get("/api/v1/data/sync-status?business_id=tea-shop").json()["imports"] == history_before
+
+    download = client.get(f"/api/v1/data/history/{historical_batch_id}/download?business_id=tea-shop")
+    assert download.status_code == 404, download.text
+    assert download.json()["error"]["code"] == "WORKBOOK_FILE_NOT_FOUND"

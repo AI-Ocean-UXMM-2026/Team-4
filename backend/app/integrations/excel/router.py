@@ -47,11 +47,7 @@ def activate_history(request: Request, business_id: str, batch_id: str = Query(.
         filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"snapshot-{batch.id[:8]}.xlsx"
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
-            if demo_path.exists():
-                content = demo_path.read_bytes()
-            else:
-                raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is no longer on disk.")
+            raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is no longer on disk.")
     result = import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=True, filename=filename)
     return {"status": "activated", "batch_id": batch.id, "filename": filename, "result": result}
 
@@ -64,11 +60,7 @@ def download_history(request: Request, business_id: str, batch_id: str, _user_id
             raise APIError(404, "BATCH_NOT_FOUND", "Import batch not found.")
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
-            if demo_path.exists():
-                content = demo_path.read_bytes()
-            else:
-                raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is not available.")
+            raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is not available.")
         filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"workbook-{batch.id[:8]}.xlsx"
         return Response(content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         headers={"Content-Disposition": f'attachment; filename="{filename}"'})
