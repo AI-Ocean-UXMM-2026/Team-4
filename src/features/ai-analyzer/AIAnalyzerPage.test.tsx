@@ -112,7 +112,7 @@ it("shows each finding once with its action and expandable evidence", () => {
   ).toBeTruthy();
   expect(screen.queryByText("Check customer receipts and confirm payment dates.")).toBeNull();
   expect(within(plan).getByRole("link", { name: /Open Financial Health/i }).getAttribute("href")).toBe(
-    "/",
+    "/financial",
   );
   fireEvent.click(within(plan).getByText(/View Details & Evidence/));
   expect(screen.getByText(/Receivables/)).toBeTruthy();

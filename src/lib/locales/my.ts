@@ -1008,21 +1008,7 @@ export const my: Record<string, string> = {
   "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.":
     "စနစ်အတွင်းရှိ ယခင်မှတ်တမ်းများသည် ဤဖိုင်၏ လုပ်ငန်းစတင်ရက်ထက် စောနေပါသည်။ ဤကာလအတွက် အသစ်အစားထိုးတင်သွင်းလိုပါက အထက်ပါ 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်၍ ထပ်မံကြိုးစားပါ။",
   "Enable complete replacement": "အသစ်အစားထိုးခြင်းကို ဖွင့်မည်",
-  "Analysis Summary": "သုံးသပ်ချက် အကျဉ်းချုပ်",
   "Verified rules-based analysis": "အတည်ပြုထားသော စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်",
-  "Some financial data is incomplete. Recommendations are based on available verified records.":
-    "ငွေကြေးဆိုင်ရာ အချက်အလက်အချို့ မပြည့်စုံပါ။ လက်ရှိရရှိထားသော အတည်ပြုမှတ်တမ်းများပေါ် အခြေခံ၍ အကြံပြုထားပါသည်။",
-  "View analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ကြည့်ရန်",
-  "Hide analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ဝှက်ရန်",
-  "Import version:": "ထည့်သွင်းထားသော ဗားရှင်း —",
-  "Batch ID:": "အသုတ်အမှတ် —",
-  "Provider configuration status:": "AI စနစ် ချိတ်ဆက်မှု အခြေအနေ —",
-  "External AI active and verified": "ပြင်ပ AI စနစ် အောင်မြင်စွာ ချိတ်ဆက်အသုံးပြုထားပါသည်",
-  "Not configured (using local verified rules engine)":
-    "ချိတ်ဆက်မထားပါ (ပြည်တွင်း အတည်ပြု စည်းမျဉ်းအင်ဂျင်ကို အသုံးပြုထားပါသည်)",
-  "Rules-based engine active": "စည်းမျဉ်းအခြေခံအင်ဂျင် အသုံးပြုနေပါသည်",
-  "Technical notes:": "နည်းပညာဆိုင်ရာ မှတ်ချက်များ —",
-  "Analysis unavailable": "သုံးသပ်ချက် မရရှိနိုင်ပါ",
   "Edit Planning Inputs": "စီမံကိန်း သွင်းအားစုများကို ပြင်ဆင်ရန်",
   "Workbook Guidelines": "Excel ဖိုင် ပြင်ဆင်ရန် လမ်းညွှန်",
   "Structure your Excel file for accurate analysis":

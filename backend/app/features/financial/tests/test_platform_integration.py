@@ -269,7 +269,7 @@ def test_business_specific_kpi_availability_and_reporting_dates(tmp_path):
         ])
     service = PlatformFinancialService(SqlFinancialRepository(sessions))
     period = Period(start=date(2026, 10, 1), end=date(2026, 10, 21))
-    a_path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    a_path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026_Enhanced.xlsx"
     a_workbook = load_workbook(BytesIO(a_path.read_bytes()))
     prepare_wholesale_sample(a_workbook, single_lender=True)
     a_bytes = BytesIO()
@@ -279,7 +279,7 @@ def test_business_specific_kpi_availability_and_reporting_dates(tmp_path):
     before_import = service.financial_snapshot("private", period)
     assert all(value is None for value in before_import.actual.model_dump().values())
 
-    b_path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    b_path = Path(__file__).parent / "fixtures" / "SHAY_SETT_Wholesale_Sample_October_2026.xlsx"
     b_workbook = load_workbook(BytesIO(b_path.read_bytes()))
     prepare_wholesale_sample(b_workbook, single_lender=True, business_id="private")
     b_bytes = BytesIO()
