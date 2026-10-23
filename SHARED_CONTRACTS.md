@@ -1,4 +1,4 @@
-# BizFlow shared contracts v1
+# Shaysett shared contracts v1
 
 P5's workbook and authentication platform now integrates the P1–P4 feature branches. Feature owners should review financial interpretation before a release. The frontend stays at `src/` (do not create a second `frontend/` app).
 

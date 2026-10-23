@@ -47,7 +47,7 @@ def activate_history(request: Request, business_id: str, batch_id: str = Query(.
         filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"snapshot-{batch.id[:8]}.xlsx"
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            demo_path = ROOT / "examples" / "demo-showcase" / "shaysett-showcase-kyaw-myanmar.xlsx"
             if demo_path.exists():
                 content = demo_path.read_bytes()
             else:
@@ -64,7 +64,7 @@ def download_history(request: Request, business_id: str, batch_id: str, _user_id
             raise APIError(404, "BATCH_NOT_FOUND", "Import batch not found.")
         content = get_batch_workbook(business_id, batch.id)
         if not content:
-            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            demo_path = ROOT / "examples" / "demo-showcase" / "shaysett-showcase-kyaw-myanmar.xlsx"
             if demo_path.exists():
                 content = demo_path.read_bytes()
             else:
