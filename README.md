@@ -4,6 +4,11 @@ Shay Sett helps business owners review cashflow, financial health, working capit
 
 The shared demo-password login and public demo reset have been removed. Registration supports Supabase with email confirmation enabled or disabled. Users follow the confirmation link when required, or sign in immediately when the provider returns a session, then complete business setup before accessing records. Completing onboarding creates one empty workspace belonging to the authenticated user. Existing data is preserved and is never automatically assigned to new accounts.
 
+## Website and video
+
+- Live website: [Shay Sett](https://shaysett-team4.vercel.app/)
+- Video: [IMG_7032.MOV](IMG_7032.MOV) (original file stored with Git LFS).
+
 ## Repository structure
 
 | Path | Purpose |
