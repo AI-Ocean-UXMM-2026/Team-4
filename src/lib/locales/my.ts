@@ -219,6 +219,8 @@ export const my: Record<string, string> = {
   "Your data starts here.": "သင့်အချက်အလက်များကို ဤနေရာမှ စတင်ပါ။",
   "Your business records are ready. View your financial performance, cash balance, and outstanding payments.":
     "သင့်လုပ်ငန်းမှတ်တမ်းများ အသင့်ဖြစ်ပါပြီ။ ငွေကြေးဆိုင်ရာ စွမ်းဆောင်ရည်၊ လက်ကျန်ငွေနှင့် ပေးရန်ကျန်ငွေများကို ကြည့်ရှုပါ။",
+  "Your business records are ready. Analyze your financial data to discover business issues and recommended next actions.":
+    "သင့်လုပ်ငန်းမှတ်တမ်းများ အသင့်ဖြစ်ပါပြီ။ လုပ်ငန်းဆိုင်ရာ ပြဿနာများနှင့် နောက်တစ်ဆင့် ဆောင်ရွက်သင့်သည့် အကြံပြုချက်များကို ရှာဖွေရန် ငွေကြေးအချက်အလက်များကို သုံးသပ်ပါ။",
   "View Financial Health": "ငွေကြေးအခြေအနေကို ကြည့်ရှုရန်",
   "Explore ways to improve your cash flow": "ငွေဝင်ငွေထွက် ပိုကောင်းစေမည့် နည်းလမ်းများကို လေ့လာပါ",
   "Discover opportunities to collect customer payments, manage inventory, and prepare for cash shortages.":

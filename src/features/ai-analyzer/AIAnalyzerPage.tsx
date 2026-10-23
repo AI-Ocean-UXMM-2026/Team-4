@@ -351,7 +351,14 @@ export function AIAnalyzerPage() {
           {t(error.message)}
         </p>
       )}
-      {!isLoading && !report && (
+      {!isLoading && isOutdated && (
+        <p role="status" className="bf-card border border-destructive text-destructive">
+          {t(
+            "This report uses an older import. Select Analyze with AI again for the current version.",
+          )}
+        </p>
+      )}
+      {!isLoading && !report && !isOutdated && (
         <section className="bf-card text-center py-10 space-y-3">
           <p className="font-semibold text-foreground">{t("No analysis yet. Import business records, then select Analyze with AI.")}</p>
           <Link to="/data-source" className="bf-button inline-block">
@@ -361,13 +368,6 @@ export function AIAnalyzerPage() {
       )}
       {report && (
         <>
-          {isOutdated && (
-            <p role="status" className="bf-card border border-destructive text-destructive">
-              {t(
-                "This report uses an older import. Select Analyze with AI again for the current version.",
-              )}
-            </p>
-          )}
           <section className="bf-card space-y-2 text-sm">
             <p className="font-semibold">
               {report.status === "completed"

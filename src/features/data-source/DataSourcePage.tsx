@@ -40,9 +40,9 @@ export function DataSourcePage() {
       </div>
       {hasConfirmedImport && (
         <NextStepCard
-          description="Your business records are ready. View your financial performance, cash balance, and outstanding payments."
-          action="View Financial Health"
-          to="/"
+          description="Your business records are ready. Analyze your financial data to discover business issues and recommended next actions."
+          action="Get AI Recommendations"
+          to="/ai"
         />
       )}
       <SyncStatus status={query.data} />
