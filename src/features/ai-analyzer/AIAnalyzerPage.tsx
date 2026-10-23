@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useBusinessAnalysis } from "./useBusinessAnalysis";
-import type { Insight } from "./types";
+import type { Insight, AIAnalysis } from "./types";
 
 const labels: Record<Insight["category"], string> = {
   liquidity: "Cash flow",
@@ -312,6 +312,167 @@ function NextSteps({ insights }: { insights: Insight[] }) {
   );
 }
 
+function AnalysisSummaryCard({ report }: { report: AIAnalysis }) {
+  const { t } = useTranslation();
+  const [showDetails, setShowDetails] = useState(false);
+
+  const isCompleted = report.status === "completed";
+  const isRulesOnly = report.status === "rules_only";
+  const isInsufficient = report.status === "insufficient_data";
+
+  const warnings = report.warnings ?? [];
+
+  // Identify if API reported missing or incomplete data
+  const hasIncompleteData =
+    isInsufficient ||
+    warnings.some((w) =>
+      /partial|missing|incomplete|quality warning|data-quality|unavailable/i.test(w),
+    );
+
+  // Identify if external AI provider is not configured
+  const isProviderNotConfigured = warnings.some((w) =>
+    /provider is not configured/i.test(w),
+  );
+
+  // Secondary technical details to show in expandable section
+  const technicalDetails = warnings.filter(
+    (w) =>
+      !/partial or missing|data-quality warnings|financial snapshot is unavailable|provider is not configured/i.test(
+        w,
+      ),
+  );
+
+  return (
+    <section aria-label={t("Analysis Summary")} className="bf-card space-y-3">
+      {/* Header with Title and Method Status Badge */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-foreground">{t("Analysis Summary")}</h2>
+        <div>
+          {isCompleted && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+              <Sparkles size={12} className="shrink-0" />
+              {t("AI-assisted analysis")}
+            </span>
+          )}
+          {isRulesOnly && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground border border-border">
+              <CheckCircle2 size={12} className="shrink-0 text-emerald-500" />
+              {t("Verified rules-based analysis")}
+            </span>
+          )}
+          {isInsufficient && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+              <AlertTriangle size={12} className="shrink-0" />
+              {t("Insufficient data for analysis")}
+            </span>
+          )}
+          {!isCompleted && !isRulesOnly && !isInsufficient && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground border border-border">
+              {t("Analysis unavailable")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Two-column metadata layout on desktop, stacked on mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">{t("Generated:")}</span>
+          <span className="font-medium text-foreground">
+            {report.generated_at ? new Date(report.generated_at).toLocaleString() : t("Unavailable")}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted-foreground">{t("Import version:")}</span>
+          <span className="font-medium text-foreground">
+            {report.source_version ?? t("Unavailable")}
+          </span>
+        </div>
+      </div>
+
+      {/* Consolidated warning when data is missing or incomplete */}
+      {hasIncompleteData && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 p-2.5 text-xs text-amber-700 dark:text-amber-400">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p>
+              {t(
+                "Some financial data is incomplete. Recommendations are based on available verified records.",
+              )}
+            </p>
+            {isInsufficient && (
+              <p>
+                <Link to="/data-source" className="font-semibold underline hover:text-amber-800 dark:hover:text-amber-300">
+                  {t("Upload or sync business records to analyze")}
+                </Link>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Expandable "View analysis details" section */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowDetails((prev) => !prev)}
+          aria-expanded={showDetails}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded transition"
+        >
+          {showDetails ? (
+            <>
+              <ChevronUp size={13} />
+              {t("Hide analysis details")}
+            </>
+          ) : (
+            <>
+              <ChevronDown size={13} />
+              {t("View analysis details")}
+            </>
+          )}
+        </button>
+
+        {showDetails && (
+          <div className="mt-2.5 pt-2.5 border-t border-border/60 space-y-2 text-xs text-muted-foreground">
+            {report.data_as_of && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-medium text-foreground">{t("Source as of:")}</span>
+                <span>{new Date(report.data_as_of).toLocaleString()}</span>
+              </div>
+            )}
+            {report.import_batch_id && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="font-medium text-foreground">{t("Batch ID:")}</span>
+                <span className="font-mono text-[11px]">{report.import_batch_id}</span>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-medium text-foreground">{t("Provider configuration status:")}</span>
+              <span>
+                {isCompleted
+                  ? t("External AI active and verified")
+                  : isProviderNotConfigured
+                    ? t("Not configured (using local verified rules engine)")
+                    : t("Rules-based engine active")}
+              </span>
+            </div>
+            {technicalDetails.length > 0 && (
+              <div className="space-y-1 pt-0.5">
+                <span className="font-medium text-foreground">{t("Technical notes:")}</span>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  {technicalDetails.map((item, idx) => (
+                    <li key={idx}>{t(item)}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function AIAnalyzerPage() {
   const { t } = useTranslation();
 
@@ -337,11 +498,6 @@ export function AIAnalyzerPage() {
           <Sparkles size={15} />
           {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
         </button>
-        <p className="max-w-2xl text-xs text-muted-foreground">
-          {t(
-            "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.",
-          )}
-        </p>
       </header>
       {(isLoading || isAnalyzing) && (
         <LoadingAnimation label={isAnalyzing ? "Analyzing…" : "Loading your latest analysis…"} />
@@ -368,34 +524,7 @@ export function AIAnalyzerPage() {
       )}
       {report && (
         <>
-          <section className="bf-card space-y-2 text-sm">
-            <p className="font-semibold">
-              {report.status === "completed"
-                ? t("AI-assisted analysis")
-                : report.status === "rules_only"
-                  ? t("AI was not used — verified findings shown")
-                  : t("Insufficient data for analysis")}
-            </p>
-            <p>
-              {t("Generated:")} {new Date(report.generated_at).toLocaleString()}{" "}
-              {t("· Import version")} {report.source_version}
-            </p>
-            {report.data_as_of && (
-              <p>
-                {t("Source as of:")} {new Date(report.data_as_of).toLocaleString()}
-              </p>
-            )}
-            {report.warnings.map((warning, index) => (
-              <p key={index} className="text-muted-foreground">
-                {t(warning)}
-              </p>
-            ))}
-            {report.status === "insufficient_data" && (
-              <Link to="/data-source" className="text-primary underline">
-                {t("Upload or sync business records to analyze")}
-              </Link>
-            )}
-          </section>
+          <AnalysisSummaryCard report={report} />
           <NextSteps insights={report.insights} />
           <p className="text-xs text-muted-foreground">{report.disclaimer}</p>
         </>

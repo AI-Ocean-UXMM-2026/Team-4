@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { OutstandingBalances } from "../components/OutstandingBalances";
 import type { Obligation } from "../types";
 
@@ -55,12 +55,15 @@ describe("OutstandingBalances", () => {
         obligations={datedObligations}
         asAt="2026-10-22"
         cashAvailable="1000.00"
-        loanPrincipalOutstanding="0.00"
       />,
     );
-    const region = screen.getByRole("region", { name: "Outstanding obligations" });
+    const region = screen.getByRole("region", { name: "Outstanding supplier payments section" });
+    expect(within(region).getByRole("heading", { name: "Outstanding Supplier Payments" })).toBeVisible();
     const summary = within(region).getByText("Outstanding supplier payments").closest("dl");
     expect(summary).not.toBeNull();
+    expect(within(summary!).getAllByRole("term")).toHaveLength(4);
+    expect(summary).toHaveClass("xl:grid-cols-4", "sm:grid-cols-2", "grid-cols-1");
+    expect(within(summary!).queryByText("Outstanding loan principal")).toBeNull();
     expect(
       within(summary!).getByText("Outstanding supplier payments").parentElement?.textContent,
     ).toContain("1,500 MMK");
@@ -79,106 +82,25 @@ describe("OutstandingBalances", () => {
     const table = screen.getByRole("table", { name: /outstanding business obligations/i });
     expect(within(table).getByText("Due later")).toBeTruthy();
     expect(within(table).getByText("Due date unavailable")).toBeTruthy();
-    expect(screen.getByText("Unavailable")).toBeTruthy();
   });
 
-  it("calculates cash remaining only when balances have known dates and loan coverage is complete", () => {
-    const obligations = datedObligations.slice(1, 3);
-    const { rerender } = render(
-      <OutstandingBalances
-        obligations={obligations}
-        asAt="2026-10-22"
-        cashAvailable="1000"
-        loanPrincipalOutstanding="0"
-      />,
-    );
-    expect(
-      screen.getByText("Cash remaining after payments due within 30 days").parentElement
-        ?.textContent,
-    ).toContain("500 MMK");
-    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
-    rerender(
-      <OutstandingBalances
-        obligations={datedObligations}
-        asAt="2026-10-22"
-        cashAvailable="1000"
-        loanPrincipalOutstanding="0"
-      />,
-    );
-    const warning = screen.getByRole("note", { name: "Payment date information" });
-    expect(warning.className).toContain("bg-[#35231c]");
-    expect(
-      within(warning).getByText(
-        "Some payment dates are missing. These payments remain outstanding but cannot be included in upcoming payment totals.",
-      ),
-    ).toBeTruthy();
-    expect(within(warning).queryByText(/marked overdue/)).toBeNull();
-    expect(
-      within(warning)
-        .getByRole("link", { name: "Review Data Source" })
-        .getAttribute("href"),
-    ).toBe("/data-source");
-    expect(within(warning).queryByText(/Loan instalment dates are missing/)).toBeNull();
-    const coverage = screen.getByText(
-      "Cash remaining after payments due within 30 days",
-    ).parentElement;
-    expect(coverage?.textContent).toContain("Unavailable");
-    expect(within(coverage!).getByText("Due dates for outstanding payments.")).toBeTruthy();
-    expect(coverage?.textContent).not.toContain("500 MMK");
-  });
-
-  it("names missing cash and loan balance without showing a coverage figure", () => {
-    render(
-      <OutstandingBalances
-        obligations={datedObligations.slice(1, 3)}
-        asAt="2026-10-22"
-        cashAvailable={null}
-        loanPrincipalOutstanding={null}
-      />,
-    );
-    const coverage = screen.getByText(
-      "Cash remaining after payments due within 30 days",
-    ).parentElement;
-    expect(coverage?.textContent).toContain("Unavailable");
-    expect(within(coverage!).getByText("Cash balance for this reporting date.")).toBeTruthy();
-    expect(within(coverage!).getByText("Recorded loan balance.")).toBeTruthy();
-    expect(coverage?.textContent).not.toContain("500 MMK");
-  });
-
-  it("identifies a missing loan schedule without treating principal as immediately due", () => {
+  it("excludes loan instalments and loan schedule warnings from supplier summary", () => {
     const obligations: Obligation[] = [
       { kind: "loan", reference_id: "LN-1", due_date: "2026-10-29", amount_mmk: "300" },
+      { kind: "loan", reference_id: "LN-UNDATED", due_date: null, amount_mmk: "500" },
+      { kind: "supplier", reference_id: "PUR-1", due_date: "2026-10-29", amount_mmk: "200" },
     ];
-    const { rerender } = render(
+    render(
       <OutstandingBalances
         obligations={obligations}
         asAt="2026-10-22"
         cashAvailable="1000"
-        loanPrincipalOutstanding="5000"
       />,
     );
-    const coverage = screen.getByText(
-      "Cash remaining after payments due within 30 days",
-    ).parentElement;
-    expect(coverage?.textContent).toContain("Unavailable");
-    expect(within(coverage!).getByText("Loan instalment dates.")).toBeTruthy();
-    expect(coverage?.textContent).not.toContain("-4,300 MMK");
-    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
-
-    rerender(
-      <OutstandingBalances
-        obligations={obligations}
-        asAt="2026-10-22"
-        cashAvailable="1000"
-        loanPrincipalOutstanding="5000"
-        loanScheduleAvailable
-      />,
-    );
-    expect(
-      screen.getByText("Cash remaining after payments due within 30 days").parentElement
-        ?.textContent,
-    ).toContain("700 MMK");
-    expect(screen.queryByRole("note", { name: "Payment date information" })).toBeNull();
+    const summary = screen.getByText("Outstanding supplier payments").closest("dl")!;
+    expect(within(summary).getByText("Due within 7 days").parentElement?.textContent).toContain("200 MMK");
+    expect(within(summary).getByText("Due within 30 days").parentElement?.textContent).toContain("200 MMK");
+    expect(within(summary).queryByText("Outstanding loan principal")).toBeNull();
   });
 
   it("filters by recorded date, status, type, and minimum balance and can sort by amount", () => {
@@ -194,13 +116,17 @@ describe("OutstandingBalances", () => {
             original_amount_mmk: 800,
             amount_paid_mmk: 200,
           },
-          { kind: "expense", reference_id: "Expense A", due_date: "2026-10-26", amount_mmk: 700 },
+          { kind: "expense", reference_id: "Expense A", due_date: "2026-10-21", amount_mmk: 700 },
         ]}
         asAt="2026-10-22"
         cashAvailable={null}
-        loanPrincipalOutstanding="800"
       />,
     );
+    const summary = screen.getByText("Outstanding supplier payments").closest("dl")!;
+    expect(within(summary).getByText("Overdue").parentElement?.textContent).toContain("100 MMK");
+    expect(within(summary).getByText("Due within 7 days").parentElement?.textContent).toContain("200 MMK");
+    expect(within(summary).getByText("Due within 30 days").parentElement?.textContent).toContain("500 MMK");
+    expect(within(summary).queryByText("Outstanding loan principal")).toBeNull();
     const typeFilter = screen.getByRole("combobox", { name: "Filter by type" });
     expect(within(typeFilter).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "All types",
@@ -244,9 +170,6 @@ describe("OutstandingBalances", () => {
     table = screen.getByRole("table", { name: /outstanding business obligations/i });
     expect(within(table).getAllByRole("row")[1]?.textContent).toContain("UNDATED");
     expect(within(table).getAllByRole("row")[2]?.textContent).toContain("LATER");
-    const warning = screen.getByRole("note", { name: "Payment date information" });
-    expect(within(warning).getByText(/Some payment dates are missing/)).toBeTruthy();
-    expect(within(warning).queryByText(/Loan instalment dates are missing/)).toBeNull();
   });
 
   it("adds money values without floating-point rounding", () => {
@@ -258,19 +181,14 @@ describe("OutstandingBalances", () => {
         ]}
         asAt="2026-10-22"
         cashAvailable="1.00"
-        loanPrincipalOutstanding="0"
       />,
     );
     expect(screen.getByText("Outstanding supplier payments").parentElement?.textContent).toContain(
       "0.3 MMK",
     );
-    expect(
-      screen.getByText("Cash remaining after payments due within 30 days").parentElement
-        ?.textContent,
-    ).toContain("0.7 MMK");
   });
 
-  it("uses recorded installment dates for coverage without listing loans as supplier payments", () => {
+  it("does not include loan instalments in supplier-only coverage or the table", () => {
     render(
       <OutstandingBalances
         obligations={[
@@ -285,15 +203,10 @@ describe("OutstandingBalances", () => {
         ]}
         asAt="2026-10-22"
         cashAvailable="1000"
-        loanPrincipalOutstanding="5000"
-        loanScheduleAvailable
       />,
     );
-    expect(
-      screen.getByText("Cash remaining after payments due within 30 days").parentElement
-        ?.textContent,
-    ).toContain("700 MMK");
     expect(screen.getByText("No supplier payments in available records")).toBeTruthy();
+    expect(screen.queryByText("Outstanding loan principal")).toBeNull();
     expect(screen.queryByRole("table", { name: /outstanding business obligations/i })).toBeNull();
   });
 
@@ -376,7 +289,6 @@ describe("OutstandingBalances", () => {
           { kind: "expense", reference_id: "EXP-25", due_date: null, amount_mmk: "1000" },
         ]}
         asAt="2026-10-22"
-        loanPrincipalOutstanding="0"
       />,
     );
     const table = screen.getByRole("table", { name: /outstanding business obligations/i });
@@ -408,7 +320,6 @@ describe("OutstandingBalances", () => {
           { kind: "loan", reference_id: "OTHER-BUSINESS", due_date: null, amount_mmk: "50" },
         ]}
         asAt="2026-10-21"
-        loanPrincipalOutstanding="50"
       />,
     );
     expect(screen.getByText("No supplier payments in available records")).toBeTruthy();
@@ -449,5 +360,36 @@ describe("OutstandingBalances", () => {
         "PART-100",
       ),
     ).toBeNull();
+  });
+
+  it("edits the selected supplier date and updates due statuses after refreshed obligations arrive", async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    const initial: Obligation = { kind: "supplier", reference_id: "PUR-1", due_date: null,
+      amount_mmk: "200", original_amount_mmk: "300", amount_paid_mmk: "100" };
+    const view = render(<OutstandingBalances obligations={[initial]} asAt="2026-10-22" onSaveDueDate={save} />);
+    expect(screen.getByRole("link", { name: "Update via Excel" })).toHaveAttribute("href", "/data-source");
+    fireEvent.click(screen.getByRole("button", { name: "Add due date" }));
+    const dialog = screen.getByRole("dialog", { name: "Edit supplier due date" });
+    expect(within(dialog).getByText(/PUR-1/)).toBeVisible();
+    expect(within(dialog).getByText(/200 MMK/)).toBeVisible();
+    fireEvent.change(within(dialog).getByLabelText("Due date"), { target: { value: "2026-10-25" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(save).toHaveBeenCalledExactlyOnceWith("PUR-1", "2026-10-25", null));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    view.rerender(<OutstandingBalances obligations={[{ ...initial, due_date: "2026-10-25" }]} asAt="2026-10-22" onSaveDueDate={save} />);
+    expect(screen.getByRole("button", { name: "Edit due date" })).toBeVisible();
+    expect(screen.getByText("Due within 7 days", { selector: "span" })).toBeVisible();
+  });
+
+  it("keeps the dialog open with a visible error after a failed save", async () => {
+    const save = vi.fn().mockRejectedValue(new Error("The due date changed. Refresh and try again."));
+    render(<OutstandingBalances obligations={[{ kind: "supplier", reference_id: "PUR-2", due_date: "2026-10-30", amount_mmk: "400" }]}
+      asAt="2026-10-22" onSaveDueDate={save} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit due date" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Due date"), { target: { value: "2026-11-01" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("The due date changed. Refresh and try again.");
+    expect(save).toHaveBeenCalledExactlyOnceWith("PUR-2", "2026-11-01", "2026-10-30");
   });
 });

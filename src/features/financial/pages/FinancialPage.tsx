@@ -20,6 +20,7 @@ export interface FinancialPageProps {
   today?: string;
   sourceVersion?: number;
   onRefresh?: () => Promise<void>;
+  onSaveDueDate?: (purchaseId: string, dueDate: string, expectedDueDate: string | null) => Promise<void>;
   dataRefreshing?: boolean;
 }
 
@@ -78,6 +79,7 @@ export function FinancialPage({
   today = yangonToday(),
   sourceVersion,
   onRefresh,
+  onSaveDueDate,
   dataRefreshing = false,
 }: FinancialPageProps) {
   const { t } = useTranslation();
@@ -238,15 +240,17 @@ export function FinancialPage({
               description="Discover opportunities to collect customer payments, manage inventory, and prepare for cash shortages."
               action="Explore Working Capital"
               to="/working-capital"
-              secondary={{ label: "Get AI Recommendations", to: "/ai" }}
+              secondary={{ label: "Open Credit Hub", to: "/credit" }}
             />
             <div className="min-w-0 w-full">
               <OutstandingBalances
                 obligations={state.snapshot.upcoming_obligations}
                 asAt={period.end}
                 cashAvailable={state.snapshot.actual.cash_balance_mmk}
-                loanPrincipalOutstanding={state.snapshot.loan_principal_outstanding_mmk ?? null}
-                loanScheduleAvailable={state.snapshot.loan_schedule_available ?? false}
+                onSaveDueDate={onSaveDueDate ? async (purchaseId, dueDate, expectedDueDate) => {
+                  await onSaveDueDate(purchaseId, dueDate, expectedDueDate);
+                  setRefresh((value) => value + 1);
+                } : undefined}
               />
             </div>
           </div>

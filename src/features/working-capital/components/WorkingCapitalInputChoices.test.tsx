@@ -80,7 +80,7 @@ describe("WorkingCapitalInputChoices", () => {
   it("replaces the missing-data choices with a small edit control when complete", () => {
     render(<WorkingCapitalInputChoices inventory={[]} recordedCashMmk={"5000000"} complete />);
     expect(screen.queryByText("Update via Excel File")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Edit planning inputs" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit Planning Inputs" }));
     expect(screen.getByRole("button", { name: "Save & Apply" })).toBeTruthy();
     expect(screen.queryByRole("spinbutton", { name: /Available cash for purchases/ })).toBeNull();
   });

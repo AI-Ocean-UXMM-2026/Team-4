@@ -31,6 +31,7 @@ it("shows the last successful workbook after reopening without enabling another 
   expect(screen.getByText("Last imported workbook:", { exact: false })).toHaveTextContent("sample.xlsx");
   expect(screen.getByRole("button", { name: translate("Import workbook") })).toBeDisabled();
 });
+
 it("does not replace the last successful workbook when an upload fails", async () => {
   localStorage.setItem("bizflow-last-workbook:my-shop-123", "previous.xlsx");
   rejectWorkbook();
@@ -40,6 +41,7 @@ it("does not replace the last successful workbook when an upload fails", async (
   render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
   expect(screen.getByText(/previous.xlsx/)).toBeVisible();
 });
+
 it("selects a dropped workbook and retains it when the picker is cancelled", () => {
   render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
   fireEvent.drop(screen.getByRole("group", {name: translate("Paste Excel file here")}), {dataTransfer: {files: [new File(["demo"], "dropped.xlsx")]}});
@@ -48,6 +50,7 @@ it("selects a dropped workbook and retains it when the picker is cancelled", () 
   expect(screen.getByText(/dropped.xlsx/)).toBeTruthy();
   expect(screen.getByRole("button", {name: translate("Import workbook")})).not.toBeDisabled();
 });
+
 it("selects a pasted workbook and keeps import explicit", () => {
   render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
   const file = new File(["demo"], "pasted.xlsx");
@@ -62,6 +65,22 @@ it("rejects pasted files that are not Excel workbooks", () => {
   expect(screen.getByRole("alert")).toBeTruthy();
   expect(screen.getByRole("button", {name: translate("Import workbook")})).toBeDisabled();
 });
+
+it("requires an explicit choice when workbook dates conflict with manual supplier dates", async () => {
+  mocks.api.mockRejectedValueOnce(new ApiError(409, "DUE_DATE_CONFLICT", "Choose which dates to keep.",
+    [{ purchase_id: "PUR-1", manual_due_date: "2026-10-25", workbook_due_date: "2026-10-27" }] as never));
+  mocks.api.mockResolvedValueOnce({ status: "success", source_version: 4, row_counts: {}, errors: [], warnings: [] });
+  render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
+  selectWorkbook("updated.xlsx");
+  fireEvent.click(screen.getByRole("button", { name: translate("Import workbook") }));
+  expect(await screen.findByText(/PUR-1:/)).toHaveTextContent("2026-10-25");
+  expect(screen.getByRole("button", { name: translate("Keep manual dates") })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: translate("Keep manual dates") }));
+  await waitFor(() => expect(mocks.api).toHaveBeenCalledTimes(2));
+  expect(mocks.api.mock.calls[1]![0]).toBe("/api/v1/data/upload?business_id=my-shop-123&due_date_resolution=keep_manual");
+  expect(await screen.findByText(/Imported:/)).toBeVisible();
+});
+
 const duplicateIssue: RowIssue = {
   sheet: "Sales",
   row: 3,
@@ -113,21 +132,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Excel workbook import guidance", () => {
-  const setupGuidance = "Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. Imports are automatically linked to your current business. The blank template contains no financial data. Loans and LoanPayments sheets are optional.";
-
-  it.each(["en", "my"] as const)("explains automatic business association in %s without requiring an ID", (language) => {
-    setPreferences({ language });
-    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
-
-    const guidance = screen.getByText(translate(setupGuidance));
-    expect(guidance).toBeVisible();
-    expect(guidance).not.toHaveTextContent("business_id");
-    expect(screen.queryByText("my-shop-123")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /copy.*id/i })).not.toBeInTheDocument();
-    if (language === "my") expect(translate(setupGuidance)).not.toBe(setupGuidance);
-  });
-
+describe("Excel workbook import", () => {
   it("sends the selected file to the current business without asking the owner for an ID", async () => {
     mocks.api.mockResolvedValue({ status: "success", source_version: 3, row_counts: {}, errors: [], warnings: [] });
     render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);

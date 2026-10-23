@@ -5,54 +5,95 @@ import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
+
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
   const { business, imported } = usePlatform();
   const [file, setFile] = useState<File | null>(null);
   const [lastWorkbook, setLastWorkbook] = useState("");
+  const [dueDateConflicts, setDueDateConflicts] = useState<Array<{ purchase_id: string; manual_due_date: string; workbook_due_date: string | null }>>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<ImportResult | null>(null);
+
   useEffect(() => {
     setFile(null);
     setResult(null);
     setError("");
-    setReplaceOmitted(false);
+    setDueDateConflicts([]);
     try {
       setLastWorkbook(localStorage.getItem(`bizflow-last-workbook:${business.id}`) || "");
     } catch {
       setLastWorkbook("");
     }
   }, [business.id]);
+
   const fileInput = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [replaceOmitted, setReplaceOmitted] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<ImportResult | null>(null);
+
   const chooseFile = (next: File | null) => {
     if (busy) return;
-    setError(""); setResult(null);
+    setError("");
+    setResult(null);
+    setDueDateConflicts([]);
     if (next && (!next.name.toLowerCase().endsWith(".xlsx") || next.size > maxBytes)) {
-      setFile(null); setError("Choose an .xlsx file within the size limit."); return;
+      setFile(null);
+      setError("Choose an .xlsx file within the size limit.");
+      return;
     }
     setFile(next);
   };
+
   const predatingError = result?.errors.some(
     (issue) => issue.reason === "Transaction predates the opening date",
   );
 
+  const importFile = async (resolution?: "keep_manual" | "accept_workbook") => {
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    setResult(null);
+    setDueDateConflicts([]);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const uploadPath = businessPath("upload", business.id);
+      const params = resolution ? `&due_date_resolution=${resolution}` : "";
+      const uploadResult = await api<ImportResult>(`${uploadPath}${params}`, {
+        method: "POST",
+        body: form,
+      });
+      setResult(uploadResult);
+      if (uploadResult.status !== "failed") {
+        setLastWorkbook(file.name);
+        try {
+          localStorage.setItem(`bizflow-last-workbook:${business.id}`, file.name);
+        } catch {
+          /* Import still succeeds when browser storage is unavailable. */
+        }
+      }
+      await imported();
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.code === "DUE_DATE_CONFLICT") {
+        setDueDateConflicts(failure.details as unknown as typeof dueDateConflicts);
+      } else {
+        setError(failure instanceof Error ? failure.message : "Import failed");
+        if (failure instanceof ApiError && failure.code === "WORKBOOK_INVALID")
+          setResult(failure.details[0] as ImportResult);
+      }
+      await imported();
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <section className="bf-card">
+    <section className="bf-card h-full">
       <div className="mb-5 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold">{t("Upload Excel workbook")}</h2>
         <Upload size={20} className="text-primary" />
       </div>
-      <p className="mb-5 text-sm text-muted-foreground">
-        {t(
-          "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once. Rows omitted from an upload are kept unless you choose full replacement.",
-        )}
-      </p>
-      <p className="mb-5 text-sm text-muted-foreground">
-        {t("Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. Imports are automatically linked to your current business. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
-      </p>
+
       <div role="group" aria-label={t("Paste Excel file here")} tabIndex={0}
         className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         onDragOver={event => event.preventDefault()}
@@ -68,116 +109,78 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           if (pasted) chooseFile(pasted);
           else setError("Copy the .xlsx file itself, then paste here. Copied cells and file paths are not supported.");
         }}>
-      <div className="block">
-        <span className="mb-3 block text-sm font-semibold">
-          {t("Choose .xlsx file · up to")} {Math.round(maxBytes / 1024 / 1024)} {t("MB")}
-        </span>
-        <input
-          ref={fileInput}
-          aria-label={t("Excel workbook")}
-          type="file"
-          accept=".xlsx"
-          disabled={busy}
-          className="hidden"
-          onChange={(event) => {
-            const selected = event.target.files?.[0];
-            if (selected) chooseFile(selected);
-            event.target.value = "";
-          }}
-        />
-        <button type="button" disabled={busy} className="bf-button-secondary" onClick={() => fileInput.current?.click()}>
-          {t(file ? "Change file" : "Browse files")}
-        </button>
-      </div>
-      <p className="mt-3 text-sm text-muted-foreground">{t("Copy an .xlsx file, click this area, then press Ctrl+V to paste.")}</p>
-      <p aria-live="polite" className="mt-2 break-all text-sm font-medium">
-        {file ? <>{t("Selected file:")} {file.name}</> : lastWorkbook ? <>{t("Last imported workbook:")} {lastWorkbook}</> : t("No workbook selected. Browse, paste or drop an .xlsx file here.")}
-      </p>
-      {!file && lastWorkbook && <p className="mt-2 text-sm text-muted-foreground">{t("Select the workbook again to import changes. Your previously imported data is saved.")}</p>}
-      </div>
-      <label className="mt-4 flex items-start gap-3 rounded-xl border p-3 text-sm">
-        <input
-          type="checkbox"
-          checked={replaceOmitted}
-          disabled={busy}
-          onChange={(event) => setReplaceOmitted(event.target.checked)}
-          className="mt-0.5"
-        />
-        <span>
-          <span className="block font-semibold">{t("This workbook is a complete replacement")}</span>
-          <span className="text-muted-foreground">
-            {t(
-              "Records missing from this file will be removed from current reports. Their import history is retained.",
-            )}
+        <div className="block">
+          <span className="mb-3 block text-sm font-semibold">
+            {t("Choose .xlsx file · up to")} {Math.round(maxBytes / 1024 / 1024)} {t("MB")}
           </span>
-        </span>
-      </label>
+          <input
+            ref={fileInput}
+            aria-label={t("Excel workbook")}
+            type="file"
+            accept=".xlsx"
+            disabled={busy}
+            className="hidden"
+            onChange={(event) => {
+              const selected = event.target.files?.[0];
+              if (selected) chooseFile(selected);
+              event.target.value = "";
+            }}
+          />
+          <button type="button" disabled={busy} className="bf-button-secondary" onClick={() => fileInput.current?.click()}>
+            {t(file ? "Change file" : "Browse files")}
+          </button>
+        </div>
+        <p aria-live="polite" className="mt-2 break-all text-sm font-medium">
+          {file ? <>{t("Selected file:")} {file.name}</> : lastWorkbook ? <>{t("Last imported workbook:")} {lastWorkbook}</> : t("No workbook selected.")}
+        </p>
+        {!file && lastWorkbook && <p className="mt-2 text-sm text-muted-foreground">{t("Select the workbook again to import changes. Your previously imported data is saved.")}</p>}
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-3">
         <button
           className="bf-button"
           disabled={!file || busy}
-          onClick={async () => {
-            if (!file) return;
-            setBusy(true);
-            setError("");
-            setResult(null);
-            try {
-              const form = new FormData();
-              form.append("file", file);
-              const uploadPath = businessPath("upload", business.id);
-              const uploadResult = await api<ImportResult>(
-                  replaceOmitted ? `${uploadPath}&replace_omitted=true` : uploadPath,
-                  {
-                    method: "POST",
-                    body: form,
-                  },
-                );
-              setResult(uploadResult);
-              if (uploadResult.status !== "failed") {
-                setLastWorkbook(file.name);
-                try {
-                  localStorage.setItem(`bizflow-last-workbook:${business.id}`, file.name);
-                } catch { /* Import still succeeds when browser storage is unavailable. */ }
-              }
-              await imported();
-            } catch (failure) {
-              setError(failure instanceof Error ? failure.message : "Import failed");
-              if (failure instanceof ApiError && failure.code === "WORKBOOK_INVALID")
-                setResult(failure.details[0] as ImportResult);
-              await imported();
-            } finally {
-              setBusy(false);
-            }
-          }}
+          onClick={() => void importFile()}
         >
           {busy ? t("Validating and importing…") : t("Import workbook")}
         </button>
-
       </div>
+
+      {dueDateConflicts.length > 0 && (
+        <div role="alert" className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+          <p className="font-semibold">{t("Workbook dates conflict with dates changed in Financial Health.")}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {dueDateConflicts.map((conflict) => (
+              <li key={conflict.purchase_id}>
+                {conflict.purchase_id}: {t("Manual")}: {conflict.manual_due_date}; {t("Workbook")}: {conflict.workbook_due_date ?? t("none")}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-muted-foreground">{t("Choose which due dates to use for these purchases. Other workbook records will import normally.")}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" className="bf-button-secondary" disabled={busy} onClick={() => void importFile("keep_manual")}>{t("Keep manual dates")}</button>
+            <button type="button" className="bf-button" disabled={busy} onClick={() => void importFile("accept_workbook")}>{t("Use workbook dates")}</button>
+          </div>
+        </div>
+      )}
+
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive">
           {t(error)}
         </p>
       )}
-      {predatingError && !replaceOmitted && (
+
+      {predatingError && (
         <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs">
           <p className="font-semibold text-amber-700 dark:text-amber-400">
             {t("Transactions predate the opening date")}
           </p>
           <p className="mt-1 text-muted-foreground">
-            {t(
-              "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.",
-            )}
+            {t("Review the opening date in Settings and the dates of records already imported for this business.")}
           </p>
-          <button
-            type="button"
-            onClick={() => setReplaceOmitted(true)}
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white hover:bg-amber-700 transition"
-          >
-            {t("Enable complete replacement")}
-          </button>
         </div>
       )}
+
       {result && (
         <div aria-live="polite" className="mt-4 text-sm">
           {result.status !== "failed" && (

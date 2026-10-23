@@ -20,13 +20,13 @@ from datetime import date
 URL = "/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-31"
 
 
-def prepare_wholesale_sample(workbook, *, single_lender):
+def prepare_wholesale_sample(workbook, *, single_lender, business_id="tea-shop"):
     for sheet in workbook.worksheets:
         headers = [cell.value for cell in sheet[1]]
         if "business_id" in headers:
             column = headers.index("business_id") + 1
             for row in range(2, sheet.max_row + 1):
-                sheet.cell(row, column).value = "tea-shop"
+                sheet.cell(row, column).value = business_id
     if single_lender:
         # Optionally normalize lenders without changing loan amounts, payments,
         # or financial totals for tests that do not exercise multi-bank input.
@@ -256,6 +256,59 @@ def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client
     partial = next(row for row in snapshot["Expenses"] if row["payment_status"] == "partial")
     assert partial["paid_date"] is not None
     assert Decimal(partial["amount_paid_mmk"]) < Decimal(partial["amount_mmk"])
+
+
+def test_business_specific_kpi_availability_and_reporting_dates(tmp_path):
+    engine = make_engine(f"sqlite:///{tmp_path / 'business-kpis.db'}")
+    Base.metadata.create_all(engine)
+    sessions = session_factory(engine)
+    with sessions.begin() as session:
+        session.add_all([
+            Business(id="tea-shop", name="Complete importer", industry="Food", city="Yangon"),
+            Business(id="private", name="Legacy importer", industry="Retail", city="Yangon"),
+        ])
+    service = PlatformFinancialService(SqlFinancialRepository(sessions))
+    period = Period(start=date(2026, 10, 1), end=date(2026, 10, 21))
+    a_path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
+    a_workbook = load_workbook(BytesIO(a_path.read_bytes()))
+    prepare_wholesale_sample(a_workbook, single_lender=True)
+    a_bytes = BytesIO()
+    a_workbook.save(a_bytes)
+    a_workbook.close()
+    assert import_validated_snapshot(sessions, "tea-shop", "owner", a_bytes.getvalue())["status"] == "success"
+    before_import = service.financial_snapshot("private", period)
+    assert all(value is None for value in before_import.actual.model_dump().values())
+
+    b_path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    b_workbook = load_workbook(BytesIO(b_path.read_bytes()))
+    prepare_wholesale_sample(b_workbook, single_lender=True, business_id="private")
+    b_bytes = BytesIO()
+    b_workbook.save(b_bytes)
+    b_workbook.close()
+    assert import_validated_snapshot(sessions, "private", "owner", b_bytes.getvalue())["status"] == "success"
+
+    a = service.financial_snapshot("tea-shop", period)
+    b = service.financial_snapshot("private", period)
+    assert a.business_id == "tea-shop"
+    assert b.business_id == "private"
+    assert a.actual.cash_balance_mmk == Decimal("12919300.00")
+    assert a.actual.cogs_mmk == Decimal("11079500.00")
+    assert a.actual.operating_profit_mmk == Decimal("-675100.00")
+    assert b.actual.revenue_mmk is not None
+    assert b.actual.operating_expenses_mmk is not None
+    assert b.actual.cash_balance_mmk is None
+    assert b.actual.cogs_mmk is None
+    assert b.actual.operating_profit_mmk is None
+    assert any("Historical cost is missing" in warning for warning in b.data_quality.warnings)
+    assert any("Expense cash movements are incomplete" in warning for warning in b.data_quality.warnings)
+
+    early = service.financial_snapshot("private", Period(start=date(2026, 8, 1), end=date(2026, 8, 31))).actual
+    assert early.revenue_mmk == Decimal("0.00")
+    assert early.cogs_mmk == Decimal("0.00")
+    assert early.operating_profit_mmk == Decimal("0.00")
+    assert early.cash_balance_mmk is None
+    assert early.receivables_mmk is None
+    engine.dispose()
 
 
 def test_same_hash_reimport_backfills_fields_added_after_legacy_import(client):

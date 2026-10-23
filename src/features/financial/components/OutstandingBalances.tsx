@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import {
-  ArrowRight,
   CalendarClock,
   CalendarDays,
   CircleDollarSign,
-  Landmark,
   TriangleAlert,
   Truck,
-  Wallet,
 } from "lucide-react";
 import type { Money, Obligation } from "../types";
 import { formatMmk } from "../types";
@@ -92,14 +89,12 @@ export function OutstandingBalances({
   obligations,
   asAt,
   cashAvailable,
-  loanPrincipalOutstanding,
-  loanScheduleAvailable = false,
+  onSaveDueDate,
 }: {
   obligations: Obligation[];
   asAt: string;
   cashAvailable?: Money;
-  loanPrincipalOutstanding?: Money;
-  loanScheduleAvailable?: boolean;
+  onSaveDueDate?: ((purchaseId: string, dueDate: string, expectedDueDate: string | null) => Promise<void>) | undefined;
 }) {
   const { t } = useTranslation();
   const [typeFilter, setTypeFilter] = useState("all");
@@ -109,16 +104,21 @@ export function OutstandingBalances({
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("due-date");
   const [page, setPage] = useState(1);
+  const [editing, setEditing] = useState<Obligation | null>(null);
+  const [editedDate, setEditedDate] = useState("");
+  const [editError, setEditError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editSuccess, setEditSuccess] = useState("");
+  const dateInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => setPage(1), [obligations, asAt]);
+  useEffect(() => { if (editing) dateInput.current?.focus(); }, [editing]);
 
   const classified = useMemo(
-    () => obligations.map((item) => ({ item, status: statusFor(item, asAt) })),
+    () => obligations.filter((item) => item.kind === "supplier").map((item) => ({ item, status: statusFor(item, asAt) })),
     [obligations, asAt],
   );
-  const suppliersTotal = sumMmk(
-    obligations.filter((item) => item.kind === "supplier").map((item) => item.amount_mmk),
-  );
+  const suppliersTotal = sumMmk(classified.map(({ item }) => item.amount_mmk));
   const overdueTotal = sumMmk(
     classified.filter(({ status }) => status === "Overdue").map(({ item }) => item.amount_mmk),
   );
@@ -132,28 +132,8 @@ export function OutstandingBalances({
       .filter(({ status }) => status === "Due within 7 days" || status === "Due within 30 days")
       .map(({ item }) => item.amount_mmk),
   );
-  // Cash coverage includes already-overdue balances and recorded obligations due by
-  // the 30-day boundary; the overdue summary itself remains a separate category.
-  const dueBy30Total = sumMmk(
-    classified
-      .filter(({ item }) => item.due_date && item.due_date <= addDays(asAt, 30))
-      .map(({ item }) => item.amount_mmk),
-  );
-  const hasUndated = classified.some(({ status }) => status === "Due date unavailable");
-  const loanPrincipal = loanPrincipalOutstanding == null ? null : String(loanPrincipalOutstanding);
-  const cash = cashAvailable == null ? null : String(cashAvailable);
-  const missingLoanSchedule =
-    loanPrincipal !== null && compareMmk(loanPrincipal, 0) > 0 && !loanScheduleAvailable;
-  const coverageUnavailable =
-    cash === null ||
-    loanPrincipal === null ||
-    hasUndated ||
-    missingLoanSchedule ||
-    dueBy30Total === null;
-  const cashAfterKnownDues =
-    coverageUnavailable || dueBy30Total === null ? null : subtractMmk(cash!, dueBy30Total);
+
   const financialDataAvailable =
-    loanPrincipal !== null &&
     suppliersTotal !== null &&
     overdueTotal !== null &&
     due7Total !== null &&
@@ -161,7 +141,7 @@ export function OutstandingBalances({
   const minAmount = minimumAmount.trim() === "" ? null : minimumAmount.trim();
   const query = search.trim().toLocaleLowerCase();
 
-  const supplierPayments = classified.filter(({ item }) => item.kind === "supplier");
+  const supplierPayments = classified;
   const rows = supplierPayments
     .filter(
       ({ item }) =>
@@ -206,14 +186,6 @@ export function OutstandingBalances({
       note: "Supplier bills detailed in the table below",
     },
     {
-      label: "Outstanding loan principal",
-      value: formatMmk(loanPrincipalOutstanding ?? null),
-      tone: "text-foreground",
-      icon: Landmark,
-      iconTone: "bg-secondary text-primary ring-border",
-      note: "Remaining principal, separate from dated payments",
-    },
-    {
       label: "Overdue",
       value: financialDataAvailable ? formatMmk(overdueTotal) : t("Unavailable"),
       tone:
@@ -225,7 +197,7 @@ export function OutstandingBalances({
         overdueTotal !== null && compareMmk(overdueTotal, 0) > 0
           ? "bg-rose-50 text-rose-700 ring-rose-100"
           : "bg-secondary text-primary ring-border",
-      note: "Recorded payments past their due dates",
+      note: "Supplier payments past their due dates",
     },
     {
       label: "Due within 7 days",
@@ -248,27 +220,31 @@ export function OutstandingBalances({
   return (
     <section
       className="min-w-0 rounded-2xl border border-border bg-card p-4 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-5"
-      aria-label={t("Outstanding obligations")}
+      aria-label={t("Outstanding supplier payments section")}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.14em] text-primary">
             {t("Business obligations")}
           </p>
           <h2 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-            {t("Outstanding payments")}
+            {t("Outstanding Supplier Payments")}
           </h2>
         </div>
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary ring-1 ring-border">
-          <CircleDollarSign size={18} aria-hidden="true" />
-        </span>
+        <div className="flex items-center gap-3">
+          <a className="bf-button-secondary" href="/data-source">{t("Update via Excel")}</a>
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary ring-1 ring-border">
+            <CircleDollarSign size={18} aria-hidden="true" />
+          </span>
+        </div>
       </div>
       <p className="mt-1 text-sm leading-5 text-muted-foreground">
         {t("Recorded balances through")} {asAt}.{" "}
         {t("Due dates and statuses use this reporting end date.")}
       </p>
+      {editSuccess && <p role="status" className="mt-3 text-sm text-primary">{t(editSuccess)}</p>}
 
-      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {summary.map((item) => (
           <div key={item.label} className="bf-metric-card min-w-0">
             <dt className="min-w-0 pr-12 text-sm font-medium text-muted-foreground">
@@ -292,58 +268,7 @@ export function OutstandingBalances({
           </div>
         ))}
       </dl>
-      {hasUndated && (
-        <div
-          role="note"
-          aria-label={t("Payment date information")}
-          className="mt-3 flex min-w-0 items-start gap-3 rounded-2xl border border-[#866e60] bg-[#35231c] p-4 text-sm leading-5 text-[#fff8f0]"
-        >
-          <CalendarClock size={18} className="mt-0.5 shrink-0 text-[#ffd199]" aria-hidden="true" />
-          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="min-w-0">
-              {t(
-                "Some payment dates are missing. These payments remain outstanding but cannot be included in upcoming payment totals.",
-              )}
-            </p>
-            <a
-              href="/data-source"
-              className="bf-button inline-flex shrink-0 items-center gap-2 self-start sm:self-auto"
-            >
-              {t("Review Data Source")} <ArrowRight size={16} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      )}
 
-      <div className="bf-metric-card mt-4 min-w-0">
-        <p className="min-w-0 pr-12 text-sm font-medium text-muted-foreground">
-          {t("Cash remaining after payments due within 30 days")}
-        </p>
-        <span className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary ring-1 ring-border">
-          <Wallet size={17} aria-hidden="true" />
-        </span>
-        <p className="mt-4 break-words text-2xl font-semibold leading-tight tracking-tight tabular-nums text-foreground">
-          {cashAfterKnownDues === null ? t("Unavailable") : formatMmk(cashAfterKnownDues)}
-        </p>
-        {cashAfterKnownDues === null ? (
-          <div className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            <p>{t("To calculate this amount, the following information is needed:")}</p>
-            <ul className="mt-1 list-disc space-y-0.5 pl-4">
-              {cash === null && <li>{t("Cash balance for this reporting date.")}</li>}
-              {loanPrincipal === null && <li>{t("Recorded loan balance.")}</li>}
-              {hasUndated && <li>{t("Due dates for outstanding payments.")}</li>}
-              {missingLoanSchedule && <li>{t("Loan instalment dates.")}</li>}
-              {dueBy30Total === null && <li>{t("Amounts for dated payments.")}</li>}
-              {!coverageUnavailable && <li>{t("Valid recorded cash and payment amounts.")}</li>}
-            </ul>
-          </div>
-        ) : (
-          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            {t("Recorded cash as of")} {asAt} {t("less overdue payments and payments due through")}{" "}
-            {addDays(asAt, 30)}. {t("Future cash movements are not included.")}
-          </p>
-        )}
-      </div>
 
       {supplierPayments.length === 0 ? (
         <div className="mt-5 rounded-xl bg-muted px-4 py-7 text-center">
@@ -484,6 +409,7 @@ export function OutstandingBalances({
                     "Remaining balance",
                     "Due date",
                     "Payment status",
+                    ...(onSaveDueDate ? ["Actions"] : []),
                   ].map((label, index) => (
                     <th
                       key={label}
@@ -538,11 +464,24 @@ export function OutstandingBalances({
                         {t(status)}
                       </span>
                     </td>
+                    {onSaveDueDate && (
+                      <td className="whitespace-nowrap px-3 py-3">
+                        <button type="button" className="font-semibold text-primary underline underline-offset-2"
+                          onClick={() => {
+                            setEditing(item);
+                            setEditedDate(item.due_date ?? "");
+                            setEditError("");
+                            setEditSuccess("");
+                          }}>
+                          {t(item.due_date ? "Edit due date" : "Add due date")}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    <td colSpan={onSaveDueDate ? 8 : 7} className="px-3 py-6 text-center text-sm text-muted-foreground">
                       {t("No payments match these filters.")}
                     </td>
                   </tr>
@@ -550,6 +489,52 @@ export function OutstandingBalances({
               </tbody>
             </table>
           </div>
+          {editing && onSaveDueDate && (
+            <div role="dialog" aria-modal="true" aria-label={t("Edit supplier due date")}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !saving) setEditing(null);
+                if (event.key !== "Tab") return;
+                const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("input:not(:disabled), button:not(:disabled)"));
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+              }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+              <form className="bf-card w-full max-w-md space-y-4" onSubmit={async (event) => {
+                event.preventDefault();
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(editedDate) || Number.isNaN(Date.parse(`${editedDate}T00:00:00Z`))) {
+                  setEditError("Enter a valid due date.");
+                  return;
+                }
+                setSaving(true);
+                setEditError("");
+                try {
+                  await onSaveDueDate(editing.reference_id, editedDate, editing.due_date);
+                  setEditing(null);
+                  setEditSuccess("Supplier due date saved.");
+                } catch (error) {
+                  setEditError(error instanceof Error ? error.message : "Could not save the due date.");
+                } finally {
+                  setSaving(false);
+                }
+              }}>
+                <h3 className="text-lg font-semibold">{t("Edit supplier due date")}</h3>
+                <p className="text-sm text-muted-foreground">{t("Purchase reference")}: {editing.reference_id}</p>
+                <p className="text-sm text-muted-foreground">{t("Remaining balance")}: {formatMmk(editing.amount_mmk)}</p>
+                <p className="text-sm text-muted-foreground">{t("Current due date")}: {editing.due_date ?? t("Due date unavailable")}</p>
+                <label className="block text-sm font-medium">{t("Due date")}
+                  <input ref={dateInput} type="date" required value={editedDate} onChange={(event) => setEditedDate(event.target.value)}
+                    className="mt-1 block w-full rounded-lg border bg-background p-2 text-foreground" />
+                </label>
+                {editError && <p role="alert" className="text-sm text-destructive">{t(editError)}</p>}
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button type="button" className="bf-button-secondary" disabled={saving} onClick={() => setEditing(null)}>{t("Cancel")}</button>
+                  <button type="submit" className="bf-button" disabled={saving}>{t(saving ? "Saving…" : "Save")}</button>
+                </div>
+              </form>
+            </div>
+          )}
           {rows.length > 0 && (
             <nav
               className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground"

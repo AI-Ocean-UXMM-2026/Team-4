@@ -110,19 +110,21 @@ export function WorkingCapitalInputChoices({
           </div>
         </>
       ) : (
-        <button
-          type="button"
-          className="bf-button-link text-sm font-semibold"
-          aria-expanded={open}
-          aria-controls="working-capital-manual-form"
-          onClick={() => {
-            setDraft(inputs ?? exampleDefaults);
-            setError("");
-            setOpen((current) => !current);
-          }}
-        >
-          {t("Edit planning inputs")}
-        </button>
+        <div>
+          <button
+            type="button"
+            className="bf-button inline-flex items-center gap-1.5"
+            aria-expanded={open}
+            aria-controls="working-capital-manual-form"
+            onClick={() => {
+              setDraft(inputs ?? exampleDefaults);
+              setError("");
+              setOpen((current) => !current);
+            }}
+          >
+            {t("Edit Planning Inputs")}
+          </button>
+        </div>
       )}
       {inputs && !complete && (
         <p className="text-xs text-primary">

@@ -31,7 +31,7 @@ export function CreditPage() {
   const [preparationSelection, setPreparationSelection] = useState<GuideSelection | null>(null);
   const [loanId, setLoanId] = useState<string | null>(null);
   const [mode, setMode] = useState("loans");
-  const [preparationTab, setPreparationTab] = useState("readiness");
+  const [preparationTab, setPreparationTab] = useState("guide");
   const currentLoan = query.data?.loans.find(loan => loan.loan_id === loanId) || query.data?.loans[0];
   const recordedApplication = query.data?.recorded_balances?.map(balance => importedApplication({
     bank_id: balance.bank_id ?? null, loan_product_id: balance.loan_product_id ?? null,
@@ -246,20 +246,23 @@ export function CreditPage() {
           <Tabs value={preparationTab} onValueChange={setPreparationTab} className="space-y-4">
             <TabsList className="grid h-auto w-full max-w-xl grid-cols-1 gap-2 bg-transparent p-0 sm:grid-cols-2">
               <TabsTrigger
-                value="readiness"
-                className="min-h-14 justify-start gap-2.5 whitespace-normal rounded-xl border border-border bg-card px-4 py-2.5 text-left shadow-sm hover:border-primary/50 hover:bg-accent/40 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
-              >
-                <FileText className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span>{t("Application preparation")}</span>
-              </TabsTrigger>
-              <TabsTrigger
                 value="guide"
                 className="min-h-14 justify-start gap-2.5 whitespace-normal rounded-xl border border-border bg-card px-4 py-2.5 text-left shadow-sm hover:border-primary/50 hover:bg-accent/40 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
               >
                 <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
                 <span>{t("Bank loan guide")}</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="readiness"
+                className="min-h-14 justify-start gap-2.5 whitespace-normal rounded-xl border border-border bg-card px-4 py-2.5 text-left shadow-sm hover:border-primary/50 hover:bg-accent/40 data-[state=active]:border-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md"
+              >
+                <FileText className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>{t("Application preparation")}</span>
+              </TabsTrigger>
             </TabsList>
+            <TabsContent value="guide">
+              <BankLoanGuide businessId={data.business_id} onViewRecords={() => setPreparationTab("readiness")} />
+            </TabsContent>
             <TabsContent value="readiness" className="space-y-4">
               <ApplicationSelector
                 selection={selection || {bank: "kbz", productId: "term"}}
@@ -288,9 +291,6 @@ export function CreditPage() {
                 onViewRecords={() => setPreparationTab("readiness")}
               />
               <CreditPreparationReport report={data.preparation_report} loan={selected} />
-            </TabsContent>
-            <TabsContent value="guide">
-              <BankLoanGuide businessId={data.business_id} onViewRecords={() => setPreparationTab("readiness")} />
             </TabsContent>
           </Tabs>
         </TabsContent>

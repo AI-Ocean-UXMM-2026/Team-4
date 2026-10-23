@@ -146,6 +146,20 @@ class RowRevision(Base):
     revision: Mapped[int] = mapped_column(Integer)
 
 
+class PurchaseDueDateOverride(Base):
+    """Field-level manual correction; events retain the actor and resolution history."""
+    __tablename__ = "purchase_due_date_overrides"
+    __table_args__ = (UniqueConstraint("business_id", "source_id", "purchase_id"),)
+    id: Mapped[str] = mapped_column(String(80), primary_key=True, default=uid)
+    business_id: Mapped[str] = mapped_column(ForeignKey("businesses.id"), index=True)
+    source_id: Mapped[str] = mapped_column(ForeignKey("workbook_sources.id"))
+    purchase_id: Mapped[str] = mapped_column(String(80))
+    workbook_due_date: Mapped[date | None] = mapped_column(Date)
+    manual_due_date: Mapped[date] = mapped_column(Date)
+    active: Mapped[bool] = mapped_column(default=True)
+    events: Mapped[list] = mapped_column(JSON, default=list)
+
+
 class AIAnalysisReport(Base):
     """Latest authenticated AI report, scoped to one business and source version."""
     __tablename__ = "ai_analysis_reports"

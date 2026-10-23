@@ -34,9 +34,13 @@ export function DataSourcePage() {
           {t(". Financial pages refresh after each successful import.")}
         </p>
       </div>
-      <div className="grid gap-6 lg:grid-cols-2 items-start">
-        <ExcelUpload key={business.id} maxBytes={query.data.max_upload_bytes} />
-        <WorkbookGuideCard />
+      <div className="grid items-stretch gap-6 lg:grid-cols-2">
+        <div className="order-2 min-w-0 lg:order-1 h-full">
+          <ExcelUpload key={business.id} maxBytes={query.data.max_upload_bytes} />
+        </div>
+        <div className="order-1 min-w-0 lg:order-2 h-full">
+          <WorkbookGuideCard />
+        </div>
       </div>
       {hasConfirmedImport && (
         <NextStepCard

@@ -88,6 +88,18 @@ before importing that field. Local SQLite schema setup derives optional columns
 from the shared contract. A reliable loan schedule still needs an agreed source
 schema before it can appear in the authenticated workbook API.
 
+Manual supplier due-date changes use the same persisted purchase projection and
+increment the business source version. Apply `database/migrations/018_purchase_due_date_overrides.sql`
+after the earlier migrations before enabling manual edits on PostgreSQL. The
+override record retains the last workbook date and a dated actor/action history;
+`row_revisions` retains prior purchase payloads. An unchanged workbook date keeps
+the manual correction. If a later workbook supplies a different date, import
+stops with `DUE_DATE_CONFLICT` until the owner chooses **Keep manual dates** or
+**Use workbook dates**. Keeping manual dates makes the override authoritative
+for that purchase until another explicit resolution; accepting workbook dates
+makes the workbook value authoritative again. Normal uploads still retain omitted
+rows, while complete replacement deactivates an omitted purchase and its override.
+
 ## Validation
 
 From repository root after installing backend requirements:

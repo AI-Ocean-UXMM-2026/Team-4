@@ -63,6 +63,9 @@ export const my: Record<string, string> = {
   "Repayment planning uses Financial Health cash, reserves all outstanding supplier balances and recorded unpaid expenses, and assumes no future customer receipts. Supplier due dates and a protected cash reserve are not recorded.": "ပြန်ဆပ်မှုစီမံရာတွင် Financial Health ရှိ ငွေလက်ကျန်မှ ကုန်ပေးသွင်းသူအကြွေးလက်ကျန်နှင့် မပေးရသေးသော အသုံးစရိတ်များအတွက် ငွေချန်ထားပြီး နောင်ဝင်လာမည့် ရငွေကို ထည့်မတွက်ထားပါ။ ဤတွက်ချက်မှုတွင် ကုန်ပေးသွင်းသူ ပေးရန်ရက်နှင့် သီးသန့်အရေးပေါ်ငွေကို အသုံးမပြုထားပါ။",
   "Paste Excel file here": "Excel ဖိုင်ကို ဤနေရာတွင် paste လုပ်ပါ",
   "Copy an .xlsx file, click this area, then press Ctrl+V to paste.": ".xlsx ဖိုင်ကို copy လုပ်ပြီး ဤနေရာကိုနှိပ်ကာ Ctrl+V ဖြင့် paste လုပ်ပါ။",
+  "Upload your completed Excel workbook to update your business records.": "လုပ်ငန်းမှတ်တမ်းများကို အသစ်ပြင်ဆင်ရန် ဖြည့်စွက်ပြီးသော Excel ဖိုင်ကို တင်သွင်းပါ။",
+  "Drag and drop an .xlsx file here, or click this area and press Ctrl+V to paste a copied file.": ".xlsx ဖိုင်ကို ဤနေရာသို့ ဆွဲချပါ။ သို့မဟုတ် ဤနေရာကို နှိပ်ပြီး ကူးယူထားသောဖိုင်ကို Ctrl+V ဖြင့် paste လုပ်ပါ။",
+  "No workbook selected.": "Excel ဖိုင် မရွေးထားပါ။",
   "Selected file:": "ရွေးထားသောဖိုင် —",
   "Copy the .xlsx file itself, then paste here. Copied cells and file paths are not supported.": ".xlsx ဖိုင်ကိုယ်တိုင်ကို copy လုပ်ပြီး ဤနေရာတွင် paste လုပ်ပါ။ Cell များနှင့် ဖိုင်လမ်းကြောင်းစာသားကို လက်မခံပါ။",
   "Show fewer months": "လအနည်းငယ်သာ ပြရန်",
@@ -216,6 +219,8 @@ export const my: Record<string, string> = {
   "Your data starts here.": "သင့်အချက်အလက်များကို ဤနေရာမှ စတင်ပါ။",
   "Your business records are ready. View your financial performance, cash balance, and outstanding payments.":
     "သင့်လုပ်ငန်းမှတ်တမ်းများ အသင့်ဖြစ်ပါပြီ။ ငွေကြေးဆိုင်ရာ စွမ်းဆောင်ရည်၊ လက်ကျန်ငွေနှင့် ပေးရန်ကျန်ငွေများကို ကြည့်ရှုပါ။",
+  "Your business records are ready. Analyze your financial data to discover business issues and recommended next actions.":
+    "သင့်လုပ်ငန်းမှတ်တမ်းများ အသင့်ဖြစ်ပါပြီ။ လုပ်ငန်းဆိုင်ရာ ပြဿနာများနှင့် နောက်တစ်ဆင့် ဆောင်ရွက်သင့်သည့် အကြံပြုချက်များကို ရှာဖွေရန် ငွေကြေးအချက်အလက်များကို သုံးသပ်ပါ။",
   "View Financial Health": "ငွေကြေးအခြေအနေကို ကြည့်ရှုရန်",
   "Explore ways to improve your cash flow": "ငွေဝင်ငွေထွက် ပိုကောင်းစေမည့် နည်းလမ်းများကို လေ့လာပါ",
   "Discover opportunities to collect customer payments, manage inventory, and prepare for cash shortages.":
@@ -272,8 +277,6 @@ export const my: Record<string, string> = {
     "ဤအစီရင်ခံစာသည် ယခင်ဗားရှင်းကို အသုံးပြုထားပါသည်။ နောက်ဆုံးဗားရှင်းအတွက် AI ဖြင့် သုံးသပ်ရန်ကို ထပ်မံရွေးပါ။",
   "AI was not used — verified findings shown":
     "AI ကို အသုံးမပြုနိုင်ခဲ့ပါ — စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားသည်",
-  "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.":
-    "AI ဖြင့် သုံးသပ်ရန်ကို နှိပ်ပါက ဤဖိုင်မှ စုစည်းထားသော ငွေကြေးပမာဏများနှင့် တွေ့ရှိချက်များကို ပြင်ပ AI ဝန်ဆောင်မှုသို့ ပို့ရန် သဘောတူပါသည်။ Excel ဖိုင်၊ အမည်များနှင့် ငွေလွှဲတစ်ကြောင်းချင်း၏ မှတ်တမ်းများကို မပို့ပါ။",
   "AI provider is not configured; rules-based findings are shown.":
     "AI ဝန်ဆောင်မှုကို မသတ်မှတ်ရသေးသဖြင့် စစ်ဆေးထားသော တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "AI wording was unavailable or failed evidence validation; rules-based findings are shown.":
@@ -737,9 +740,15 @@ export const my: Record<string, string> = {
   "Cost of goods sold": "ရောင်းကုန် ကုန်ကျစရိတ်",
   "Unavailable if historical sale costs were not imported":
     "ရောင်းချစဉ် ကုန်ကျစရိတ်မရှိပါက မဖော်ပြနိုင်ပါ",
+  "Unavailable because historical sale costs are missing for one or more sales in this period.":
+    "ဤကာလအတွင်း ရောင်းချမှုတစ်ခု သို့မဟုတ် တစ်ခုထက်ပို၍ ရောင်းချစဉ် ကုန်ကျစရိတ် မရှိသဖြင့် မဖော်ပြနိုင်ပါ။",
+  "Cost of products sold during this period.":
+    "ဤကာလအတွင်း ရောင်းချခဲ့သော ကုန်ပစ္စည်းများ၏ ကုန်ကျစရိတ်။",
   "Operating profit": "လုပ်ငန်းလည်ပတ်အမြတ်",
   "Revenue less operating costs, when available":
     "အချက်အလက်ရှိပါက ရောင်းရငွေမှ လုပ်ငန်းကုန်ကျစရိတ် နုတ်ထားသောပမာဏ",
+  "Revenue minus cost of goods sold and operating expenses.":
+    "ရောင်းရငွေမှ ရောင်းကုန်ကုန်ကျစရိတ်နှင့် လုပ်ငန်းလည်ပတ်အသုံးစရိတ်ကို နုတ်ထားသောပမာဏ။",
   "Cash-paid interest": "ငွေသားဖြင့် ပေးချေသောအတိုး",
   "Interest paid during the selected period": "ရွေးချယ်ကာလအတွင်း ပေးချေသောအတိုး",
   "Supplier balances": "ပေးသွင်းသူထံ ပေးရန်ကျန်ငွေ",
@@ -757,6 +766,13 @@ export const my: Record<string, string> = {
   "Exact trend figures; unavailable values are not zero":
     "တိကျသော ကိန်းဂဏန်းများ။ မရှိသောတန်ဖိုးကို သုညဟု မယူဆရပါ",
   "Business obligations": "လုပ်ငန်း၏ ပေးရန်တာဝန်များ",
+  "Outstanding Supplier Payments": "ပေးသွင်းသူများထံ ပေးရန်ကျန်ငွေများ",
+  "Outstanding supplier payments section": "ပေးသွင်းသူများထံ ပေးရန်ကျန်ငွေ ကဏ္ဍ",
+  "Supplier payments past their due dates": "ပေးချေရမည့်ရက် ကျော်လွန်နေသော ပေးသွင်းသူငွေများ",
+  "Cash remaining after supplier payments due within 30 days": "ရက် ၃၀ အတွင်း ပေးရမည့် ပေးသွင်းသူငွေများ နုတ်ပြီး ကျန်ရှိငွေ",
+  "Due dates for outstanding supplier payments.": "ပေးသွင်းသူများထံ ပေးရန်ကျန်ငွေများ၏ ပေးချေရမည့်ရက်များ။",
+  "Amounts for dated supplier payments.": "ပေးချေရမည့်ရက်ရှိသော ပေးသွင်းသူငွေ ပမာဏများ။",
+  "less overdue supplier payments and supplier payments due through": "မှ ရက်ကျော်နေသော ပေးသွင်းသူငွေများနှင့် ဤရက်အထိ ပေးရမည့် ပေးသွင်းသူငွေများ နုတ်ထားသည် —",
   "Outstanding payments": "ပေးချေရန် ကျန်ရှိငွေ",
   "Outstanding obligations": "မပေးချေရသေးသော တာဝန်များ",
   "Recorded balances through": "မှတ်တမ်းရှိ လက်ကျန်၊ ရက်စွဲ",
@@ -989,16 +1005,35 @@ export const my: Record<string, string> = {
   "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.":
     "စနစ်အတွင်းရှိ ယခင်မှတ်တမ်းများသည် ဤဖိုင်၏ လုပ်ငန်းစတင်ရက်ထက် စောနေပါသည်။ ဤကာလအတွက် အသစ်အစားထိုးတင်သွင်းလိုပါက အထက်ပါ 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်၍ ထပ်မံကြိုးစားပါ။",
   "Enable complete replacement": "အသစ်အစားထိုးခြင်းကို ဖွင့်မည်",
+  "Analysis Summary": "သုံးသပ်ချက် အကျဉ်းချုပ်",
+  "Verified rules-based analysis": "အတည်ပြုထားသော စည်းမျဉ်းအခြေခံ သုံးသပ်ချက်",
+  "Some financial data is incomplete. Recommendations are based on available verified records.":
+    "ငွေကြေးဆိုင်ရာ အချက်အလက်အချို့ မပြည့်စုံပါ။ လက်ရှိရရှိထားသော အတည်ပြုမှတ်တမ်းများပေါ် အခြေခံ၍ အကြံပြုထားပါသည်။",
+  "View analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ကြည့်ရန်",
+  "Hide analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ဝှက်ရန်",
+  "Import version:": "ထည့်သွင်းထားသော ဗားရှင်း —",
+  "Batch ID:": "အသုတ်အမှတ် —",
+  "Provider configuration status:": "AI စနစ် ချိတ်ဆက်မှု အခြေအနေ —",
+  "External AI active and verified": "ပြင်ပ AI စနစ် အောင်မြင်စွာ ချိတ်ဆက်အသုံးပြုထားပါသည်",
+  "Not configured (using local verified rules engine)":
+    "ချိတ်ဆက်မထားပါ (ပြည်တွင်း အတည်ပြု စည်းမျဉ်းအင်ဂျင်ကို အသုံးပြုထားပါသည်)",
+  "Rules-based engine active": "စည်းမျဉ်းအခြေခံအင်ဂျင် အသုံးပြုနေပါသည်",
+  "Technical notes:": "နည်းပညာဆိုင်ရာ မှတ်ချက်များ —",
+  "Analysis unavailable": "သုံးသပ်ချက် မရရှိနိုင်ပါ",
+  "Edit Planning Inputs": "စီမံကိန်း သွင်းအားစုများကို ပြင်ဆင်ရန်",
   "Workbook Guidelines": "Excel ဖိုင် ပြင်ဆင်ရန် လမ်းညွှန်",
   "Structure your Excel file for accurate analysis":
     "တိကျသော စီးပွားရေးဆန်းစစ်ချက်များ ရရှိရန် Excel ဖိုင်ကို သတ်မှတ်ပုံစံအတိုင်း ပြင်ဆင်ပါ",
   "Copied": "ကူးယူပြီးပါပြီ",
   "Core Sheets (Required)": "အဓိက စာရွက်များ (မဖြစ်မနေ လိုအပ်သည်)",
+  "Keep all seven sheets. Fill in one Settings row; other sheets may be empty when you have no entries.": "လိုအပ်သော စာရွက် ခုနစ်ခုစလုံးကို ထည့်ပါ။ Settings စာရွက်တွင် အတန်းတစ်ကြောင်း ဖြည့်ပါ။ မှတ်တမ်းမရှိလျှင် အခြားစာရွက်များတွင် အချက်အလက်အတန်းများကို ဗလာထားနိုင်ပါသည်။",
+  "Optional Sheets": "ရွေးချယ်ထည့်သွင်းနိုင်သော စာရွက်များ",
+  "Add these sheets when you need to record loans or cash balances and adjustments.": "ချေးငွေ၊ လက်ကျန်ငွေ သို့မဟုတ် ငွေသားညှိနှိုင်းမှုများကို မှတ်တမ်းတင်ရန် လိုအပ်မှ ဤစာရွက်များကို ထည့်ပါ။",
   "Advanced & Credit Hub (Optional)":
     "ချေးငွေနှင့် အဆင့်မြင့်ကဏ္ဍများ (ရွေးချယ်ထည့်သွင်းနိုင်သည်)",
   "Pro Tip": "အကြံပြုချက်",
-  "Keep stable row IDs when updating existing records. When uploading a new accounting period, check 'This workbook is a complete replacement' to retire older records cleanly.":
-    "ယခင်မှတ်တမ်းများကို ပြင်ဆင်လိုပါက row ID များကို မပြောင်းလဲဘဲ ထားပါ။ စာရင်းကာလအသစ် တင်သွင်းပါက ယခင်မှတ်တမ်းဟောင်းများကို အသစ်လဲလှယ်ရန် 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်ပါ။",
+  "Keep the same row IDs when updating existing records. For new months, use a normal upload to keep previous records. Use complete replacement only when you intentionally want omitted records removed from current reports.":
+    "ရှိပြီးသားမှတ်တမ်းများကို ပြင်ဆင်ရာတွင် row ID များကို မပြောင်းပါနှင့်။ လအသစ်များအတွက် ယခင်မှတ်တမ်းများကို ထိန်းသိမ်းရန် ပုံမှန်တင်သွင်းမှုကို အသုံးပြုပါ။ လက်ရှိအစီရင်ခံစာများမှ ဖိုင်တွင် မပါသောမှတ်တမ်းများကို ရည်ရွယ်ချက်ရှိရှိ ဖယ်ရှားလိုသည့်အခါမှသာ အပြည့်အဝအစားထိုးခြင်းကို အသုံးပြုပါ။",
   "Excel workbook (.xlsx)": "Excel ဖိုင် (.xlsx)",
   "Available datasets": "ရရှိနိုင်သော ဒေတာအတွဲများ",
   "saved versions": "သိမ်းဆည်းထားသော ဗားရှင်းများ",

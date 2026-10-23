@@ -6,8 +6,9 @@ from decimal import Decimal
 from sqlalchemy import insert, select, update
 
 from ...core.errors import APIError
-from ...db.models import (Business, ImportBatch, ImportedRow, PROJECTIONS, RowRevision,
+from ...db.models import (Business, ImportBatch, ImportedRow, PROJECTIONS, PurchaseDueDateOverride, RowRevision,
                           WorkbookSource, now)
+from .purchase_due_dates import event
 from .import_audit import batch_response
 from .schemas import SCHEMA, ParsedWorkbook, WorkbookRow, issue
 from .validators import validate_workbook
@@ -29,7 +30,9 @@ def typed_values(sheet, payload):
     return result
 
 
-def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False, filename=None):
+def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False, filename=None, due_date_resolution=None):
+    if due_date_resolution not in (None, "keep_manual", "accept_workbook"):
+        raise APIError(400, "DUE_DATE_RESOLUTION_INVALID", "Choose a supported due-date resolution.")
     digest = hashlib.sha256(content).hexdigest()
     parsed = parse_workbook(content, business_id=business_id)
     result = None
@@ -51,6 +54,33 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
         errors = validate_workbook(parsed, business_id)
         stored = session.scalars(select(ImportedRow).where(ImportedRow.business_id == business_id, ImportedRow.source_id == source.id)).all()
         by_key = {(row.sheet_name, row.row_id): row for row in stored}
+        overrides = {item.purchase_id: item for item in session.scalars(select(PurchaseDueDateOverride).where(
+            PurchaseDueDateOverride.business_id == business_id,
+            PurchaseDueDateOverride.source_id == source.id)).all()}
+        conflicts = []
+        def effective_payload(name, payload):
+            if name != "Purchases":
+                return payload
+            override = overrides.get(payload["purchase_id"])
+            if override is None or not override.active:
+                return payload
+            incoming = payload.get("due_date")
+            workbook_date = override.workbook_due_date.isoformat() if override.workbook_due_date else None
+            manual_date = override.manual_due_date.isoformat()
+            if incoming != workbook_date and incoming != manual_date and due_date_resolution is None:
+                conflicts.append({"purchase_id": payload["purchase_id"], "manual_due_date": manual_date,
+                                  "workbook_due_date": incoming})
+            return payload if incoming == manual_date or (incoming != workbook_date and due_date_resolution == "accept_workbook") else {
+                **payload, "due_date": manual_date}
+        effective = {name: [WorkbookRow(row.excel_row, effective_payload(name, row.values)) for row in rows]
+                     for name, rows in parsed.sheets.items()}
+        override_reconciliation = any(
+            (override := overrides.get(row.values["purchase_id"])) is not None and override.active and
+            row.values.get("due_date") != (override.workbook_due_date.isoformat() if override.workbook_due_date else None)
+            for row in parsed.sheets.get("Purchases", [])
+        )
+        if conflicts and not errors:
+            raise APIError(409, "DUE_DATE_CONFLICT", "Workbook due dates differ from manual corrections. Choose which dates to keep.", details=conflicts)
         incoming_keys = {name: {row.values[SCHEMA[name]["id"]] for row in parsed.sheets.get(name, [])} for name in SCHEMA}
         active_omissions = any(
             old.active_status == "active" and row_id not in incoming_keys[name]
@@ -60,9 +90,9 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
         # Reconcile when a parser/schema upgrade adds fields to an otherwise unchanged file.
         persisted_matches = all(
             (old := by_key.get((name, row.values.get(SCHEMA[name]["id"])))) is not None and old.payload == row.values
-            for name, rows in parsed.sheets.items() for row in rows
+            for name, rows in effective.items() for row in rows
         )
-        if not errors and source.last_hash == digest and persisted_matches and not (replace_omitted and active_omissions):
+        if not errors and source.last_hash == digest and persisted_matches and not override_reconciliation and not (replace_omitted and active_omissions):
             batch.status = "up_to_date"
             if etag:
                 source.last_etag = etag
@@ -72,7 +102,7 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
         else:
             if not errors:
                 # Omitted records remain active. Validate the actual resulting state, not just the new file.
-                merged = ParsedWorkbook(sheets={name: list(parsed.sheets.get(name, [])) for name in SCHEMA})
+                merged = ParsedWorkbook(sheets={name: list(effective.get(name, [])) for name in SCHEMA})
                 incoming_keys = {name: {r.values[SCHEMA[name]["id"]] for r in rows} for name, rows in merged.sheets.items()}
                 for (name, row_id), old in by_key.items():
                     if old.active_status == "active" and row_id not in incoming_keys[name] and not replace_omitted:
@@ -93,17 +123,32 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
                                                 payload=old.payload, batch_id=old.batch_id, revision=old.revision))
                         old.active_status = "removed"
                         old.revision += 1
+                        if name == "Purchases" and (override := overrides.get(row_id)) and override.active:
+                            override.events = [*override.events, event(actor_id, "purchase_removed", old.payload.get("due_date"), None)]
+                            override.active = False
                         session.execute(PROJECTIONS[name].delete().where(
                             PROJECTIONS[name].c.source_id == source.id,
                             PROJECTIONS[name].c[SCHEMA[name]["id"]] == row_id,
                         ))
                         removed_count += 1
-                for name, rows in parsed.sheets.items():
+                for name, rows in effective.items():
                     spec, table = SCHEMA[name], PROJECTIONS[name]
                     for row in rows:
                         payload = row.values
                         row_id = payload[spec["id"]]
                         old = by_key.get((name, row_id))
+                        if name == "Purchases" and (override := overrides.get(row_id)) and override.active:
+                            incoming = next(item.values.get("due_date") for item in parsed.sheets[name]
+                                            if item.values["purchase_id"] == row_id)
+                            workbook_date = override.workbook_due_date.isoformat() if override.workbook_due_date else None
+                            if incoming != workbook_date:
+                                override.workbook_due_date = date.fromisoformat(incoming) if incoming else None
+                                if incoming == override.manual_due_date.isoformat() or due_date_resolution == "accept_workbook":
+                                    override.active = False
+                                    action = "workbook_accepted"
+                                else:
+                                    action = "manual_kept"
+                                override.events = [*override.events, event(actor_id, action, workbook_date, incoming)]
                         if old and old.payload == payload and old.active_status == "active":
                             counts["unchanged"] += 1
                             continue

@@ -116,6 +116,22 @@ describe("Financial reporting", () => {
     render(<FinancialKpiCards snapshot={data} />);
     expect(screen.getByText("Unavailable")).toBeTruthy();
     expect(screen.getByText("150,000 MMK")).toBeTruthy();
+    expect(screen.getByText("Cost of products sold during this period.")).toBeTruthy();
+    expect(screen.getByText("Revenue minus cost of goods sold and operating expenses.")).toBeTruthy();
+  });
+
+  it("explains missing historical sale costs without presenting an unavailable KPI as zero", () => {
+    const data = snapshot();
+    data.actual.cogs_mmk = null;
+    data.actual.operating_profit_mmk = null;
+    render(<FinancialKpiCards snapshot={data} />);
+    const cogs = screen.getByText("Cost of goods sold").closest("article");
+    expect(cogs?.textContent).toContain("Unavailable");
+    expect(cogs?.textContent).toContain(
+      "historical sale costs are missing for one or more sales in this period",
+    );
+    expect(cogs?.textContent).not.toContain("0 MMK");
+    expect(screen.getByText("Revenue minus cost of goods sold and operating expenses.")).toBeTruthy();
   });
 
   it("links to data source without fetching when no workbook is imported", async () => {
@@ -219,9 +235,9 @@ describe("Financial reporting", () => {
       "href",
       "/working-capital",
     );
-    expect(within(nextStep).getByRole("link", { name: "Get AI Recommendations" })).toHaveAttribute(
+    expect(within(nextStep).getByRole("link", { name: "Open Credit Hub" })).toHaveAttribute(
       "href",
-      "/ai",
+      "/credit",
     );
     expect(screen.queryByText("Please note about this report")).toBeNull();
     expect(screen.queryByText("Interest uses cash-paid amounts.")).toBeNull();
@@ -232,13 +248,14 @@ describe("Financial reporting", () => {
     const supplierRow = within(obligationsTable).getByText("P001").closest("tr");
     expect(supplierRow?.textContent).toContain("2026-10-15");
     expect(supplierRow?.textContent).toContain("Overdue");
-    expect(screen.getByText("30,000 MMK")).toBeTruthy();
+    expect(supplierRow?.textContent).toContain("30,000 MMK");
     expect(
       screen.getByRole("table", { name: "Exact trend figures; unavailable values are not zero" }),
     ).toBeTruthy();
     expect(screen.queryByText("No reporting periods available.")).toBeNull();
     const chart = screen.getByRole("region", { name: "Revenue and total cost trends" });
-    const obligations = screen.getByRole("region", { name: "Outstanding obligations" });
+    const obligations = screen.getByRole("region", { name: "Outstanding supplier payments section" });
+    expect(within(obligations).queryByText("Outstanding loan principal")).toBeNull();
     const chartPanel = chart.parentElement;
     const obligationsPanel = obligations.parentElement;
     expect(chartPanel?.parentElement).toBe(obligationsPanel?.parentElement);
@@ -321,12 +338,63 @@ describe("Financial reporting", () => {
     );
   });
 
+  it("updates period KPIs while keeping cumulative cash distinct from period revenue", async () => {
+    const api = client();
+    api.summary = vi.fn(async (businessId, period) => ({
+      ...snapshot(),
+      business_id: businessId,
+      period,
+      actual: {
+        ...snapshot().actual,
+        revenue_mmk: period.start === "2026-09-01" ? 0 : 50000,
+        cogs_mmk: period.start === "2026-09-01" ? 0 : 40000,
+        operating_profit_mmk: period.start === "2026-09-01" ? 0 : 10000,
+        cash_balance_mmk: period.start === "2026-09-01" ? 110000 : 150000,
+      },
+    }));
+    api.trends = vi.fn(async (businessId, period, granularity) => ({
+      business_id: businessId,
+      granularity,
+      points: [{
+        period,
+        revenue_mmk: 0,
+        cogs_mmk: 0,
+        operating_expenses_mmk: 0,
+        total_costs_mmk: 0,
+        revenue_record_count: 0,
+        operating_expense_record_count: 0,
+      }],
+      as_of: "2026-10-20T10:00:00Z",
+      import_batch_id: "batch-1",
+    }));
+    render(<FinancialPage client={api} businessId="A" businessName="Business A" synthetic importBatchId="batch-1" today="2026-10-22" />);
+    await waitFor(() =>
+      expect(screen.getByText("Cash available").closest("article")).toHaveTextContent("150,000 MMK"),
+    );
+    fireEvent.change(screen.getByRole("combobox", { name: "Reporting period" }), {
+      target: { value: "previous" },
+    });
+    await waitFor(() =>
+      expect(screen.getByText("Cash available").closest("article")).toHaveTextContent("110,000 MMK"),
+    );
+    expect(screen.getByText("Cash available").closest("article")).not.toHaveTextContent("150,000 MMK");
+    const figures = within(screen.getByRole("region", { name: "Financial summary" }));
+    expect(figures.getByText("Revenue").closest("article")?.textContent).toContain("0 MMK");
+    expect(figures.getByText("Cost of goods sold").closest("article")?.textContent).toContain("0 MMK");
+  });
+
   it("keeps the selected period when requesting a newly selected business", async () => {
     const api = client();
     api.summary = vi.fn(async (businessId, period) => ({
       ...snapshot(),
       business_id: businessId,
       period,
+      actual: {
+        ...snapshot().actual,
+        cash_balance_mmk: businessId === "A" ? 150000 : null,
+        cogs_mmk: businessId === "A" ? 40000 : null,
+        operating_profit_mmk: businessId === "A" ? 10000 : null,
+      },
     }));
     api.trends = vi.fn(async (businessId, period, requestedGranularity) => ({
       business_id: businessId,
@@ -355,7 +423,9 @@ describe("Financial reporting", () => {
         today="2026-10-22"
       />,
     );
-    await screen.findByText("150,000 MMK");
+    await waitFor(() =>
+      expect(screen.getByText("Cash available").closest("article")).toHaveTextContent("150,000 MMK"),
+    );
     view.rerender(
       <FinancialPage
         client={api}
@@ -380,6 +450,27 @@ describe("Financial reporting", () => {
         "weekly",
         expect.any(AbortSignal),
       ),
+    );
+    const cashCard = screen.getByText("Cash available").closest("article");
+    expect(cashCard?.textContent).toContain("Unavailable");
+    expect(screen.getByText("Cash available").closest("article")).not.toHaveTextContent("150,000 MMK");
+    const cogsCard = screen.getByText("Cost of goods sold").closest("article");
+    expect(cogsCard?.textContent).toContain("historical sale costs are missing");
+    view.rerender(
+      <FinancialPage
+        client={api}
+        businessId="A"
+        businessName="Business A"
+        synthetic
+        importBatchId="batch-1"
+        today="2026-10-22"
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByText("Cash available").closest("article")).toHaveTextContent("150,000 MMK"),
+    );
+    expect(screen.getByText("Cost of goods sold").closest("article")?.textContent).toContain(
+      "Cost of products sold during this period.",
     );
   });
 });

@@ -138,13 +138,17 @@ export function FinancialKpiCards({ snapshot }: { snapshot: FinancialSnapshot })
           <MetricCard
             label={t("Cost of goods sold")}
             value={a.cogs_mmk}
-            note="Unavailable if historical sale costs were not imported"
+            note={
+              a.cogs_mmk === null
+                ? "Unavailable because historical sale costs are missing for one or more sales in this period."
+                : "Cost of products sold during this period."
+            }
             icon={ReceiptText}
           />
           <MetricCard
             label={t("Operating profit")}
             value={a.operating_profit_mmk}
-            note="Revenue less operating costs, when available"
+            note="Revenue minus cost of goods sold and operating expenses."
             icon={ArrowUpRight}
             tone={
               a.operating_profit_mmk !== null && Number(a.operating_profit_mmk) < 0

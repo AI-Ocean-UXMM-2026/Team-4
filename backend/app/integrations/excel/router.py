@@ -17,6 +17,7 @@ from ...db.models import Business, ImportBatch, PROJECTIONS, WorkbookSource
 from .graph_client import GraphClient
 from .import_audit import batch_response, iso_timestamp
 from .import_service import import_validated_snapshot, lock_business
+from .purchase_due_dates import change_purchase_due_date
 from .onedrive_auth import access_token, require_graph
 from .sync_service import sync_now
 from .schemas import SCHEMA
@@ -27,13 +28,25 @@ ROOT = Path(__file__).resolve().parents[4]
 
 
 @router.post("/upload")
-def upload(request: Request, business_id: str, file: UploadFile = File(...), replace_omitted: bool = Query(False), user_id: str = Depends(authorize_business)):
+def upload(request: Request, business_id: str, file: UploadFile = File(...), replace_omitted: bool = Query(False), due_date_resolution: str | None = Query(None), user_id: str = Depends(authorize_business)):
     if not file.filename or not file.filename.lower().endswith(".xlsx"):
         raise APIError(400, "FILE_TYPE_INVALID", "Choose an .xlsx workbook.")
     content = file.file.read(request.app.state.settings.max_upload_bytes + 1)
     if len(content) > request.app.state.settings.max_upload_bytes:
         raise APIError(400, "FILE_TOO_LARGE", "Workbook exceeds the upload size limit.")
-    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=replace_omitted, filename=file.filename)
+    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=replace_omitted, filename=file.filename, due_date_resolution=due_date_resolution)
+
+
+class DueDateUpdate(BaseModel):
+    due_date: date
+    expected_due_date: date | None = None
+
+
+@router.put("/purchases/{purchase_id}/due-date")
+def update_purchase_due_date(request: Request, purchase_id: str, change: DueDateUpdate,
+                             business_id: str, user_id: str = Depends(authorize_business)):
+    return change_purchase_due_date(request.app.state.sessions, business_id, purchase_id,
+                                    user_id, change.due_date, change.expected_due_date)
 
 
 @router.post("/activate-history")
