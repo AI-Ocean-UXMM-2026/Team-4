@@ -14,6 +14,7 @@ def initialize_local_database(engine):
                          "annual_rate_pct": "NUMERIC(7,3)", "remaining_term_months": "INTEGER", "repayment_terms": "JSON",
                          "loan_start_date": "DATE", "loan_end_date": "DATE"},
                      "users": {"full_name": "VARCHAR(120)", "email": "VARCHAR(254)", "avatar_data_url": "TEXT"},
+                     "import_batches": {"filename": "VARCHAR(255)"},
                      "businesses": {"owner_id": "VARCHAR(80) REFERENCES users(id)", "industry": "VARCHAR(120)",
                                     "city": "VARCHAR(120)", "phone": "VARCHAR(40)", "address": "VARCHAR(500)",
                                     "currency": "VARCHAR(3) NOT NULL DEFAULT 'MMK'"}}

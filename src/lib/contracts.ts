@@ -6,6 +6,7 @@ export type ImportResult = {
   import_batch_id?: string;
   status: "success" | "failed" | "up_to_date";
   source_version: number;
+  filename?: string | null;
   row_counts: { inserted?: number; updated?: number; unchanged?: number; removed?: number };
   errors: RowIssue[];
   warnings: RowIssue[];

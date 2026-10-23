@@ -115,6 +115,7 @@ class ImportBatch(Base):
     actor_id: Mapped[str] = mapped_column(String(80))
     status: Mapped[str] = mapped_column(String(30))
     content_hash: Mapped[str | None] = mapped_column(String(64))
+    filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     row_counts: Mapped[dict] = mapped_column(JSON, default=dict)
     errors: Mapped[list] = mapped_column(JSON, default=list)
     warnings: Mapped[list] = mapped_column(JSON, default=list)

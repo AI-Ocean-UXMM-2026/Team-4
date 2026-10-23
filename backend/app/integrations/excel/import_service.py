@@ -12,6 +12,7 @@ from .import_audit import batch_response
 from .schemas import SCHEMA, ParsedWorkbook, WorkbookRow, issue
 from .validators import validate_workbook
 from .workbook_parser import parse_workbook
+from .workbook_storage import save_batch_workbook
 
 
 def lock_business(session, business_id):
@@ -28,7 +29,7 @@ def typed_values(sheet, payload):
     return result
 
 
-def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False):
+def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *, etag=None, expected_link=None, expected_data_version=None, replace_omitted=False, filename=None):
     digest = hashlib.sha256(content).hexdigest()
     parsed = parse_workbook(content)
     result = None
@@ -44,7 +45,7 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
         if expected_link and (source.drive_id, source.item_id, source.linked_user_id) != expected_link:
             raise APIError(409, "SOURCE_CHANGED", "The linked workbook changed during sync. Try again.")
         batch = ImportBatch(source_id=source.id, business_id=business_id, actor_id=actor_id,
-                            status="success", content_hash=digest, row_counts={}, errors=[], warnings=list(parsed.warnings))
+                            status="success", content_hash=digest, filename=filename, row_counts={}, errors=[], warnings=list(parsed.warnings))
         session.add(batch)
         session.flush()
         errors = validate_workbook(parsed, business_id)
@@ -66,6 +67,7 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
             if etag:
                 source.last_etag = etag
                 source.last_checked_at = now()
+            save_batch_workbook(business_id, batch.id, content)
             result = batch_response(batch, business.version)
         else:
             if not errors:
@@ -132,6 +134,7 @@ def import_validated_snapshot(sessions, business_id, actor_id, content: bytes, *
                 source.last_etag = etag
                 if etag:
                     source.last_checked_at = now()
+                save_batch_workbook(business_id, batch.id, content)
                 result = batch_response(batch, business.version)
     if result["status"] == "failed":
         raise APIError(400, "WORKBOOK_INVALID", "Workbook rejected. No business records were changed.", details=[result])

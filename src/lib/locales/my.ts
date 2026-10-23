@@ -947,4 +947,21 @@ export const my: Record<string, string> = {
   "Due in": "ပေးရန်လိုသေးသည်",
   "days overdue": "ရက် ကျော်လွန်နေသည်",
   "Estimated": "ခန့်မှန်းချက်",
+  "Past uploaded workbooks": "ယခင် တင်သွင်းထားသော ဖိုင်များ",
+  "Switch to any past file to view its data across all reports":
+    "ယခင်ဖိုင်တစ်ခုခုကို ရွေးချယ်၍ လုပ်ငန်းအစီရင်ခံစာများ အားလုံးတွင် အချက်အလက်များကို ကြည့်ရှုနိုင်ပါသည်။",
+  "Active snapshot": "လက်ရှိ အသုံးပြုနေသည်",
+  "Currently active across all features": "လက်ရှိ ကဏ္ဍအားလုံးတွင် အသုံးပြုနေသော ဖိုင်",
+  "Load this file": "ဤဖိုင်ကို အသုံးပြုမည်",
+  "Activating…": "ပြောင်းလဲနေသည်…",
+  "Active workbook switched successfully. All feature reports updated.":
+    "ရွေးချယ်ထားသော ဖိုင်သို့ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။ အစီရင်ခံစာများ အားလုံးကို အသစ်ပြင်ဆင်ပြီးပါပြီ။",
+  "Failed to activate past workbook": "ယခင်ဖိုင်ကို ပြောင်းလဲအသုံးပြုရာတွင် မအောင်မြင်ပါ။",
+  "Download": "ဒေါင်းလုဒ်",
+  "Workbook import": "ဖိုင်တင်သွင်းမှု",
+  "No successful workbook imports yet.": "အောင်မြင်သော ဖိုင်တင်သွင်းမှု မှတ်တမ်း မရှိသေးပါ။",
+  "Failed upload attempts ({0})": "မအောင်မြင်ခဲ့သော တင်သွင်းမှုမှတ်တမ်းများ ({0})",
+  "Click to view details": "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ",
+  "Rejected file": "လက်မခံသော ဖိုင်",
+  "Active Dataset:": "လက်ရှိ အချက်အလက်ဖိုင် -",
 };
