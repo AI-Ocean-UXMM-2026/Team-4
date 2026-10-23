@@ -4,7 +4,7 @@ from pathlib import PurePosixPath
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response
-from sqlalchemy import select, func
+from sqlalchemy import delete, select, func
 
 from ...core.dependencies import authorize_business
 from ...db.models import CreditDocument
@@ -49,6 +49,22 @@ def saved_applications(request: Request, business_id: str, _user=Depends(authori
             })
             item["filenames"].append(filename)
         return {"applications": list(applications.values())}
+
+
+@router.delete("/saved-applications")
+def delete_saved_application(request: Request, business_id: str, bank_id: str, product_id: str,
+                             _user=Depends(authorize_business)):
+    check_scope(bank_id, product_id)
+    with request.app.state.sessions.begin() as session:
+        lock_business(session, business_id)
+        result = session.execute(delete(CreditDocument).where(
+            CreditDocument.business_id == business_id,
+            CreditDocument.bank_id == bank_id,
+            CreditDocument.product_id == product_id,
+        ))
+        if not result.rowcount:
+            raise HTTPException(404, "Saved application not found.")
+        return {"deleted": True, "documents_deleted": result.rowcount}
 
 
 @router.post("/documents")

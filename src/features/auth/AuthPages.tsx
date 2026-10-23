@@ -20,18 +20,26 @@ function usePolicy() {
     },
   };
 }
-function useAvailability(signup = false) {
+function useAvailability(signup = false, directProviderSignIn = false) {
   const query = useConfig();
-  const notice = query.isError
-    ? "Unable to verify account configuration. Please try again shortly."
-    : !query.data
-      ? "Checking account configuration..."
-      : !query.data.auth_configured || !authClient()
-        ? "Account access is temporarily unavailable. Please try again later."
-        : signup && !query.data.auth_status?.ready
-          ? query.data.auth_status?.message ||
-            "Account creation is temporarily unavailable. Please try again later."
-          : "";
+  const clientAvailable = !!authClient();
+  // Existing users authenticate directly with Supabase using the public client
+  // configuration. Do not hold sign-in behind the slower server-side signup
+  // readiness check; the provider remains authoritative when credentials submit.
+  const notice = !clientAvailable
+    ? "Account access is temporarily unavailable. Please try again later."
+    : directProviderSignIn
+      ? ""
+      : query.isError
+        ? "Unable to verify account configuration. Please try again shortly."
+        : !query.data
+          ? "Checking account configuration..."
+          : !query.data.auth_configured
+            ? "Account access is temporarily unavailable. Please try again later."
+            : signup && !query.data.auth_status?.ready
+              ? query.data.auth_status?.message ||
+                "Account creation is temporarily unavailable. Please try again later."
+              : "";
   return { notice, blocked: !!notice };
 }
 function useCooldown(initial?: number) {
@@ -102,6 +110,30 @@ function useAccountRequest(initialCooldown?: number) {
 const message = (error: unknown) =>
   error instanceof Error ? error.message : "Something went wrong. Please try again.";
 
+const SIGN_IN_TIMEOUT_MS = 10_000;
+
+async function signInWithDeadline(email: string, password: string) {
+  let timer: ReturnType<typeof window.setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      requireAuthClient().auth.signInWithPassword({ email, password }),
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Sign in is taking too long. Check your connection and try again.",
+              ),
+            ),
+          SIGN_IN_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) window.clearTimeout(timer);
+  }
+}
+
 export function SignInPage() {
   const { t } = useTranslation();
 
@@ -111,7 +143,7 @@ export function SignInPage() {
   const [busy, setBusy] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const navigate = useNavigate();
-  const availability = useAvailability();
+  const availability = useAvailability(false, true);
   const { session, ready } = useAuth();
   if (ready && session) return <Navigate to="/" replace />;
   return (
@@ -142,10 +174,7 @@ export function SignInPage() {
           }
           setBusy(true);
           try {
-            const { error } = await requireAuthClient().auth.signInWithPassword({
-              email: email.trim(),
-              password,
-            });
+            const { error } = await signInWithDeadline(email.trim(), password);
             if (error) {
               setNeedsConfirmation(error.code === "email_not_confirmed");
               setError(

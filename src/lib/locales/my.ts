@@ -967,6 +967,8 @@ export const my: Record<string, string> = {
   "Payment timeline period": "ငွေပေးချေမှု အချိန်ကာလ",
   "No recorded loan payments are due in this period.":
     "ဤကာလအတွင်း ပေးရမည့် ချေးငွေအရစ်ကျ မှတ်တမ်းမရှိပါ။",
+  "No next payment details have been added yet. Add a payment date and amount to see the timeline.":
+    "နောက်အရစ်ကျ အချက်အလက် မထည့်ရသေးပါ။ အချိန်ဇယားကို ကြည့်ရန် ပေးချေရမည့်ရက်နှင့် ငွေပမာဏကို ထည့်ပါ။",
   "Next": "လာမည့်",
   "Due in": "ပေးရန်လိုသေးသည်",
   "days overdue": "ရက် ကျော်လွန်နေသည်",

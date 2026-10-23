@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, FileText, Landmark } from "lucide-react";
+import { ChevronDown, ExternalLink, FileText, Landmark } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { ApplicationFiles } from "./ApplicationFiles";
 
@@ -8,6 +8,7 @@ import type { ReadinessCategory } from "../types";
 export type GuideSelection = { bank: string; productId: string };
 
 type Copy = readonly [string, string];
+const savedApplicationName = (label: string) => label.split(" · ").slice(0, -2).join(" · ") || label;
 type Product = {
   id: string;
   name: string;
@@ -198,19 +199,25 @@ export function applicationRequirements({ bank, productId }: GuideSelection): Co
         ];
 }
 
-export function ApplicationSelector({ selection, onSelectionChange, savedSelections = [] }: {
+export function ApplicationSelector({ selection, onSelectionChange, onRemoveSaved, savedSelections = [] }: {
   selection: GuideSelection;
   onSelectionChange: (selection: GuideSelection) => void;
-  savedSelections?: { id: string; label: string; selection: GuideSelection }[];
+  onRemoveSaved?: (selection: GuideSelection) => Promise<void>;
+  savedSelections?: { id: string; label: string; selection: GuideSelection; fileCount?: number; updatedAt?: string }[];
 }) {
   const { language } = useTranslation();
   const copy = (text: Copy) => text[language === "my" ? 1 : 0];
+  const [opened, setOpened] = useState("");
+  const [removing, setRemoving] = useState("");
+  const [removeError, setRemoveError] = useState("");
   const available = products[selection.bank]!;
   const product = available.find((item) => item.id === selection.productId) || available[0]!;
-  const selectedSavedId = savedSelections.find(item =>
-    item.selection.bank === selection.bank && item.selection.productId === product.id
-  )?.id ?? "";
   const selectClass = "mt-2 block min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground";
+  const openSaved = (item: typeof savedSelections[number]) => {
+    onSelectionChange(item.selection);
+    setOpened(item.label);
+    window.requestAnimationFrame(() => document.getElementById("application-document-checklist")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   return <section className="bf-card space-y-4" aria-label={copy(["Choose an application", "ချေးငွေလျှောက်လွှာ ရွေးချယ်ရန်"])}>
     <div>
@@ -223,17 +230,35 @@ export function ApplicationSelector({ selection, onSelectionChange, savedSelecti
         "ပြင်ဆင်လိုသော စာရွက်စာတမ်းများအတွက် ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ရွေးပါ။",
       ])}</p>
     </div>
-    <label className="block text-sm font-medium">
-      {copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])}
-      <select className={selectClass} value={selectedSavedId} onChange={event => {
-        const saved = savedSelections.find(item => item.id === event.target.value);
-        if (saved) onSelectionChange(saved.selection);
-      }}>
-        <option value="">{copy(["Open a saved application…", "သိမ်းထားသော လျှောက်လွှာကို ရွေးပါ…"])}</option>
-        {savedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
-      </select>
-      {!savedSelections.length && <span className="mt-2 block text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</span>}
-    </label>
+    <details className="group rounded-xl border bg-card" defaultOpen={savedSelections.length < 3}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 font-medium hover:bg-muted/50">
+        <span>{copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])} <span className="text-muted-foreground">({savedSelections.length})</span></span>
+        <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <div className="space-y-2 border-t p-4">
+      {savedSelections.length ? <div className="grid gap-3 sm:grid-cols-2">
+        {savedSelections.map(item => <article key={item.id} className="rounded-xl border bg-background p-4 shadow-sm">
+          <p className="font-semibold">{savedApplicationName(item.label)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {item.fileCount ?? 0} {copy(["saved files", "ဖိုင် သိမ်းထားသည်"])}
+            {item.updatedAt ? ` · ${copy(["Updated", "နောက်ဆုံးပြင်ဆင်ချိန်"])} ${new Date(item.updatedAt).toLocaleDateString(language === "my" ? "my-MM" : "en-US")}` : ""}
+          </p>
+          <div className="mt-3 grid gap-2">
+            <button type="button" className="bf-button w-full" onClick={() => openSaved(item)}>
+              {copy(["Continue application", "လျှောက်လွှာဆက်လုပ်ရန်"])}
+            </button>
+            {onRemoveSaved && <button type="button" disabled={!!removing} className="min-h-10 rounded-xl border border-destructive/40 px-3 text-sm font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-60" onClick={() => {
+              if (!window.confirm(copy(["Remove this saved application and all its documents? This cannot be undone.", "ဤသိမ်းထားသော လျှောက်လွှာနှင့် စာရွက်စာတမ်းအားလုံးကို ဖယ်ရှားမည်လား။ ပြန်လည်ရယူ၍ မရပါ။"]))) return;
+              setRemoving(item.id); setRemoveError("");
+              void onRemoveSaved(item.selection).then(() => { if (opened === item.label) setOpened(""); }).catch(failure => setRemoveError(failure instanceof Error ? failure.message : copy(["Could not remove the application.", "လျှောက်လွှာကို ဖယ်ရှား၍ မရပါ။"]))).finally(() => setRemoving(""));
+            }}>{removing === item.id ? copy(["Removing…", "ဖယ်ရှားနေသည်…"]) : copy(["Remove saved application", "သိမ်းထားသော လျှောက်လွှာကို ဖယ်ရှားရန်"])}</button>}
+          </div>
+        </article>)}
+      </div> : <p className="text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</p>}
+      {opened && <p role="status" className="text-sm font-medium text-primary">{copy(["Saved application opened:", "သိမ်းထားသော လျှောက်လွှာကို ဖွင့်ပြီးပါပြီ။"])} {savedApplicationName(opened)}</p>}
+      {removeError && <p role="alert" className="text-sm text-destructive">{removeError}</p>}
+      </div>
+    </details>
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">
         {copy(["Bank", "ဘဏ်"])}
@@ -259,19 +284,17 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
   onViewRecords: () => void; businessId?: string; selection?: GuideSelection;
   onSelectionChange?: (selection: GuideSelection) => void; preparationOnly?: boolean;
   records?: ReadinessCategory[];
-  savedSelections?: { id: string; label: string; selection: GuideSelection }[];
+  savedSelections?: { id: string; label: string; selection: GuideSelection; fileCount?: number; updatedAt?: string }[];
   showSelector?: boolean;
 }) {
   const { language } = useTranslation();
   const copy = (text: Copy) => text[language === "my" ? 1 : 0];
   const [localSelection, setLocalSelection] = useState<GuideSelection>({ bank: "kbz", productId: "term" });
+  const [opened, setOpened] = useState("");
   const { bank, productId } = selection || localSelection;
   const select = (next: GuideSelection) => { setLocalSelection(next); onSelectionChange?.(next); };
   const available = products[bank]!;
   const product = available.find((item) => item.id === productId) || available[0]!;
-  const selectedSavedId = savedSelections.find(item =>
-    item.selection.bank === bank && item.selection.productId === product.id
-  )?.id ?? "";
   const source =
     bank === "kbz"
       ? kbzProducts
@@ -295,17 +318,25 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
             "ဘဏ်ထုတ်ပြန်ထားသော လုပ်ငန်းချေးငွေအချက်အလက်များကို လေ့လာနိုင်ပါသည်။ ရှိပြီးသားချေးငွေများကို မပြောင်းလဲသကဲ့သို့ ခွင့်ပြုနိုင်မှုကိုလည်း မဆုံးဖြတ်ပါ။",
           ])}
         </p>
-        {preparationOnly && <label className="block text-sm font-medium">
-          {copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])}
-          <select className={selectClass} value={selectedSavedId} onChange={event => {
-            const saved = savedSelections.find(item => item.id === event.target.value);
-            if (saved) select(saved.selection);
-          }}>
-            <option value="">{copy(["Open a saved application…", "သိမ်းထားသော လျှောက်လွှာကို ရွေးပါ…"])}</option>
-            {savedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
-          </select>
-          {!savedSelections.length && <span className="mt-2 block text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</span>}
-        </label>}
+        {preparationOnly && <details className="group rounded-xl border bg-card" defaultOpen={savedSelections.length < 3}>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 font-medium hover:bg-muted/50">
+            <span>{copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])} <span className="text-muted-foreground">({savedSelections.length})</span></span>
+            <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div className="space-y-2 border-t p-4">
+          {savedSelections.length ? <div className="grid gap-3 sm:grid-cols-2">
+            {savedSelections.map(item => <article key={item.id} className="rounded-xl border bg-background p-4 shadow-sm">
+              <p className="font-semibold">{savedApplicationName(item.label)}</p>
+              <button type="button" className="bf-button mt-3 w-full" onClick={() => {
+                select(item.selection);
+                setOpened(item.label);
+                window.requestAnimationFrame(() => document.getElementById("application-document-checklist")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+              }}>{copy(["Continue application", "လျှောက်လွှာဆက်လုပ်ရန်"])}</button>
+            </article>)}
+          </div> : <p className="text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</p>}
+          {opened && <p role="status" className="text-sm font-medium text-primary">{copy(["Saved application opened:", "သိမ်းထားသော လျှောက်လွှာကို ဖွင့်ပြီးပါပြီ။"])} {savedApplicationName(opened)}</p>}
+          </div>
+        </details>}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium">
             {copy(["Bank", "ဘဏ်"])}

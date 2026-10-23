@@ -57,7 +57,7 @@ export function ApplicationFiles({ businessId, bank, productId, documents, recor
       })}>{copy(["Remove", "ဖယ်ရှားရန်"])}</button>
     </div>)}
   </div>;
-  return <section aria-label={copy(["Application checklist", "လျှောက်လွှာစစ်ဆေးစာရင်း"])} className="space-y-4">
+  return <section id="application-document-checklist" aria-label={copy(["Application checklist", "လျှောက်လွှာစစ်ဆေးစာရင်း"])} className="scroll-mt-6 space-y-4">
     <p className="text-sm text-muted-foreground">{copy(["Upload PDF, PNG or JPEG files, up to 4 MB each. Files are saved for this business, bank and product. Imported Excel records are shown separately within each folder. Neither records nor uploads are bank verification.", "PDF၊ PNG သို့မဟုတ် JPEG ဖိုင်များကို တစ်ဖိုင် 4 MB အထိ တင်နိုင်ပါသည်။ ဖိုင်များကို ဤလုပ်ငန်း၊ ဘဏ်နှင့် ချေးငွေအမျိုးအစားအတွက် သိမ်းထားပါသည်။ Folder တစ်ခုစီတွင် Excel စာရင်းဒေတာကို သီးခြားဖော်ပြထားပါသည်။ ဒေတာနှင့်တင်ထားသောဖိုင်များသည် ဘဏ်အတည်ပြုချက် မဟုတ်ပါ။"])}</p>
     {files.isPending && <p role="status">{copy(["Loading files…", "ဖိုင်များ ဖတ်နေပါသည်…"])}</p>}
     {files.isError && <p role="alert">{copy(["Could not load files. Try again.", "ဖိုင်များ မဖတ်နိုင်ပါ။ ထပ်စမ်းပါ။"])} <button className="bf-button-link" onClick={() => void files.refetch()}>{copy(["Retry", "ထပ်စမ်းရန်"])}</button></p>}

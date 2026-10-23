@@ -62,3 +62,14 @@ def test_rejects_fake_file_type_and_mismatched_bank_product(client):
     assert fake.status_code == 400
     assert client.get("/documents?business_id=mine&bank_id=yoma&product_id=kbz-term").status_code == 400
     assert client.get("/documents?business_id=other&bank_id=kbz&product_id=kbz-term").status_code == 403
+
+
+def test_delete_saved_application_removes_all_product_documents(client):
+    content = b"%PDF-1.4\nDemo attachment"
+    for name in ("license.pdf", "statement.pdf"):
+        assert client.post(f"/documents?{SCOPE}&requirement_key=doc-0", files={"file": (name, content, "application/pdf")}).status_code == 200
+    deleted = client.delete(f"/saved-applications?{SCOPE}")
+    assert deleted.status_code == 200
+    assert deleted.json()["documents_deleted"] == 2
+    assert client.get(f"/documents?{SCOPE}").json()["documents"] == []
+    assert client.delete(f"/saved-applications?{SCOPE}").status_code == 404

@@ -15,15 +15,13 @@ export function TopBar() {
       </div>
       <DisplayPreferences />
       <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:w-auto sm:gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border bg-background/70 px-3 py-2 text-sm">
+        <div
+          title={business.name}
+          aria-label={t("Active business")}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border/80 bg-background/70 px-3.5 py-2 text-sm sm:max-w-56"
+        >
           <Building2 size={16} className="shrink-0 text-primary" aria-hidden="true" />
-          <span className="sr-only">{t("Active business")}</span>
-          <span
-            className="min-w-0 truncate py-1 text-sm font-semibold text-foreground sm:max-w-56"
-            title={business.name}
-          >
-            {business.name}
-          </span>
+          <span className="truncate font-semibold text-foreground">{business.name}</span>
         </div>
         <Link
           to="/profile"

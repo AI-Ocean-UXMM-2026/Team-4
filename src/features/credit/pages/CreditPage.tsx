@@ -64,7 +64,13 @@ export function CreditPage() {
   const savedSelections = (savedApplications.data?.applications || []).flatMap(item => {
     const bank = loanCatalog.banks.find(bank => bank.id === item.bank_id);
     const product = bank?.products.find(product => product.id === item.product_id);
-    return bank && product ? [{id: `${bank.id}:${product.id}`, label: `${bank.name} · ${product.name} · ${item.filenames.length} ${t("files")}`, selection: {bank: bank.id, productId: product.id.slice(bank.id.length + 1)}}] : [];
+    return bank && product ? [{
+      id: `${bank.id}:${product.id}`,
+      label: `${bank.name} · ${product.name} · ${item.filenames.length} ${t("files")}`,
+      selection: {bank: bank.id, productId: product.id.slice(bank.id.length + 1)},
+      fileCount: item.filenames.length,
+      updatedAt: item.updated_at,
+    }] : [];
   });
   return (
     <div className="credit-page space-y-5">
@@ -258,6 +264,17 @@ export function CreditPage() {
               <ApplicationSelector
                 selection={selection || {bank: "kbz", productId: "term"}}
                 onSelectionChange={setPreparationSelection}
+                onRemoveSaved={async item => {
+                  await api(`/api/v1/credit/saved-applications?${new URLSearchParams({
+                    business_id: data.business_id,
+                    bank_id: item.bank,
+                    product_id: `${item.bank}-${item.productId}`,
+                  })}`, {method: "DELETE"});
+                  await Promise.all([
+                    savedApplications.refetch(),
+                    files.refetch(),
+                  ]);
+                }}
                 savedSelections={savedSelections}
               />
               <BankLoanGuide

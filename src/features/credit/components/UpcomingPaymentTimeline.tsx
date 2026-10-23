@@ -22,7 +22,7 @@ const displayDate = (value: string) => {
 export function UpcomingPaymentTimeline({ data }: { data: CreditSummary }) {
   const { t } = useTranslation();
   const [windowDays, setWindowDays] = useState<WindowDays>(30);
-  const payments = ([
+  const recordedPayments = ([
     ...data.loans.flatMap((loan): Payment[] => {
       if (loan.schedule_status === "available") {
         return loan.schedule
@@ -40,7 +40,8 @@ export function UpcomingPaymentTimeline({ data }: { data: CreditSummary }) {
         ? [{ id: `balance-${balance.id}`, lender: balance.lender_name, dueDate: balance.next_payment_date, amount: balance.next_payment_mmk, estimated: false }]
         : [];
     }),
-  ] as Payment[])
+  ] as Payment[]);
+  const payments = recordedPayments
     .map((item) => ({ ...item, daysUntilDue: Math.round((dayNumber(item.dueDate) - dayNumber(data.as_of)) / 86400000) }))
     .filter((item) => item.daysUntilDue <= windowDays)
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
@@ -71,7 +72,11 @@ export function UpcomingPaymentTimeline({ data }: { data: CreditSummary }) {
       {payments.length === 0
         ? <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border px-4 py-7 text-center">
             <CalendarClock size={22} className="text-muted-foreground/70" aria-hidden="true" />
-            <p className="mt-2 text-sm text-muted-foreground">{t("No recorded loan payments are due in this period.")}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t(recordedPayments.length === 0
+                ? "No next payment details have been added yet. Add a payment date and amount to see the timeline."
+                : "No recorded loan payments are due in this period.")}
+            </p>
           </div>
         : <ul className="divide-y divide-border rounded-xl border border-border">{payments.map((payment) => {
           const paymentStatus = status(payment.daysUntilDue);

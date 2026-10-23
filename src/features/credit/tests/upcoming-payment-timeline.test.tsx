@@ -21,3 +21,13 @@ it("shows due dates and statuses in the selected timeline", () => {
   expect(screen.getByText("Nov 28, 2026")).toBeTruthy();
   expect(screen.getByText("Dec 28, 2026")).toBeTruthy();
 });
+
+it("explains when no next payment details have been added", () => {
+  render(<UpcomingPaymentTimeline data={{ ...summary, loans: [], recorded_balances: [{ ...summary.recorded_balances![0], next_payment_date: null, next_payment_mmk: null }] }} />);
+  expect(screen.getByText("No next payment details have been added yet. Add a payment date and amount to see the timeline.")).toBeTruthy();
+});
+
+it("explains when recorded payments fall outside the selected period", () => {
+  render(<UpcomingPaymentTimeline data={{ ...summary, loans: [], recorded_balances: [{ ...summary.recorded_balances![0], next_payment_date: "2027-01-23" }] }} />);
+  expect(screen.getByText("No recorded loan payments are due in this period.")).toBeTruthy();
+});
