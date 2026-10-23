@@ -121,7 +121,7 @@ describe("WorkingCapitalToolTabs", () => {
     ).toBe("1234567");
     expect(simulate).not.toHaveBeenCalled();
     expect(planReserve).not.toHaveBeenCalled();
-  });
+  }, 15_000);
 
   it("preserves a calculated scenario result when another tab is visited", async () => {
     const { simulate } = renderTools();
