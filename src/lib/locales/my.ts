@@ -1019,4 +1019,18 @@ export const my: Record<string, string> = {
   "Excel workbook (.xlsx)": "Excel ဖိုင် (.xlsx)",
   "Available datasets": "ရရှိနိုင်သော ဒေတာအတွဲများ",
   "saved versions": "သိမ်းဆည်းထားသော ဗားရှင်းများ",
+  "Analysis Summary": "သုံးသပ်ချက် အကျဉ်းချုပ်",
+  "Some financial data is incomplete. Recommendations are based on available verified records.":
+    "ငွေကြေးဆိုင်ရာ အချက်အလက်အချို့ မပြည့်စုံပါ။ လက်ရှိရရှိထားသော အတည်ပြုမှတ်တမ်းများပေါ် အခြေခံ၍ အကြံပြုထားပါသည်။",
+  "View analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ကြည့်ရန်",
+  "Hide analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ဝှက်ရန်",
+  "Import version:": "ထည့်သွင်းထားသော ဗားရှင်း —",
+  "Batch ID:": "အသုတ်အမှတ် —",
+  "Provider configuration status:": "AI စနစ် ချိတ်ဆက်မှု အခြေအနေ —",
+  "External AI active and verified": "ပြင်ပ AI စနစ် အောင်မြင်စွာ ချိတ်ဆက်အသုံးပြုထားပါသည်",
+  "Not configured (using local verified rules engine)":
+    "ချိတ်ဆက်မထားပါ (ပြည်တွင်း အတည်ပြု စည်းမျဉ်းအင်ဂျင်ကို အသုံးပြုထားပါသည်)",
+  "Rules-based engine active": "စည်းမျဉ်းအခြေခံအင်ဂျင် အသုံးပြုနေပါသည်",
+  "Technical notes:": "နည်းပညာဆိုင်ရာ မှတ်ချက်များ —",
+  "Analysis unavailable": "သုံးသပ်ချက် မရရှိနိုင်ပါ",
 };
