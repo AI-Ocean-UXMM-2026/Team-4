@@ -19,6 +19,7 @@ describe("App routing", () => {
     "/credit",
     "/ai",
     "/data-source",
+    "/financial",
     "/sign-in",
     "/register",
     "/forgot-password",

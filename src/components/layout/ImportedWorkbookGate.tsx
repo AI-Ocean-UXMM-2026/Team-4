@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "@/lib/i18n";
 
-const dataPages = new Set(["/", "/working-capital", "/ai"]);
+const dataPages = new Set(["/", "/financial", "/working-capital", "/ai"]);
 
 export function ImportedWorkbookGate({ sourceVersion, path, children }: {
   sourceVersion: number; path: string; children: ReactNode;

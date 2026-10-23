@@ -11,7 +11,7 @@ import {
 export const navigation = [
   { to: "/data-source", label: "Data Source", icon: Database },
   { to: "/ai", label: "AI Analyzer", icon: Sparkles },
-  { to: "/", label: "Financial Health", icon: ChartNoAxesCombined },
+  { to: "/financial", label: "Financial Health", icon: ChartNoAxesCombined },
   { to: "/working-capital", label: "Working Capital", icon: CircleDollarSign },
   { to: "/credit", label: "Credit Hub", icon: ClipboardCheck },
   { to: "/profile", label: "Profile", icon: UserRound },

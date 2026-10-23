@@ -34,9 +34,9 @@ const categoryIcons: Record<Insight["category"], typeof CircleDollarSign> = {
 
 const destinations: Record<
   Insight["category"],
-  "/" | "/working-capital" | "/credit" | "/data-source"
+  "/financial" | "/working-capital" | "/credit" | "/data-source"
 > = {
-  liquidity: "/",
+  liquidity: "/financial",
   working_capital: "/working-capital",
   credit: "/credit",
   data_quality: "/data-source",
@@ -44,10 +44,10 @@ const destinations: Record<
 
 const nextStepDestinations: Record<
   string,
-  { to: "/" | "/working-capital" | "/credit" | "/data-source"; label: string }
+  { to: "/financial" | "/working-capital" | "/credit" | "/data-source"; label: string }
 > = {
-  "supplier-shortfall": { to: "/", label: "Open Financial Health" },
-  "receivables-followup": { to: "/", label: "Open Financial Health" },
+  "supplier-shortfall": { to: "/financial", label: "Open Financial Health" },
+  "receivables-followup": { to: "/financial", label: "Open Financial Health" },
   "supplier-balances": { to: "/working-capital", label: "Open Working Capital" },
   "slow-stock-review": { to: "/working-capital", label: "Open Working Capital" },
   "stockout-review": { to: "/working-capital", label: "Open Working Capital" },

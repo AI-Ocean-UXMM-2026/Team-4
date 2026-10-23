@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataSourceRouteImport } from './routes/data-source'
+import { Route as FinancialRouteImport } from './routes/financial'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -41,6 +42,11 @@ const CreditRoute = CreditRouteImport.update({
 const DataSourceRoute = DataSourceRouteImport.update({
   id: '/data-source',
   path: '/data-source',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinancialRoute = FinancialRouteImport.update({
+  id: '/financial',
+  path: '/financial',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/financial': typeof FinancialRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/financial': typeof FinancialRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/ai': typeof AiRoute
   '/credit': typeof CreditRoute
   '/data-source': typeof DataSourceRoute
+  '/financial': typeof FinancialRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/credit'
     | '/data-source'
+    | '/financial'
     | '/forgot-password'
     | '/onboarding'
     | '/profile'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/credit'
     | '/data-source'
+    | '/financial'
     | '/forgot-password'
     | '/onboarding'
     | '/profile'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/credit'
     | '/data-source'
+    | '/financial'
     | '/forgot-password'
     | '/onboarding'
     | '/profile'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AiRoute: typeof AiRoute
   CreditRoute: typeof CreditRoute
   DataSourceRoute: typeof DataSourceRoute
+  FinancialRoute: typeof FinancialRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/data-source'
       fullPath: '/data-source'
       preLoaderRoute: typeof DataSourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financial': {
+      id: '/financial'
+      path: '/financial'
+      fullPath: '/financial'
+      preLoaderRoute: typeof FinancialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiRoute: AiRoute,
   CreditRoute: CreditRoute,
   DataSourceRoute: DataSourceRoute,
+  FinancialRoute: FinancialRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
