@@ -2,7 +2,10 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, expect, it, vi } from "vitest";
 import { AIAnalyzerPage } from "./AIAnalyzerPage";
 
-const { run } = vi.hoisted(() => ({ run: vi.fn() }));
+const { run, mockWarnings } = vi.hoisted(() => ({
+  run: vi.fn(),
+  mockWarnings: [] as string[],
+}));
 vi.mock("@/lib/i18n", () => ({ useTranslation: () => ({ t: (text: string) => text }) }));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, children, ...props }: { to: string; children: React.ReactNode }) => (
@@ -19,7 +22,8 @@ vi.mock("./useBusinessAnalysis", () => ({
       source_version: 2,
       generated_at: "2026-10-22T00:00:00Z",
       data_as_of: "2026-10-21T00:00:00Z",
-      warnings: [],
+      import_batch_id: "batch-a",
+      warnings: mockWarnings,
       disclaimer: "Decision support only.",
       insights: [
         {
@@ -45,6 +49,39 @@ vi.mock("./useBusinessAnalysis", () => ({
 afterEach(() => {
   cleanup();
   run.mockClear();
+  mockWarnings.length = 0;
+});
+
+it("shows a compact summary without a rules-based badge and keeps provider details available", () => {
+  mockWarnings.push("AI provider is not configured; rules-based findings are shown.");
+  render(<AIAnalyzerPage />);
+
+  const summary = screen.getByRole("region", { name: "Analysis Summary" });
+  expect(within(summary).getByText("Analysis Summary")).toBeVisible();
+  expect(within(summary).queryByText("Verified rules-based analysis")).toBeNull();
+  expect(within(summary).queryByText(/AI provider is not configured/)).toBeNull();
+  expect(within(summary).getByText("Generated:")).toBeVisible();
+  expect(within(summary).getByText("Import version:")).toBeVisible();
+
+  fireEvent.click(within(summary).getByRole("button", { name: "View analysis details" }));
+  expect(within(summary).getByText("Source as of:")).toBeVisible();
+  expect(within(summary).getByText("Batch ID:")).toBeVisible();
+  expect(within(summary).getByText("Provider configuration status:")).toBeVisible();
+});
+
+it("consolidates incomplete-data warnings without hiding the limitation", () => {
+  mockWarnings.push(
+    "Financial snapshot is partial or missing.",
+    "Financial source contains data-quality warnings.",
+  );
+  render(<AIAnalyzerPage />);
+
+  const summary = screen.getByRole("region", { name: "Analysis Summary" });
+  expect(within(summary).getByText(
+    "Some financial data is incomplete. Recommendations are based on available verified records.",
+  )).toBeVisible();
+  expect(within(summary).queryByText("Financial snapshot is partial or missing.")).toBeNull();
+  expect(within(summary).queryByText("Financial source contains data-quality warnings.")).toBeNull();
 });
 
 it("offers one clearly disclosed AI action", () => {

@@ -1,4 +1,7 @@
 export const my: Record<string, string> = {
+  "Edit your workbook, save it, then re-upload. Keep the same row IDs to update entries once. Rows omitted from an upload are kept unless you choose full replacement.": "Excel ဖိုင်ကို ပြင်ဆင်ပြီး သိမ်းကာ ပြန်တင်ပါ။ မှတ်တမ်းများကို ထပ်မပွားဘဲ ပြင်ဆင်နိုင်ရန် မူလ row ID များကို ဆက်သုံးပါ။ အချက်အလက်အားလုံး အစားထိုးရန် မရွေးထားပါက ဖိုင်အသစ်တွင် မပါသော မှတ်တမ်းဟောင်းများကို ဆက်ထိန်းထားပါမည်။",
+  "Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.": "မတင်သွင်းမီ Settings တွင် business_name၊ currency (MMK)၊ opening_date နှင့် opening_cash_mmk ပါသော အတန်းတစ်ကြောင်းကို ဖြည့်ပါ။ ဖိုင်အလွတ်ပုံစံတွင် ငွေကြေးဒေတာ မပါပါ။ Loans နှင့် LoanPayments စာရွက်များကို လိုအပ်မှသာ ဖြည့်ပါ။",
+  "Uploads are assigned to your selected workspace automatically. You do not need to add or change business_id in Excel.": "တင်သွင်းသည့်ဖိုင်ကို လက်ရှိရွေးထားသော လုပ်ငန်းနှင့် အလိုအလျောက် ချိတ်ဆက်ပေးပါမည်။ Excel ထဲတွင် business_id ထည့်ရန် သို့မဟုတ် ပြောင်းရန် မလိုပါ။",
   "Upload profile photo": "ကိုယ်ရေးဓာတ်ပုံ တင်ရန်",
   "Add profile photo": "ကိုယ်ရေးဓာတ်ပုံ ထည့်ရန်",
   "Change profile photo": "ကိုယ်ရေးဓာတ်ပုံ ပြောင်းရန်",
@@ -1016,4 +1019,18 @@ export const my: Record<string, string> = {
   "Excel workbook (.xlsx)": "Excel ဖိုင် (.xlsx)",
   "Available datasets": "ရရှိနိုင်သော ဒေတာအတွဲများ",
   "saved versions": "သိမ်းဆည်းထားသော ဗားရှင်းများ",
+  "Analysis Summary": "သုံးသပ်ချက် အကျဉ်းချုပ်",
+  "Some financial data is incomplete. Recommendations are based on available verified records.":
+    "ငွေကြေးဆိုင်ရာ အချက်အလက်အချို့ မပြည့်စုံပါ။ လက်ရှိရရှိထားသော အတည်ပြုမှတ်တမ်းများပေါ် အခြေခံ၍ အကြံပြုထားပါသည်။",
+  "View analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ကြည့်ရန်",
+  "Hide analysis details": "သုံးသပ်ချက် အသေးစိတ်ကို ဝှက်ရန်",
+  "Import version:": "ထည့်သွင်းထားသော ဗားရှင်း —",
+  "Batch ID:": "အသုတ်အမှတ် —",
+  "Provider configuration status:": "AI စနစ် ချိတ်ဆက်မှု အခြေအနေ —",
+  "External AI active and verified": "ပြင်ပ AI စနစ် အောင်မြင်စွာ ချိတ်ဆက်အသုံးပြုထားပါသည်",
+  "Not configured (using local verified rules engine)":
+    "ချိတ်ဆက်မထားပါ (ပြည်တွင်း အတည်ပြု စည်းမျဉ်းအင်ဂျင်ကို အသုံးပြုထားပါသည်)",
+  "Rules-based engine active": "စည်းမျဉ်းအခြေခံအင်ဂျင် အသုံးပြုနေပါသည်",
+  "Technical notes:": "နည်းပညာဆိုင်ရာ မှတ်ချက်များ —",
+  "Analysis unavailable": "သုံးသပ်ချက် မရရှိနိုင်ပါ",
 };
