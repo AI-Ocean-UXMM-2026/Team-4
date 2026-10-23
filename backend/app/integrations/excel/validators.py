@@ -25,6 +25,14 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
     if errors:
         return errors
     opening = parsed.sheets["Settings"][0].values["opening_date"]
+    balance_dates = set()
+    for row in parsed.sheets.get("CashBalances", []):
+        stamp = row.values["as_of_date"]
+        if stamp < opening:
+            errors.append(issue("CashBalances", row.excel_row, "as_of_date", "Balance date predates the opening date"))
+        if stamp in balance_dates:
+            errors.append(issue("CashBalances", row.excel_row, "as_of_date", "Use one cash and bank balance snapshot per date"))
+        balance_dates.add(stamp)
     references = {"Sales": ("Products", "product_id"), "Purchases": ("Products", "product_id"),
                   "CustomerReceipts": ("Sales", "sale_id"), "SupplierPayments": ("Purchases", "purchase_id"),
                   "LoanPayments": ("Loans", "loan_id")}
@@ -98,20 +106,6 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
             limit = D(original[base]) if initial is None else D(original["quantity"]) * D(original[base]) - D(original[initial])
             if running[value[fk]] > limit:
                 errors.append(issue(child, row.excel_row, "principal_mmk" if initial is None else "amount_mmk", "Cumulative payments exceed the outstanding amount"))
-    # Product rule: historical settled loans may belong to other banks, but
-    # outstanding loans must all belong to one lender. Also runs on merged imports.
-    repaid = defaultdict(lambda: D(0))
-    for row in parsed.sheets.get("LoanPayments", []):
-        repaid[row.values["loan_id"]] += D(row.values["principal_mmk"])
-    active_banks = set()
-    for row in parsed.sheets.get("Loans", []):
-        value = row.values
-        if D(value["principal_mmk"]) > repaid[value["loan_id"]]:
-            bank = " ".join(value["lender"].casefold().split())
-            bank = {"kbz": "kbz bank", "yoma": "yoma bank"}.get(bank, bank)
-            active_banks.add(bank)
-    if len(active_banks) > 1:
-        errors.append(issue("Loans", 0, "lender", "This app supports outstanding loans from one bank at a time. Review the lender and repayment records; existing loans were not changed."))
     stock = {key: D(row.values["opening_stock"]) for key, row in index.get("Products", {}).items()}
     events = [(row.values["date"], 0, "Purchases", row) for row in parsed.sheets.get("Purchases", [])]
     events += [(row.values["date"], 1, "Sales", row) for row in parsed.sheets.get("Sales", [])]

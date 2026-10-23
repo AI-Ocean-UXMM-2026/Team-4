@@ -35,6 +35,22 @@ def list_documents(request: Request, business_id: str, bank_id: str, product_id:
         return {"documents": [metadata(row) for row in rows]}
 
 
+@router.get("/saved-applications")
+def saved_applications(request: Request, business_id: str, _user=Depends(authorize_business)):
+    with request.app.state.sessions() as session:
+        rows = session.execute(select(CreditDocument.bank_id, CreditDocument.product_id,
+            CreditDocument.filename, CreditDocument.created_at).where(
+                CreditDocument.business_id == business_id).order_by(CreditDocument.created_at.desc())).all()
+        applications = {}
+        for bank_id, product_id, filename, created_at in rows:
+            item = applications.setdefault((bank_id, product_id), {
+                "bank_id": bank_id, "product_id": product_id, "filenames": [],
+                "updated_at": created_at.isoformat(),
+            })
+            item["filenames"].append(filename)
+        return {"applications": list(applications.values())}
+
+
 @router.post("/documents")
 def upload_document(request: Request, business_id: str, bank_id: str, product_id: str, requirement_key: str,
                     file: UploadFile = File(...), _user=Depends(authorize_business)):

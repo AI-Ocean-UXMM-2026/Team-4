@@ -1,8 +1,84 @@
 export const my: Record<string, string> = {
+  "Upload profile photo": "ကိုယ်ရေးဓာတ်ပုံ တင်ရန်",
+  "Add profile photo": "ကိုယ်ရေးဓာတ်ပုံ ထည့်ရန်",
+  "Change profile photo": "ကိုယ်ရေးဓာတ်ပုံ ပြောင်းရန်",
+  "Profile photo": "ကိုယ်ရေးဓာတ်ပုံ",
+  "Add photo": "ဓာတ်ပုံထည့်ရန်",
+  "Change photo": "ဓာတ်ပုံပြောင်းရန်",
+  "Remove photo": "ဓာတ်ပုံဖယ်ရှားရန်",
+  "Reading photo…": "ဓာတ်ပုံဖတ်နေသည်…",
+  "JPG, PNG or WebP, up to 2 MB. Save changes to keep your photo.":
+    "JPG၊ PNG သို့မဟုတ် WebP၊ အများဆုံး 2 MB။ ဓာတ်ပုံကိုသိမ်းရန် ပြင်ဆင်ချက်များကို သိမ်းပါ။",
+  "Choose a valid JPG, PNG or WebP photo up to 2 MB.":
+    "2 MB ထက်မကြီးသော JPG၊ PNG သို့မဟုတ် WebP ဓာတ်ပုံကို ရွေးပါ။",
+  "Could not read this photo. Please choose another one.":
+    "ဓာတ်ပုံကိုဖတ်၍မရပါ။ အခြားဓာတ်ပုံတစ်ပုံ ရွေးပါ။",
+  "Your profile": "သင့်ကိုယ်ရေးအချက်အလက်",
+  "Manage your personal details and business information.":
+    "သင့်ကိုယ်ရေးအချက်အလက်နှင့် လုပ်ငန်းအချက်အလက်များကို စီမံပါ။",
+  Profile: "ကိုယ်ရေးအချက်အလက်",
+  "Personal details": "ကိုယ်ရေးအချက်အလက်များ",
+  "Business owner": "လုပ်ငန်းပိုင်ရှင်",
+  Account: "အကောင့်",
+  "Used to sign in to your account.": "သင့်အကောင့်သို့ ဝင်ရောက်ရန် အသုံးပြုသော အီးမေးလ်ဖြစ်သည်။",
+  "Keep your business information up to date.":
+    "သင့်လုပ်ငန်းအချက်အလက်များကို နောက်ဆုံးအခြေအနေနှင့်အညီ ပြင်ဆင်ထားပါ။",
+  "Save changes": "ပြင်ဆင်ချက်များကို သိမ်းရန်",
+  "Cancel changes": "ပြင်ဆင်ချက်များကို ပယ်ဖျက်ရန်",
+  "Profile saved.": "ကိုယ်ရေးအချက်အလက်ကို သိမ်းပြီးပါပြီ။",
+  "Saving profile…": "ကိုယ်ရေးအချက်အလက် သိမ်းနေသည်…",
+  "Loading your profile…": "သင့်ကိုယ်ရေးအချက်အလက်ကို ရယူနေသည်…",
+  "Unable to load your profile.": "သင့်ကိုယ်ရေးအချက်အလက်ကို မရယူနိုင်ပါ။",
+  "Your changes have not been saved. Try again.":
+    "သင့်ပြင်ဆင်ချက်များကို မသိမ်းနိုင်ပါ။ ထပ်မံကြိုးစားပါ။",
+  "Finish business setup before updating business details.":
+    "လုပ်ငန်းအချက်အလက်များကို မပြင်ဆင်မီ လုပ်ငန်းစတင်သတ်မှတ်ခြင်းကို အပြီးသတ်ပါ။",
+  "Profile initials": "အမည်အတိုကောက်",
+  "No business is linked to this profile yet.":
+    "ဤကိုယ်ရေးအချက်အလက်နှင့် ချိတ်ဆက်ထားသော လုပ်ငန်း မရှိသေးပါ။",
+  "You have unsaved changes.": "မသိမ်းရသေးသော ပြင်ဆင်ချက်များ ရှိပါသည်။",
+  "All changes saved.": "ပြင်ဆင်ချက်အားလုံးကို သိမ်းပြီးပါပြီ။",
+  "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.":
+    "သက်ဆိုင်ရာ လျှောက်လွှာလိုအပ်ချက်များကို ကြည့်ရန် Loans စာရွက်တွင် ပံ့ပိုးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ဖြည့်ပြီး တင်သွင်းပါ။",
+  "Imported records and uploaded supporting files remain unverified by lenders.":
+    "တင်သွင်းထားသောစာရင်းနှင့် အထောက်အထားဖိုင်များကို ဘဏ်က စစ်ဆေးအတည်ပြုထားခြင်း မရှိသေးပါ။",
   Safe: "လက်ကျန်ကုန်ပစ္စည်း လုံလောက်သည်",
   "Order Soon": "မကြာမီ မှာယူပါ",
   "High Risk": "ကုန်ပြတ်နိုင်ခြေ မြင့်သည်",
   "Source: Excel": "ရင်းမြစ်: Excel",
+  "Recorded outstanding principal": "မှတ်တမ်းတင်ထားသော လက်ကျန်အရင်း",
+  "User-recorded balance. Repayment terms and payment history have not been supplied.": "မိမိဖြည့်သွင်းထားသော လက်ကျန်အရင်း ဖြစ်ပါသည်။ ပြန်ဆပ်စည်းကမ်းချက်နှင့် ပေးချေမှုမှတ်တမ်းများ မဖြည့်ရသေးပါ။",
+  "Last imported workbook:": "နောက်ဆုံးတင်သွင်းထားသော Excel ဖိုင်:",
+  "Select the workbook again to import changes. Your previously imported data is saved.": "ပြင်ဆင်ထားသောအချက်အလက်များ တင်သွင်းရန် ဖိုင်ကို ပြန်ရွေးပါ။ ယခင်တင်သွင်းထားသော အချက်အလက်များကို သိမ်းထားပါသည်။",
+  "Before importing, complete one Settings row: business_id, business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.": "Import မလုပ်မီ Settings တွင် business_id၊ business_name၊ currency (MMK)၊ opening_date နှင့် opening_cash_mmk ပါသော အတန်းတစ်ကြောင်းကို ဖြည့်ပါ။ Blank template တွင် ငွေကြေးဒေတာ မပါပါ။ Loans နှင့် LoanPayments sheet များ မလိုအပ်ပါ။",
+  "No workbook imported yet": "Excel ဖိုင် မတင်သွင်းရသေးပါ",
+  "Import an Excel workbook for this business to see financial data, loan records and analysis. Selecting a file alone does not import it.": "ဤလုပ်ငန်း၏ ငွေကြေးစာရင်း၊ ချေးငွေမှတ်တမ်းနှင့် သုံးသပ်ချက်များကို ကြည့်ရန် Excel ဖိုင်တင်သွင်းပါ။ ဖိုင်ရွေးထားရုံဖြင့် တင်သွင်းပြီးခြင်း မဟုတ်ပါ။",
+  "Import Excel workbook": "Excel ဖိုင်တင်သွင်းရန်",
+  "Browse files": "ဖိုင်ရွေးရန်",
+  "Change file": "ဖိုင်ပြောင်းရန်",
+  "No workbook selected. Browse, paste or drop an .xlsx file here.": "ဖိုင်မရွေးရသေးပါ။ .xlsx ဖိုင်ကို ရွေးပါ၊ paste လုပ်ပါ သို့မဟုတ် ဤနေရာသို့ ဆွဲထည့်ပါ။",
+  "Calculation notes and limitations": "တွက်ချက်မှုဆိုင်ရာ ရှင်းလင်းချက်နှင့် ကန့်သတ်ချက်များ",
+  "Repayment planning uses Financial Health cash and reserves all outstanding supplier balances and recorded unpaid expenses, regardless of supplier due dates. No future customer receipts or protected cash reserve are assumed.": "ပြန်ဆပ်မှုစီမံရာတွင် Financial Health ရှိ ငွေလက်ကျန်ကို အသုံးပြုပြီး ပေးရန်ရက်မရွေးဘဲ ကုန်ပေးသွင်းသူအကြွေးလက်ကျန်နှင့် မပေးရသေးသော အသုံးစရိတ်အားလုံးအတွက် ငွေချန်ထားပါသည်။ နောင်ဝင်လာမည့် ဖောက်သည်ရငွေနှင့် သီးသန့်အရေးပေါ်ငွေကို ထည့်မတွက်ထားပါ။",
+  "Repayment planning uses Financial Health cash, reserves all outstanding supplier balances and recorded unpaid expenses, and assumes no future customer receipts. Supplier due dates and a protected cash reserve are not recorded.": "ပြန်ဆပ်မှုစီမံရာတွင် Financial Health ရှိ ငွေလက်ကျန်မှ ကုန်ပေးသွင်းသူအကြွေးလက်ကျန်နှင့် မပေးရသေးသော အသုံးစရိတ်များအတွက် ငွေချန်ထားပြီး နောင်ဝင်လာမည့် ရငွေကို ထည့်မတွက်ထားပါ။ ဤတွက်ချက်မှုတွင် ကုန်ပေးသွင်းသူ ပေးရန်ရက်နှင့် သီးသန့်အရေးပေါ်ငွေကို အသုံးမပြုထားပါ။",
+  "Paste Excel file here": "Excel ဖိုင်ကို ဤနေရာတွင် paste လုပ်ပါ",
+  "Copy an .xlsx file, click this area, then press Ctrl+V to paste.": ".xlsx ဖိုင်ကို copy လုပ်ပြီး ဤနေရာကိုနှိပ်ကာ Ctrl+V ဖြင့် paste လုပ်ပါ။",
+  "Selected file:": "ရွေးထားသောဖိုင် —",
+  "Copy the .xlsx file itself, then paste here. Copied cells and file paths are not supported.": ".xlsx ဖိုင်ကိုယ်တိုင်ကို copy လုပ်ပြီး ဤနေရာတွင် paste လုပ်ပါ။ Cell များနှင့် ဖိုင်လမ်းကြောင်းစာသားကို လက်မခံပါ။",
+  "Show fewer months": "လအနည်းငယ်သာ ပြရန်",
+  "Show remaining months": "ကျန်လများကို ပြရန်",
+  "Uploaded application files": "တင်ထားသော လျှောက်လွှာအထောက်အထားဖိုင်များ",
+  "Files for the selected bank and product. Uploads are not lender verification.": "ရွေးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားအတွက် ဖိုင်များဖြစ်ပါသည်။ ဘဏ်က အတည်ပြုထားခြင်း မဟုတ်ပါ။",
+  "Last file uploaded": "နောက်ဆုံးဖိုင်တင်ထားသည့်အချိန်",
+  "Requirement": "လိုအပ်ချက်",
+  "File name": "ဖိုင်အမည်",
+  "Uploaded at (Myanmar time)": "ဖိုင်တင်သည့်အချိန် (မြန်မာစံတော်ချိန်)",
+  "Uploaded · not verified": "ဖိုင်တင်ပြီး · အတည်မပြုရသေး",
+  "This report lists attachments; the original file contents are not embedded.": "ဤအစီရင်ခံစာတွင် ပူးတွဲဖိုင်စာရင်းကိုသာ ဖော်ပြထားပြီး မူရင်းဖိုင်အကြောင်းအရာ မပါဝင်ပါ။",
+  "No application files uploaded for this bank and product.": "ဤဘဏ်နှင့် ချေးငွေအမျိုးအစားအတွက် ဖိုင်မတင်ရသေးပါ။",
+  "Loading the latest application files…": "နောက်ဆုံးဖိုင်စာရင်းကို ဖတ်နေပါသည်…",
+  "Application files could not be loaded. Refresh before printing.": "ဖိုင်စာရင်း မဖတ်နိုင်ပါ။ ပုံမနှိပ်မီ ပြန်ဖတ်ပါ။",
+  "Preparing latest report…": "နောက်ဆုံးအစီရင်ခံစာကို ပြင်ဆင်နေပါသည်…",
+  "Could not load the latest application files. Try again before printing.": "နောက်ဆုံးဖိုင်စာရင်း မဖတ်နိုင်ပါ။ ပုံမနှိပ်မီ ထပ်စမ်းပါ။",
   "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.": "သက်ဆိုင်ရာ လျှောက်လွှာလိုအပ်ချက်များကို ကြည့်ရန် Loans စာရွက်တွင် ပံ့ပိုးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ဖြည့်ပြီး တင်သွင်းပါ။",
   "Imported records and uploaded supporting files remain unverified by lenders.": "တင်သွင်းထားသောစာရင်းနှင့် အထောက်အထားဖိုင်များကို ဘဏ်က စစ်ဆေးအတည်ပြုထားခြင်း မရှိသေးပါ။",
   "As of": "စာရင်းရက်စွဲ",
@@ -10,21 +86,28 @@ export const my: Record<string, string> = {
   "{0} days remaining": "{0} ရက် ကျန်ပါသည်",
   "{0} days past scheduled date": "သတ်မှတ်ရက်မှ {0} ရက် ကျော်ပါပြီ",
   "Due today": "ယနေ့ ပေးရမည့်ရက်",
-  "Estimated installment. Payment status not linked to schedule.": "ခန့်မှန်းအရစ်ကျ ဖြစ်ပါသည်။ ပေးချေပြီးမှုကို အစီအစဉ်နှင့် မချိတ်ဆက်ရသေးပါ။",
+  "Estimated installment. Payment status not linked to schedule.":
+    "ခန့်မှန်းအရစ်ကျ ဖြစ်ပါသည်။ ပေးချေပြီးမှုကို အစီအစဉ်နှင့် မချိတ်ဆက်ရသေးပါ။",
   "No future installment scheduled": "နောက်လာမည့် အရစ်ကျ မရှိပါ",
   "Complete loan terms to see the next payment": "နောက်အရစ်ကျကြည့်ရန် ချေးငွေအချက်အလက်များ ဖြည့်ပါ",
   "Import an existing bank loan": "ရှိပြီးသား ဘဏ်ချေးငွေ တင်သွင်းရန်",
-  "In Loans, supply bank_id, loan_product_id, loan_product, annual_rate_pct, term_months, first_payment_date and payment_frequency together. Use the signed agreement rate: enter 12 for 12% annually.": "Loans တွင် bank_id၊ loan_product_id၊ loan_product၊ annual_rate_pct၊ term_months၊ first_payment_date နှင့် payment_frequency တို့ကို အတူဖြည့်ပါ။ စာချုပ်ပါ နှစ်စဉ်အတိုး ၁၂% အတွက် 12 ဟု ထည့်ပါ။",
-  "Monthly reducing-balance estimates require the first payment one month after disbursement. Other repayment arrangements need the lender schedule.": "လစဉ် လက်ကျန်အရင်းပေါ် အတိုးတွက်ရန် ပထမအရစ်ကျရက်သည် ငွေထုတ်ရက်၏ တစ်လအကြာ ဖြစ်ရပါမည်။ အခြားပြန်ဆပ်ပုံများအတွက် ဘဏ်၏အစီအစဉ် လိုပါသည်။",
-  "Only monthly repayments are supported. No schedule is estimated for this frequency.": "လစဉ်ပြန်ဆပ်မှုကိုသာ တွက်နိုင်ပါသည်။ ဤအကြိမ်နှုန်းအတွက် အစီအစဉ် မခန့်မှန်းပါ။",
-  "The first payment creates an irregular interest period. Import the lender schedule; no schedule is estimated.": "ပထမအရစ်ကျရက်ကြောင့် အတိုးတွက်ကာလ မမှန်ပါ။ ဘဏ်၏အစီအစဉ် လိုအပ်ပြီး လက်ရှိစနစ်က မခန့်မှန်းပါ။",
+  "In Loans, supply bank_id, loan_product_id, loan_product, annual_rate_pct, term_months, first_payment_date and payment_frequency together. Use the signed agreement rate: enter 12 for 12% annually.":
+    "Loans တွင် bank_id၊ loan_product_id၊ loan_product၊ annual_rate_pct၊ term_months၊ first_payment_date နှင့် payment_frequency တို့ကို အတူဖြည့်ပါ။ စာချုပ်ပါ နှစ်စဉ်အတိုး ၁၂% အတွက် 12 ဟု ထည့်ပါ။",
+  "Monthly reducing-balance estimates require the first payment one month after disbursement. Other repayment arrangements need the lender schedule.":
+    "လစဉ် လက်ကျန်အရင်းပေါ် အတိုးတွက်ရန် ပထမအရစ်ကျရက်သည် ငွေထုတ်ရက်၏ တစ်လအကြာ ဖြစ်ရပါမည်။ အခြားပြန်ဆပ်ပုံများအတွက် ဘဏ်၏အစီအစဉ် လိုပါသည်။",
+  "Only monthly repayments are supported. No schedule is estimated for this frequency.":
+    "လစဉ်ပြန်ဆပ်မှုကိုသာ တွက်နိုင်ပါသည်။ ဤအကြိမ်နှုန်းအတွက် အစီအစဉ် မခန့်မှန်းပါ။",
+  "The first payment creates an irregular interest period. Import the lender schedule; no schedule is estimated.":
+    "ပထမအရစ်ကျရက်ကြောင့် အတိုးတွက်ကာလ မမှန်ပါ။ ဘဏ်၏အစီအစဉ် လိုအပ်ပြီး လက်ရှိစနစ်က မခန့်မှန်းပါ။",
   "First payment date": "ပထမအရစ်ကျ ပေးရမည့်ရက်",
   "Payment frequency": "ပေးချေမှုအကြိမ်နှုန်း",
-  "monthly": "လစဉ်",
-  "weekly": "အပတ်စဉ်",
-  "quarterly": "သုံးလတစ်ကြိမ်",
-  "Supply the bank, loan product, agreed annual interest rate, term, first payment date and payment frequency to estimate repayments.": "ပြန်ဆပ်ရမည့်အစီအစဉ်တွက်ရန် ဘဏ်၊ ချေးငွေအမျိုးအစား၊ စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း၊ သက်တမ်း၊ ပထမပေးရမည့်ရက်နှင့် ပေးချေမှုအကြိမ်နှုန်းကို ဖြည့်ပါ။",
-  "Some imported loans need complete bank, product and repayment terms before a schedule can be estimated.": "ချေးငွေအချို့အတွက် ဘဏ်၊ ချေးငွေအမျိုးအစားနှင့် ပြန်ဆပ်မှုအချက်အလက်များ ပြည့်စုံရန်လိုပါသည်။",
+  monthly: "လစဉ်",
+  weekly: "အပတ်စဉ်",
+  quarterly: "သုံးလတစ်ကြိမ်",
+  "Supply the bank, loan product, agreed annual interest rate, term, first payment date and payment frequency to estimate repayments.":
+    "ပြန်ဆပ်ရမည့်အစီအစဉ်တွက်ရန် ဘဏ်၊ ချေးငွေအမျိုးအစား၊ စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း၊ သက်တမ်း၊ ပထမပေးရမည့်ရက်နှင့် ပေးချေမှုအကြိမ်နှုန်းကို ဖြည့်ပါ။",
+  "Some imported loans need complete bank, product and repayment terms before a schedule can be estimated.":
+    "ချေးငွေအချို့အတွက် ဘဏ်၊ ချေးငွေအမျိုးအစားနှင့် ပြန်ဆပ်မှုအချက်အလက်များ ပြည့်စုံရန်လိုပါသည်။",
   "Workbook rejected. No business records were changed.":
     "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
   "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",
@@ -43,7 +126,8 @@ export const my: Record<string, string> = {
   "Loan product": "ချေးငွေအမျိုးအစား",
   "Agreed annual interest rate": "စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း",
   "Term (months)": "သက်တမ်း (လ)",
-  "Some imported loans are missing the agreed annual interest rate or term; their repayment schedules are unavailable.": "တင်သွင်းထားသော ချေးငွေအချို့တွင် စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း သို့မဟုတ် သက်တမ်း မပါသဖြင့် ပြန်ဆပ်ရမည့်အစီအစဉ်ကို မတွက်နိုင်ပါ။",
+  "Some imported loans are missing the agreed annual interest rate or term; their repayment schedules are unavailable.":
+    "တင်သွင်းထားသော ချေးငွေအချို့တွင် စာချုပ်ပါ နှစ်စဉ်အတိုးနှုန်း သို့မဟုတ် သက်တမ်း မပါသဖြင့် ပြန်ဆပ်ရမည့်အစီအစဉ်ကို မတွက်နိုင်ပါ။",
   "Bank loan guide": "ဘဏ်ချေးငွေလမ်းညွှန်",
   "Report date": "အစီရင်ခံရက်",
   Industry: "လုပ်ငန်းအမျိုးအစား",
@@ -64,7 +148,7 @@ export const my: Record<string, string> = {
     "ဖောက်သည်များထံမှ ရရန်ငွေနှင့် ကုန်ပေးသွင်းသူများကို ပေးရန်ငွေ",
   "Existing debt and repayment records": "ရှိပြီးသားချေးငွေနှင့် ပြန်ဆပ်မှုမှတ်တမ်း",
   "Other lender-requested documents": "ငွေချေးပေးသူ တောင်းဆိုသော အခြားစာရွက်စာတမ်းများ",
-  "uploaded": "ထည့်သွင်းထားပြီး",
+  uploaded: "ထည့်သွင်းထားပြီး",
   "excel imported": "Excel မှ ထည့်သွင်းထားသည်",
   "not applicable": "မသက်ဆိုင်ပါ",
   none: "မရှိသေးပါ",
@@ -201,7 +285,11 @@ export const my: Record<string, string> = {
   "External AI analysis was not selected; rules-based findings are shown.":
     "ပြင်ပ AI သုံးသပ်ချက်ကို မရွေးချယ်ထားသဖြင့် စည်းမျဉ်းအခြေခံ တွေ့ရှိချက်များကို ပြထားပါသည်။",
   "Analyzing…": "သုံးသပ်နေသည်…",
-  "Appears covered from recorded cash": "မှတ်တမ်းပါ ငွေသားဖြင့် လုံလောက်နိုင်ပါသည်",
+  "Appears covered from recorded cash": "မှတ်တမ်းပါ ငွေလက်ကျန်အရ နောက်အရစ်ကျကို ပေးချေနိုင်ဖွယ်ရှိသည်",
+  "Estimated cash remaining after repayment:": "အရစ်ကျပေးပြီးနောက် ခန့်မှန်းငွေပို —",
+  "Estimated repayment shortfall:": "အရစ်ကျပေးရန် ခန့်မှန်းငွေလို —",
+  "Planning estimate using Financial Health cash after reserving outstanding supplier balances and recorded unpaid expenses, with no future receipts assumed. No protected reserve is recorded. This is not an approval or affordability assessment.": "Financial Health ရှိ ငွေလက်ကျန်မှ ပေးရန်ကျန်သော ကုန်ပေးသွင်းသူအကြွေးများနှင့် မပေးရသေးသော အသုံးစရိတ်များအတွက် ငွေချန်ထားပြီး တွက်ချက်ထားသည့် ခန့်မှန်းချက်ဖြစ်ပါသည်။ နောင်ဝင်လာမည့်ရငွေကို ထည့်မတွက်ထားပါ။ သီးသန့်ချန်ထားမည့် အရေးပေါ်ငွေကိုလည်း မှတ်တမ်းမတင်ထားပါ။ ဤခန့်မှန်းချက်သည် ချေးငွေခွင့်ပြုချက် သို့မဟုတ် ချေးငွေပြန်ဆပ်နိုင်စွမ်း အကဲဖြတ်ချက် မဟုတ်ပါ။",
+  "Repayment planning needs recorded cash and operating payments from Financial Health, plus supported loan schedules. Repayment planning uses cash, not profit.": "ပြန်ဆပ်မှုစီမံရန် Financial Health မှ ငွေလက်ကျန်နှင့် လုပ်ငန်းငွေပေးချေမှုမှတ်တမ်းများအပြင် တွက်ချက်နိုင်သော ချေးငွေပြန်ဆပ်အစီအစဉ် လိုအပ်ပါသည်။ အမြတ်ပေါ်မဟုတ်ဘဲ ငွေသားပေါ် အခြေခံတွက်ချက်ပါသည်။",
   "Associated cost of goods": "ဆက်စပ်ကုန်ပစ္စည်း ကုန်ကျစရိတ်",
   "Assumptions:": "ယူဆချက်များ —",
   "Borrower preparation summary": "ချေးငွေလျှောက်ရန် ပြင်ဆင်မှုအကျဉ်းချုပ်",
@@ -248,7 +336,20 @@ export const my: Record<string, string> = {
     "Excel ဖိုင်ကို ပြင်ဆင်သိမ်းဆည်းပြီး ပြန်တင်ပါ။ မှတ်တမ်းမထပ်စေရန် မူလ အတန်း ID များကို ဆက်သုံးပါ။",
   "Excel row": "Excel အတန်း",
   "Excel workbook": "Excel ဖိုင်",
+  "Choose a credit option": "ချေးငွေဆိုင်ရာ ရွေးချယ်မှု ပြုလုပ်ရန်",
+  "Choose what you want to do": "လုပ်ဆောင်လိုသည်ကို ရွေးချယ်ပါ",
+  "Manage a loan you already have or prepare your business for a new credit application.":
+    "ရှိပြီးသားချေးငွေကို စီမံပါ သို့မဟုတ် ချေးငွေအသစ်လျှောက်ရန် သင့်လုပ်ငန်းကို ပြင်ဆင်ပါ။",
+  "Existing Loan": "ရှိပြီးသား ချေးငွေ",
+  "Record a loan or view and manage loans you already have.":
+    "ချေးငွေကို မှတ်တမ်းတင်ပါ သို့မဟုတ် ရှိပြီးသားချေးငွေများကို ကြည့်ရှုစီမံပါ။",
+  "Prepare for New Credit": "ချေးငွေအသစ်အတွက် ပြင်ဆင်ရန်",
+  "Compare loan options and prepare the records needed for a new application.":
+    "ချေးငွေရွေးချယ်စရာများကို နှိုင်းယှဉ်ပြီး လျှောက်လွှာအသစ်အတွက် လိုအပ်သောမှတ်တမ်းများကို ပြင်ဆင်ပါ။",
   "Existing loans": "လက်ရှိ ချေးငွေများ",
+  "Manage existing loans": "လက်ရှိချေးငွေများကို စီမံရန်",
+  "Record balances, upcoming payments and actual repayments for loans you already have.":
+    "ရှိပြီးသားချေးငွေများ၏ လက်ကျန်၊ နောက်ပေးရမည့်အရစ်ကျနှင့် အမှန်တကယ်ပြန်ဆပ်မှုများကို မှတ်တမ်းတင်ပါ။",
   "Expected sell-through": "ရောင်းချနိုင်မည့် ရာခိုင်နှုန်း",
   "Expected units sold": "ရောင်းချနိုင်မည့် အရေအတွက်",
   "Expense already paid": "အသုံးစရိတ် ပေးချေပြီး",
@@ -341,6 +442,11 @@ export const my: Record<string, string> = {
   "Potential cash shortfall": "ဖြစ်နိုင်သော ငွေသားလိုအပ်ချက်",
   "Potential spending avoided": "လျှော့ချနိုင်သော အသုံးစရိတ်",
   "Prepare for credit": "ချေးငွေအတွက် ပြင်ဆင်ရန်",
+  "Prepare for new credit": "ချေးငွေအသစ်အတွက် ပြင်ဆင်ရန်",
+  "Prepare for a new loan": "ချေးငွေအသစ်အတွက် ပြင်ဆင်ရန်",
+  "Compare suitable bank products and prepare the records needed for an application.":
+    "သင့်တော်သော ဘဏ်ချေးငွေအမျိုးအစားများကို နှိုင်းယှဉ်ပြီး လျှောက်ထားရန်လိုအပ်သော မှတ်တမ်းများကို ပြင်ဆင်ပါ။",
+  "Application preparation": "လျှောက်လွှာပြင်ဆင်ရန်",
   "Previous import": "ယခင် ထည့်သွင်းမှု",
   "Price after discount": "ဈေးလျှော့ပြီး ရောင်းဈေး",
   Principal: "အရင်း",
@@ -738,4 +844,110 @@ export const my: Record<string, string> = {
   "Open Data Source to review import warnings and resolve missing sheet records.": "အချက်အလက်ရင်းမြစ်ကဏ္ဍသို့ သွားရောက်၍ သတိပေးချက်များနှင့် ချို့ယွင်းချက်များကို စစ်ဆေးပါ။",
   "Re-upload your verified Excel workbook so all financial metrics reflect complete records.": "စာရင်းအချက်အလက် ပြည့်စုံမှန်ကန်သော Excel ဖိုင်ကို ပြန်လည်တင်သွင်းပါ။",
   "Review detected business issues, actionable remediation steps, and open direct hub tools for deeper inspection.": "တွေ့ရှိရသည့် လုပ်ငန်းပြဿနာများ၊ ဖြေရှင်းရန်အဆင့်များနှင့် အသေးစိတ်စစ်ဆေးရန် သက်ဆိုင်ရာ ကဏ္ဍခွဲများကို လေ့လာပါ။",
+  "What type of business do you operate?": "သင့်လုပ်ငန်းသည် မည်သည့်အမျိုးအစားဖြစ်ပါသလဲ။",
+  "B2C — Business to Consumer": "B2C — တစ်ဦးချင်းဝယ်ယူသူများထံ ရောင်းချသောလုပ်ငန်း",
+  "B2B — Business to Business": "B2B — အခြားလုပ်ငန်းများထံ ရောင်းချသောလုပ်ငန်း",
+  "Retail shops and individual customers": "လက်လီဆိုင်များနှင့် တစ်ဦးချင်းဝယ်ယူသူများ",
+  "Wholesale and sales to other businesses": "လက်ကားနှင့် အခြားလုပ်ငန်းများထံ ရောင်းချခြင်း",
+  "I serve both B2B and B2C customers": "B2B နှင့် B2C ဝယ်ယူသူနှစ်မျိုးလုံးကို ဝန်ဆောင်မှုပေးသည်",
+  "Both — B2B and B2C": "နှစ်မျိုးလုံး — B2B နှင့် B2C",
+  "Sales to both businesses and individual customers":
+    "လုပ်ငန်းများနှင့် တစ်ဦးချင်းဝယ်ယူသူများထံ ရောင်းချခြင်း",
+  "B2C customer share": "B2C ဝယ်ယူသူအချိုး",
+  "B2B customer share": "B2B ဝယ်ယူသူအချိုး",
+  "This is your estimated customer mix, not a classification from the workbook.":
+    "ဤအချိုးသည် သင်ခန့်မှန်းထားသော ဝယ်ယူသူအမျိုးအစားဖြစ်ပြီး Excel စာရင်းမှ အတည်ပြုထားခြင်းမဟုတ်ပါ။",
+  "B2C sales paid later": "နောက်မှငွေပေးချေသော B2C အရောင်းအချိုး",
+  "B2B sales paid later": "နောက်မှငွေပေးချေသော B2B အရောင်းအချိုး",
+  "B2C collection days (DSO)": "B2C ငွေကောက်ခံရန်ကြာချိန် (DSO)",
+  "B2B collection days (DSO)": "B2B ငွေကောက်ခံရန်ကြာချိန် (DSO)",
+  "Average B2C customer payment days": "B2C ဝယ်ယူသူများ၏ ပျမ်းမျှငွေပေးချေရက်",
+  "Average B2B customer payment days": "B2B ဝယ်ယူသူများ၏ ပျမ်းမျှငွေပေးချေရက်",
+  "Average customer payment days across all sales":
+    "အရောင်းအားလုံးအတွက် ဝယ်ယူသူငွေပေးချေရက် ပျမ်းမျှ",
+  "Include immediately paid sales as 0 days in this average.":
+    "ချက်ချင်းငွေပေးချေသော အရောင်းများကို ဤပျမ်းမျှတွင် ၀ ရက်အဖြစ် ထည့်တွက်ပါ။",
+  "Include immediately paid sales as 0 days in each average.":
+    "ချက်ချင်းငွေပေးချေသော အရောင်းများကို ပျမ်းမျှတစ်ခုစီတွင် ၀ ရက်အဖြစ် ထည့်တွက်ပါ။",
+  "B2C scenario": "B2C ခန့်မှန်းအခြေအနေ",
+  "B2B scenario": "B2B ခန့်မှန်းအခြေအနေ",
+  "B2B and B2C are shown separately because verified sales shares are unavailable. These are scenario estimates, not a combined business cash gap.":
+    "အတည်ပြုထားသော B2B နှင့် B2C အရောင်းအချိုးများ မရှိသဖြင့် ခန့်မှန်းအခြေအနေများကို သီးခြားပြထားသည်။ ဤရလဒ်များသည် လုပ်ငန်းတစ်ခုလုံး၏ ပေါင်းစပ်ငွေသားလိုအပ်ချိန် မဟုတ်ပါ။",
+  "−60% wait days per group": "အုပ်စုတစ်ခုစီ၏ စောင့်ဆိုင်းရက် ၆၀% လျှော့ချ",
+  "{0} scenario cash gap falls by {1} days.":
+    "{0} ခန့်မှန်းအခြေအနေတွင် ငွေသားလိုအပ်ချိန် {1} ရက် လျော့ကျသည်။",
+  "Before Changes": "ပြောင်းလဲမှုမပြုမီ",
+  "After Changes": "ပြောင်းလဲပြီးနောက်",
+  "Potential improvement: {0} fewer days": "တိုးတက်နိုင်မှု — {0} ရက် လျော့နည်း",
+  "Cash gap worsens by {0} days": "ငွေသားလိုအပ်ချိန် {0} ရက် ပိုရှည်လာသည်",
+  "No change yet": "ပြောင်းလဲမှုမရှိသေးပါ",
+  "Cash amount cannot be estimated yet.": "ငွေသားပမာဏကို ယခု မခန့်မှန်းနိုင်သေးပါ။",
+  "A dated cash forecast is needed to estimate an MMK amount.":
+    "ကျပ်ပမာဏကို ခန့်မှန်းရန် ရက်စွဲပါ ငွေသားခန့်မှန်းချက် လိုအပ်သည်။",
+  "Ways to Reduce Your Cash Gap": "ငွေသားလိုအပ်ချိန် လျှော့ချနိုင်မည့် နည်းလမ်းများ",
+  "What-if: every pay-later sale provides a 60% deposit immediately. Actual terms may differ.":
+    "အခြေအနေခန့်မှန်းချက် — နောက်မှငွေပေးချေမည့် အရောင်းတိုင်းမှ ၆၀% ကြိုတင်ငွေကို ချက်ချင်းရမည်ဟု ယူဆထားသည်။ လက်တွေ့သဘောတူညီချက်များ ကွဲပြားနိုင်သည်။",
+  "No verified sales split; B2C and B2B estimates are shown separately.":
+    "အတည်ပြုထားသော အရောင်းအချိုးမရှိသဖြင့် B2C နှင့် B2B ခန့်မှန်းချက်များကို သီးခြားပြထားသည်။",
+  "Ways to reduce your cash gap": "ငွေသားလိုအပ်ချိန် လျှော့ချနိုင်မည့် နည်းလမ်းများ",
+  "What-if: ask every pay-later customer for a 60% deposit immediately":
+    "အခြေအနေခန့်မှန်းချက် — နောက်မှငွေပေးချေမည့် ဝယ်ယူသူတိုင်းထံမှ ၆၀% ကြိုတင်ငွေကို ချက်ချင်းတောင်းရန်",
+  "What-if: Restock only fast-selling items, reducing stock days by up to 10":
+    "အခြေအနေခန့်မှန်းချက် — အရောင်းမြန်သော ပစ္စည်းများကိုသာ ပြန်မှာယူပြီး ကုန်ပစ္စည်းထားရှိရက်ကို အများဆုံး ၁၀ ရက် လျှော့ချရန်",
+  "What-if: suppliers agree to 15 more days to pay":
+    "အခြေအနေခန့်မှန်းချက် — ပေးသွင်းသူများက ငွေပေးချေရန် နောက်ထပ် ၁၅ ရက် သဘောတူပေးရန်",
+  "Planning estimates only. Your business records do not change.":
+    "ဤကိန်းဂဏန်းများသည် စီမံကိန်းခန့်မှန်းချက်များသာဖြစ်ပြီး သင့်လုပ်ငန်းမှတ်တမ်းများကို မပြောင်းလဲပါ။",
+  "Days stock stays before selling (DIO)": "ရောင်းချမည့်အချိန်အထိ ကုန်ပစ္စည်းထားရှိရက် (DIO)",
+  "Days before paying suppliers (DPO)": "ပေးသွင်းသူများကို ငွေပေးချေမည့်အချိန်အထိ ရက် (DPO)",
+  "Assumes every pay-later sale receives a 60% deposit immediately; actual terms may differ.":
+    "နောက်မှငွေပေးချေမည့် အရောင်းတိုင်းအတွက် ၆၀% ကြိုတင်ငွေကို ချက်ချင်းရရှိမည်ဟု ယူဆထားသည်။ လက်တွေ့သဘောတူညီချက်များ ကွဲပြားနိုင်သည်။",
+  "Calculated from each customer group's share, pay-later percentage, and collection days. Pay-now sales add no waiting days.":
+    "ဝယ်ယူသူအုပ်စုတစ်ခုစီ၏ အချိုး၊ နောက်မှငွေပေးချေမှုအချိုးနှင့် ငွေကောက်ခံရန်ကြာချိန်အပေါ် မူတည်၍ တွက်ချက်သည်။ ချက်ချင်းငွေပေးချေသော အရောင်းများတွင် စောင့်ဆိုင်းရက်မရှိပါ။",
+  "Ask customers who pay later for a 60% deposit":
+    "နောက်မှငွေပေးချေမည့် ဝယ်ယူသူများထံမှ ၆၀% ကြိုတင်ငွေတောင်းရန်",
+  "Working Capital tools": "လုပ်ငန်းလည်ပတ်ငွေ စီမံရေးကိရိယာများ",
+  "Find Cash": "အသုံးချနိုင်သည့် ငွေသားရှာရန်",
+  "Cash Gap": "ငွေသားလိုအပ်ချိန်",
+  "Safety Reserve": "အရန်ငွေ",
+  "Planning tools": "စီမံကိန်းရေးဆွဲရန် ကိရိယာများ",
+  "You can edit planning inputs above whenever a tool needs information your workbook does not contain.":
+    "Excel စာရင်းတွင် မပါသည့်အချက်အလက်ကို ကိရိယာတစ်ခုက လိုအပ်ပါက အပေါ်ရှိ စီမံကိန်းအတွက် ထည့်သွင်းချက်များကို ပြင်ဆင်နိုင်သည်။",
+  "Enter monthly essential costs, a protected reserve target, and the amount already set aside in the planning inputs above to see a reserve plan.":
+    "အရန်ငွေစီမံချက်ကို ကြည့်ရန် အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လစဉ်မဖြစ်မနေကုန်ကျစရိတ်၊ ကာကွယ်ထားမည့်အရန်ငွေပန်းတိုင်နှင့် ဖယ်ထားပြီးသောပမာဏကို ထည့်ပါ။",
+  "Enter amount": "ပမာဏထည့်ပါ",
+  "Amount you plan to save each month.": "လစဉ် စုဆောင်းရန် စီစဉ်ထားသော ပမာဏ။",
+  "Enter a monthly contribution, or 0 if you cannot save yet.":
+    "လစဉ်စုဆောင်းမည့်ပမာဏကို ထည့်ပါ။ မစုဆောင်းနိုင်သေးပါက ၀ ထည့်ပါ။",
+  "Enter a non-negative whole MMK amount.": "အနုတ်မဟုတ်သော ကျပ်ပြည့်ပမာဏကို ထည့်ပါ။",
+  "Monthly contribution must be 1,000,000,000,000 MMK or less.":
+    "လစဉ်စုဆောင်းမည့်ပမာဏသည် ကျပ် ၁,၀၀၀,၀၀၀,၀၀၀,၀၀၀ ထက် မပိုရပါ။",
+  "Enter monthly essential costs and the reserve already saved in the planning inputs above.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လစဉ်မဖြစ်မနေကုန်ကျစရိတ်နှင့် စုဆောင်းထားပြီးသော အရန်ငွေကို ထည့်ပါ။",
+  "Enter monthly essential costs greater than 0 in the planning inputs above.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် သုညထက်ကြီးသော လစဉ်မဖြစ်မနေကုန်ကျစရိတ်ကို ထည့်ပါ။",
+  "Enter your current dedicated reserve in the planning inputs above. Use 0 if none.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် လက်ရှိဖယ်ထားသော အရန်ငွေကို ထည့်ပါ။ မရှိပါက ၀ ထည့်ပါ။",
+  "Enter a protected reserve target in the planning inputs above. Use 0 if none.":
+    "အပေါ်ရှိ စီမံကိန်းထည့်သွင်းချက်များတွင် ကာကွယ်ထားမည့် အရန်ငွေပန်းတိုင်ကို ထည့်ပါ။ မရှိပါက ၀ ထည့်ပါ။",
+  "Choose target coverage from 1 to 6 months.": "ပန်းတိုင်အတွက် ၁ လမှ ၆ လအထိ ရွေးပါ။",
+  "Check your reserve planning inputs and try again.":
+    "အရန်ငွေစီမံကိန်း ထည့်သွင်းချက်များကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
+  "Reserve target already reached.": "အရန်ငွေပန်းတိုင်သို့ ရောက်ရှိပြီးဖြစ်သည်။",
+  "At 0 MMK per month, this target cannot be reached without additional contributions.":
+    "လစဉ် ၀ ကျပ်သာ စုဆောင်းပါက နောက်ထပ်ထည့်ဝင်မှုမရှိဘဲ ဤပန်းတိုင်သို့ မရောက်နိုင်ပါ။",
+  "At {0} per month, the target could be reached in about {1} months.":
+    "လစဉ် {0} စုဆောင်းပါက {1} လခန့်အကြာတွင် ပန်းတိုင်သို့ ရောက်နိုင်သည်။",
+  "Add the next payment date and total amount for every recorded balance to enable repayment planning.": "ငွေပြန်ဆပ်နိုင်မှုကို စီမံရန် မှတ်တမ်းတင်ထားသော ချေးငွေတစ်ခုစီအတွက် နောက်အရစ်ကျရက်နှင့် စုစုပေါင်းပေးရမည့်ပမာဏကို ဖြည့်ပါ။",
+  "Upcoming payment timeline": "လာမည့် ငွေပေးချေမှု အချိန်ဇယား",
+  "Loan payments due in the selected period, including overdue items":
+    "ရွေးချယ်ထားသောကာလအတွင်း ပေးရမည့် ချေးငွေအရစ်ကျများနှင့် ရက်ကျော်နေသော အရစ်ကျများ",
+  "Payment timeline period": "ငွေပေးချေမှု အချိန်ကာလ",
+  "No recorded loan payments are due in this period.":
+    "ဤကာလအတွင်း ပေးရမည့် ချေးငွေအရစ်ကျ မှတ်တမ်းမရှိပါ။",
+  "Next": "လာမည့်",
+  "days": "ရက်",
+  "Due in": "ပေးရန်လိုသေးသည်",
+  "days overdue": "ရက် ကျော်လွန်နေသည်",
+  "Estimated": "ခန့်မှန်းချက်",
 };

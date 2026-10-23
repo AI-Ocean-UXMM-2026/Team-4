@@ -27,7 +27,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
       </header>
       <div className="mx-auto grid min-h-[calc(100svh-100px)] max-w-[1220px] items-center gap-10 py-8 lg:grid-cols-[1.05fr_1fr] lg:py-7">
         <aside className="bf-auth-story">
-          <p className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-inherit">
+          <p className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-inherit">
             <Sparkles size={13} aria-hidden="true" />
             {t("Built around your business")}
           </p>
@@ -38,7 +38,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <br />
             <span className="text-inherit">{t("business.")}</span>
           </h2>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-inherit">
+          <p className="mt-5 max-w-sm text-sm leading-7 text-[var(--feature-muted)]">
             {t(
               "Keep your finances connected, understand your cashflow, and plan your next step with confidence.",
             )}
@@ -57,10 +57,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
                 { Icon: ChartNoAxesCombined, label: "Insights" },
                 { Icon: Layers3, label: "Planning" },
               ].map(({ Icon, label }) => (
-                <div
-                  key={label}
-                  className="bf-flow-tile rounded-xl border border-white/10 bg-white/10 px-2 py-4"
-                >
+                <div key={label} className="bf-flow-tile rounded-xl border px-2 py-4">
                   <Icon size={21} strokeWidth={1.5} className="mx-auto mb-2 text-inherit" />
                   {t(label)}
                 </div>
@@ -68,7 +65,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <svg
-            className="bf-flow-path mt-6 h-10 w-full"
+            className="bf-flow-path mt-6 h-10 w-full text-inherit"
             viewBox="0 0 440 40"
             fill="none"
             aria-hidden="true"
@@ -81,22 +78,16 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <path
               className="bf-flow-trace"
               d="M8 29H122C150 29 154 11 180 11H260C288 11 294 29 322 29H432"
-              stroke="url(#shay-flow-light)"
+              stroke="currentColor"
               strokeWidth="2"
               pathLength="1"
             />
-            <circle cx="8" cy="29" r="3" fill="#fed7aa" />
-            <circle cx="220" cy="11" r="4" fill="#ffedd5" />
-            <circle cx="432" cy="29" r="3" fill="#fed7aa" />
-            <defs>
-              <linearGradient id="shay-flow-light">
-                <stop stopColor="#fed7aa" />
-                <stop offset="1" stopColor="#fed7aa" />
-              </linearGradient>
-            </defs>
+            <circle cx="8" cy="29" r="3" fill="currentColor" />
+            <circle cx="220" cy="11" r="4" fill="currentColor" />
+            <circle cx="432" cy="29" r="3" fill="currentColor" />
           </svg>
-          <div className="mt-8 flex items-center gap-3 text-xs text-inherit">
-            <span className="h-px w-8 bg-white/30" />
+          <div className="mt-8 flex items-center gap-3 text-xs text-[var(--feature-muted)]">
+            <span className="h-px w-8 bg-current/30" />
             {t("Less guesswork. More confidence.")}
           </div>
         </aside>
@@ -167,7 +158,7 @@ export function PasswordField({
           }
           aria-controls={id}
           aria-pressed={visible}
-          className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring"
+          className="bf-button-quiet absolute right-1 top-1 flex h-10 w-10 items-center justify-center focus-visible:outline-2 focus-visible:outline-ring"
           onClick={() => setVisible(!visible)}
         >
           {visible ? <EyeOff size={18} /> : <Eye size={18} />}

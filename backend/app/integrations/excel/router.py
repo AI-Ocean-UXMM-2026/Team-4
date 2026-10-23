@@ -94,6 +94,9 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
         raise APIError(503, "TEMPLATE_UNAVAILABLE", "Workbook template has not been generated.")
     workbook = load_workbook(path)
     try:
+        for sheet_name in ("Loans", "LoanPayments"):
+            if sheet_name in workbook.sheetnames:
+                workbook.remove(workbook[sheet_name])
         for sheet_name, spec in SCHEMA.items():
             if sheet_name not in workbook.sheetnames:
                 continue
@@ -112,6 +115,7 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
         with request.app.state.sessions() as session:
             business = session.get(Business, business_id)
             workbook["Settings"]["A2"], workbook["Settings"]["B2"] = business_id, business.name
+            workbook["Settings"]["C2"] = business.currency or "MMK"
         buffer = BytesIO()
         workbook.save(buffer)
     finally:

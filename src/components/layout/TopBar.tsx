@@ -1,6 +1,7 @@
 import { useTranslation } from "@/lib/i18n";
 import { usePlatform } from "@/app/providers";
-import { Building2, LogOut } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Building2, LogOut, UserRound } from "lucide-react";
 import { Brand } from "./Brand";
 import { DisplayPreferences } from "./DisplayPreferences";
 export function TopBar() {
@@ -30,10 +31,15 @@ export function TopBar() {
             ))}
           </select>
         </label>
-        <button
-          className="bf-button-secondary min-h-11 border-transparent bg-transparent px-3 text-muted-foreground"
-          onClick={signOut}
+        <Link
+          to="/profile"
+          aria-label={t("Your profile")}
+          title={t("Your profile")}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-primary/20 bg-primary/10 text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
+          <UserRound size={20} aria-hidden="true" />
+        </Link>
+        <button className="bf-button-secondary min-h-11 px-3" onClick={signOut}>
           <LogOut size={16} aria-hidden="true" />
           <span className="hidden sm:inline">{t("Sign out")}</span>
           <span className="sr-only sm:hidden">{t("Sign out")}</span>

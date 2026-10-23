@@ -1,9 +1,7 @@
 import { useTranslation } from "@/lib/i18n";
 import { LoadingAnimation } from "@/components/LoadingAnimation";
-import { CashGapSimulator } from "../components/CashGapSimulator";
 import { InventoryRiskTable } from "../components/InventoryRiskTable";
-import { ReservePlanner } from "../components/ReservePlanner";
-import { UnlockCashSimulator } from "../components/UnlockCashSimulator";
+import { WorkingCapitalToolTabs } from "../components/WorkingCapitalToolTabs";
 import { useWorkingCapital } from "../hooks/useWorkingCapital";
 import { usePlatform } from "@/app/providers";
 import { Link } from "@tanstack/react-router";
@@ -31,12 +29,14 @@ export function WorkingCapitalPage() {
   const needsInput = needsWorkingCapitalInput(display);
   return (
     <main className="space-y-6">
-      <header className="bf-brand-banner rounded-3xl px-6 py-8 sm:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em]">{t("Working Capital")}</p>
+      <header>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
+          {t("Working Capital")}
+        </p>
         <h1 className="mt-2 max-w-2xl text-3xl font-bold sm:text-4xl">
           {t("Plan cash with clearer choices")}
         </h1>
-        <p className="mt-3 max-w-2xl text-sm text-[var(--feature-muted)] sm:text-base">
+        <p className="mt-3 max-w-2xl text-sm text-muted-foreground sm:text-base">
           {t(
             "Explore inventory, collections, cash timing, and reserves. Simulations are read-only and do not change your records.",
           )}
@@ -47,25 +47,6 @@ export function WorkingCapitalPage() {
         recordedCashMmk={snapshot?.available_cash_mmk ?? null}
         complete={!needsInput}
       />
-      {needsInput && snapshot?.warnings.length ? (
-        <section
-          className="bf-card border-warning/50 bg-warning/10"
-          aria-label={t("Data limitations")}
-        >
-          <h2 className="text-sm font-semibold">{t("Information still needed")}</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            {manualInputs ? (
-              <li>
-                {t(
-                  "Some inventory or cash inputs are still missing. Manual planning values do not change imported records or other financial reports.",
-                )}
-              </li>
-            ) : (
-              snapshot.warnings.map((warning) => <li key={warning}>{t(warning)}</li>)
-            )}
-          </ul>
-        </section>
-      ) : null}
       <section className="bf-card space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -129,7 +110,7 @@ export function WorkingCapitalPage() {
       </section>
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-primary">
-          {t("Illustrative scenarios")}
+          {t("Planning tools")}
         </p>
         <h2 className="mt-1 text-2xl font-bold">{t("Explore what could change")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -137,18 +118,21 @@ export function WorkingCapitalPage() {
             "Unlock hidden cash uses imported amounts; sliders are what-if assumptions. Other scenario inputs may be illustrative.",
           )}
         </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t(
+            "You can edit planning inputs above whenever a tool needs information your workbook does not contain.",
+          )}
+        </p>
       </div>
-      <UnlockCashSimulator
+      <WorkingCapitalToolTabs
         key={`${business.id}:${business.source_version}`}
-        inputs={display?.unlock_cash}
+        unlockInputs={display?.unlock_cash}
+        cashGapInputs={snapshot?.unlock_cash}
         manualStock={!!manualInputs && Object.keys(manualInputs.stockLevels).length > 0}
-      />
-      <CashGapSimulator
-        key={`${business.id}:${business.source_version}`}
+        manualInputs={manualInputs}
         simulate={simulate}
-        inputs={snapshot?.unlock_cash}
+        planReserve={planReserve}
       />
-      <ReservePlanner planReserve={planReserve} inputs={manualInputs} />
     </main>
   );
 }

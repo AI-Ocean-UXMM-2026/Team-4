@@ -2,17 +2,17 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { BankLoanGuide } from "../components/BankLoanGuide";
 
-vi.mock("../components/ApplicationFiles", () => ({ ApplicationFiles: () => <div>Application files</div> }));
+vi.mock("../components/ApplicationFiles", () => ({ ApplicationFiles: () => <div>Application checklist</div> }));
 const preferences = vi.hoisted(() => ({ language: "en" }));
 vi.mock("@/lib/i18n", () => ({ useTranslation: () => preferences }));
 afterEach(() => { cleanup(); localStorage.clear(); preferences.language = "en"; });
 
 it("keeps uploads in preparation and the guide informational", () => {
   const view = render(<BankLoanGuide businessId="mine" onViewRecords={() => {}} />);
-  expect(screen.queryByText("Application files")).toBeNull();
+  expect(screen.queryByText("Application checklist")).toBeNull();
   expect(screen.getByText("Financial statements for the last 3 years")).toBeTruthy();
   view.rerender(<BankLoanGuide businessId="mine" preparationOnly onViewRecords={() => {}} />);
-  expect(screen.getAllByText("Application files").length).toBeGreaterThan(0);
+  expect(screen.getAllByText("Application checklist").length).toBeGreaterThan(0);
   expect(screen.queryByRole("checkbox")).toBeNull();
 });
 

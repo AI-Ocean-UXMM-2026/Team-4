@@ -13,10 +13,11 @@ them, supply all seven. Term must be
 a whole number from 1 to 1200 months. Imported terms are retained in the versioned
 payload and read by Credit Hub, without modifying the older projection tables.
 
-The app permits outstanding principal at one bank at a time. Fully repaid loans
-from other banks may remain as history. This is an app rule, not a statement of
-Myanmar banking law. Validation also checks retained rows from earlier imports.
-Use a consistent lender name; KBZ/KBZ Bank and Yoma/Yoma Bank are recognized aliases.
+Outstanding loans may belong to multiple banks. KBZ and Yoma products can use the
+structured product catalog. For other banks, analysis uses only the loan and
+repayment details entered by the user and must be checked against the signed loan
+agreement or bank statement. Use a consistent lender name; KBZ/KBZ Bank and
+Yoma/Yoma Bank are recognized aliases.
 
 The bank guide is informational browsing, not an application or borrowing action.
 Only imported loan agreements appear in Existing loans. A product's published

@@ -24,6 +24,14 @@ def test_missing_sheet_rejected(workbook_bytes):
     assert any(e["sheet"] == "Sales" for e in parse_workbook(data).errors)
 
 
+def test_workbook_without_loan_sheets_is_supported(workbook_bytes):
+    def remove_loans(workbook):
+        workbook.remove(workbook["Loans"])
+        workbook.remove(workbook["LoanPayments"])
+    parsed = parse_workbook(edit_workbook(workbook_bytes, remove_loans))
+    assert validate_workbook(parsed, "tea-shop") == []
+
+
 def test_unknown_enums_and_invalid_dates_rejected(workbook_bytes):
     def change(w):
         w["Sales"]["G2"] = "mixed"

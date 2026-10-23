@@ -40,6 +40,11 @@ def test_upload_list_download_delete_and_product_isolation(client):
     assert result.status_code == 200
     document = result.json()
     assert document["status"] == "uploaded_unverified"
+    saved = client.get("/saved-applications?business_id=mine").json()["applications"]
+    assert len(saved) == 1
+    assert saved[0]["product_id"] == "kbz-term"
+    assert saved[0]["filenames"] == ["license.pdf"]
+    assert client.get("/saved-applications?business_id=other").status_code == 403
     assert client.get(f"/documents?{SCOPE}").json()["documents"][0]["filename"] == "license.pdf"
     assert client.get("/documents?business_id=mine&bank_id=kbz&product_id=kbz-jica").json()["documents"] == []
     downloaded = client.get(f"/documents/{document['id']}/download?business_id=mine")
@@ -49,6 +54,7 @@ def test_upload_list_download_delete_and_product_isolation(client):
     assert client.delete(f"/documents/{document['id']}?business_id=other").status_code == 403
     assert client.delete(f"/documents/{document['id']}?business_id=mine").status_code == 200
     assert client.get(f"/documents?{SCOPE}").json()["documents"] == []
+    assert client.get("/saved-applications?business_id=mine").json()["applications"] == []
 
 
 def test_rejects_fake_file_type_and_mismatched_bank_product(client):

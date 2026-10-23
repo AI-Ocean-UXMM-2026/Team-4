@@ -15,6 +15,7 @@ import { Route as CreditRouteImport } from './routes/credit'
 import { Route as DataSourceRouteImport } from './routes/data-source'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
@@ -50,6 +51,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/data-source': typeof DataSourceRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/data-source': typeof DataSourceRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/data-source': typeof DataSourceRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/onboarding': typeof OnboardingRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-in': typeof SignInRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/data-source'
     | '/forgot-password'
     | '/onboarding'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sign-in'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/data-source'
     | '/forgot-password'
     | '/onboarding'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sign-in'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/data-source'
     | '/forgot-password'
     | '/onboarding'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/sign-in'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   DataSourceRoute: typeof DataSourceRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   OnboardingRoute: typeof OnboardingRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignInRoute: typeof SignInRoute
@@ -228,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   DataSourceRoute: DataSourceRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   OnboardingRoute: OnboardingRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignInRoute: SignInRoute,

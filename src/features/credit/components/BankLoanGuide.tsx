@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, Landmark } from "lucide-react";
+import { ExternalLink, FileText, Landmark } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 import { ApplicationFiles } from "./ApplicationFiles";
 
@@ -198,10 +198,69 @@ export function applicationRequirements({ bank, productId }: GuideSelection): Co
         ];
 }
 
-export function BankLoanGuide({ onViewRecords, businessId = "preview", selection, onSelectionChange, preparationOnly = false, records }: {
+export function ApplicationSelector({ selection, onSelectionChange, savedSelections = [] }: {
+  selection: GuideSelection;
+  onSelectionChange: (selection: GuideSelection) => void;
+  savedSelections?: { id: string; label: string; selection: GuideSelection }[];
+}) {
+  const { language } = useTranslation();
+  const copy = (text: Copy) => text[language === "my" ? 1 : 0];
+  const available = products[selection.bank]!;
+  const product = available.find((item) => item.id === selection.productId) || available[0]!;
+  const selectedSavedId = savedSelections.find(item =>
+    item.selection.bank === selection.bank && item.selection.productId === product.id
+  )?.id ?? "";
+  const selectClass = "mt-2 block min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground";
+
+  return <section className="bf-card space-y-4" aria-label={copy(["Choose an application", "ချေးငွေလျှောက်လွှာ ရွေးချယ်ရန်"])}>
+    <div>
+      <h2 className="flex items-center gap-2.5 text-xl font-semibold">
+        <FileText className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+        <span>{copy(["Choose an application", "ချေးငွေလျှောက်လွှာ ရွေးချယ်ရန်"])}</span>
+      </h2>
+      <p className="mt-1 text-sm text-muted-foreground">{copy([
+        "Select the bank and loan product whose documents you want to prepare.",
+        "ပြင်ဆင်လိုသော စာရွက်စာတမ်းများအတွက် ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ရွေးပါ။",
+      ])}</p>
+    </div>
+    <label className="block text-sm font-medium">
+      {copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])}
+      <select className={selectClass} value={selectedSavedId} onChange={event => {
+        const saved = savedSelections.find(item => item.id === event.target.value);
+        if (saved) onSelectionChange(saved.selection);
+      }}>
+        <option value="">{copy(["Open a saved application…", "သိမ်းထားသော လျှောက်လွှာကို ရွေးပါ…"])}</option>
+        {savedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+      </select>
+      {!savedSelections.length && <span className="mt-2 block text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</span>}
+    </label>
+    <div className="grid gap-4 sm:grid-cols-2">
+      <label className="text-sm font-medium">
+        {copy(["Bank", "ဘဏ်"])}
+        <select className={selectClass} value={selection.bank} onChange={event => {
+          const bank = event.target.value;
+          onSelectionChange({ bank, productId: products[bank]![0]!.id });
+        }}>
+          <option value="kbz">KBZ Bank</option>
+          <option value="yoma">Yoma Bank</option>
+        </select>
+      </label>
+      <label className="text-sm font-medium">
+        {copy(["Loan product", "ချေးငွေအမျိုးအစား"])}
+        <select className={selectClass} value={product.id} onChange={event => onSelectionChange({ bank: selection.bank, productId: event.target.value })}>
+          {available.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+        </select>
+      </label>
+    </div>
+  </section>;
+}
+
+export function BankLoanGuide({ onViewRecords, businessId = "preview", selection, onSelectionChange, preparationOnly = false, records, savedSelections = [], showSelector = true }: {
   onViewRecords: () => void; businessId?: string; selection?: GuideSelection;
   onSelectionChange?: (selection: GuideSelection) => void; preparationOnly?: boolean;
   records?: ReadinessCategory[];
+  savedSelections?: { id: string; label: string; selection: GuideSelection }[];
+  showSelector?: boolean;
 }) {
   const { language } = useTranslation();
   const copy = (text: Copy) => text[language === "my" ? 1 : 0];
@@ -210,6 +269,9 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
   const select = (next: GuideSelection) => { setLocalSelection(next); onSelectionChange?.(next); };
   const available = products[bank]!;
   const product = available.find((item) => item.id === productId) || available[0]!;
+  const selectedSavedId = savedSelections.find(item =>
+    item.selection.bank === bank && item.selection.productId === product.id
+  )?.id ?? "";
   const source =
     bank === "kbz"
       ? kbzProducts
@@ -219,32 +281,31 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
     "mt-2 block min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm text-foreground";
   return (
     <section className="space-y-4">
-      <div className="bf-card space-y-4">
+      {showSelector && <div className="bf-card space-y-4">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
           <Landmark size={21} className="text-primary" />
           {copy(preparationOnly ? ["Prepare this application", "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်"] : ["Bank loan guide", "ဘဏ်ချေးငွေလမ်းညွှန်"])}
         </h2>
         <p className="text-sm text-muted-foreground">
           {copy(preparationOnly ? [
-            "Upload and manage supporting files for the bank and loan product imported from Excel.",
-            "Excel မှတင်သွင်းထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားအတွက် အထောက်အထားဖိုင်များကို တင်သွင်းပြီး စီမံနိုင်ပါသည်။",
+            "Choose a bank and loan product to upload files, or reopen a saved application.",
+            "ဖိုင်တင်ရန် ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ရွေးပါ။ ဖိုင်တင်ထားပြီးသော လျှောက်လွှာကိုလည်း ပြန်ဖွင့်နိုင်ပါသည်။",
           ] : [
             "Explore published business loan information. This guide does not change your recorded loans or assess approval.",
             "ဘဏ်ထုတ်ပြန်ထားသော လုပ်ငန်းချေးငွေအချက်အလက်များကို လေ့လာနိုင်ပါသည်။ ရှိပြီးသားချေးငွေများကို မပြောင်းလဲသကဲ့သို့ ခွင့်ပြုနိုင်မှုကိုလည်း မဆုံးဖြတ်ပါ။",
           ])}
         </p>
-        {preparationOnly ? (
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-sm text-muted-foreground">{copy(["Bank", "ဘဏ်"])}</dt>
-              <dd className="mt-2 font-semibold">{bank === "kbz" ? "KBZ Bank" : "Yoma Bank"}</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-muted-foreground">{copy(["Loan product", "ချေးငွေအမျိုးအစား"])}</dt>
-              <dd className="mt-2 font-semibold">{product.name}</dd>
-            </div>
-          </dl>
-        ) : (
+        {preparationOnly && <label className="block text-sm font-medium">
+          {copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])}
+          <select className={selectClass} value={selectedSavedId} onChange={event => {
+            const saved = savedSelections.find(item => item.id === event.target.value);
+            if (saved) select(saved.selection);
+          }}>
+            <option value="">{copy(["Open a saved application…", "သိမ်းထားသော လျှောက်လွှာကို ရွေးပါ…"])}</option>
+            {savedSelections.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+          {!savedSelections.length && <span className="mt-2 block text-xs text-muted-foreground">{copy(["Applications appear here automatically after you upload a file.", "ဖိုင်တင်ပြီးသော လျှောက်လွှာများကို ဤစာရင်းတွင် အလိုအလျောက် သိမ်းပေးပါမည်။"])}</span>}
+        </label>}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-medium">
             {copy(["Bank", "ဘဏ်"])}
@@ -275,8 +336,7 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
             </select>
           </label>
         </div>
-        )}
-      </div>
+      </div>}
       <div className={preparationOnly ? "space-y-4" : "grid gap-4 lg:grid-cols-2"}>
         {!preparationOnly && <article className="bf-card space-y-4">
           <h3 className="text-lg font-semibold">{product.name}</h3>
@@ -317,7 +377,7 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
         </article>}
         <article className="bf-card">
           <h3 className="mb-3 text-lg font-semibold">
-            {copy(preparationOnly ? ["Application files", "လျှောက်လွှာစာရွက်စာတမ်းဖိုင်များ"] : ["Application requirements", "လျှောက်ထားရန်လိုအပ်ချက်များ"])}
+            {copy(preparationOnly ? ["Application checklist", "လျှောက်လွှာစစ်ဆေးစာရင်း"] : ["Application requirements", "လျှောက်ထားရန်လိုအပ်ချက်များ"])}
           </h3>
           {bank === "kbz" && (
             <p className="mb-3 text-xs text-muted-foreground">

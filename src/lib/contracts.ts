@@ -87,6 +87,13 @@ export type WorkbookTables = {
     principal_mmk: DecimalString;
     interest_mmk: DecimalString;
   })[];
+  CashBalances?: {
+    balance_id: string;
+    business_id: string;
+    as_of_date: string;
+    cash_on_hand_mmk: DecimalString;
+    bank_balance_mmk: DecimalString;
+  }[];
   CashAdjustments: (Dated & {
     adjustment_id: string;
     direction: "in" | "out";
@@ -123,4 +130,13 @@ export type AccountStatus = {
   onboarding_complete: boolean;
   pending_business: BusinessDetails | null;
   owned_business_id: string | null;
+};
+export type UserProfile = {
+  user: AccountStatus["user"] & { avatar_data_url?: string | null };
+  business: (BusinessDetails & { id: string }) | null;
+};
+export type ProfileUpdate = {
+  full_name: string;
+  business?: BusinessDetails;
+  avatar_data_url?: string | null;
 };

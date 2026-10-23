@@ -9,7 +9,11 @@ def initialize_local_database(engine):
     if engine.dialect.name == "sqlite":
         Base.metadata.create_all(engine)
         # Additive upgrade for existing local databases; preserve every legacy row.
-        additions = {"users": {"full_name": "VARCHAR(120)", "email": "VARCHAR(254)"},
+        additions = {"recorded_loan_balances": {"bank_id": "VARCHAR(40)", "loan_product_id": "VARCHAR(80)",
+                         "next_payment_date": "DATE", "next_payment_mmk": "NUMERIC(18,2)", "payment_frequency": "VARCHAR(20)",
+                         "annual_rate_pct": "NUMERIC(7,3)", "remaining_term_months": "INTEGER", "repayment_terms": "JSON",
+                         "loan_start_date": "DATE", "loan_end_date": "DATE"},
+                     "users": {"full_name": "VARCHAR(120)", "email": "VARCHAR(254)", "avatar_data_url": "TEXT"},
                      "businesses": {"owner_id": "VARCHAR(80) REFERENCES users(id)", "industry": "VARCHAR(120)",
                                     "city": "VARCHAR(120)", "phone": "VARCHAR(40)", "address": "VARCHAR(500)",
                                     "currency": "VARCHAR(3) NOT NULL DEFAULT 'MMK'"}}

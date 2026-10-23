@@ -3,12 +3,14 @@ import type { CreditSummary, Loan } from "../types";
 import { importedApplication } from "../importedApplication";
 import { applicationProductName } from "./BankLoanGuide";
 
+
 export function CreditPreparationReport({
   report,
   loan,
 }: {
   report: CreditSummary["preparation_report"];
   loan?: Loan | undefined;
+
 }) {
   const { t } = useTranslation();
   const application = importedApplication(loan);
@@ -24,9 +26,6 @@ export function CreditPreparationReport({
               : t("Imported business records")}
           </p>
         </div>
-        <button type="button" className="bf-button print:hidden" onClick={() => window.print()}>
-          {t("Print / save report")}
-        </button>
       </div>
       <div className="mt-4 space-y-2 text-sm">
         <p>

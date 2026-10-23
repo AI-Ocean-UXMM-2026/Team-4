@@ -20,7 +20,6 @@ def with_terms(workbook):
 
 def test_terms_survive_import_and_reach_credit_summary(tmp_path, workbook_bytes):
     import pytest
-    from app.core.errors import APIError
     from app.db.connection import make_engine, session_factory
     from app.db.models import Base, Business
     from app.integrations.excel.import_service import import_validated_snapshot
@@ -41,7 +40,7 @@ def test_terms_survive_import_and_reach_credit_summary(tmp_path, workbook_bytes)
     assert float(loans[0]["annual_rate_pct"]) == 0
     assert loans[0]["term_months"] == 24
     assert loans[0]["schedule_status"] == "available"
-    # Omitted rows are retained: a second file cannot bypass the bank rule.
+    # Omitted rows are retained and loans from another bank can coexist.
     def another_bank(workbook):
         with_terms(workbook)
         workbook["Loans"]["A2"] = "SECOND-LOAN"
@@ -49,11 +48,9 @@ def test_terms_survive_import_and_reach_credit_summary(tmp_path, workbook_bytes)
         workbook["Loans"]["G2"] = "SME Business Loan"
         workbook["Loans"]["J2"] = "yoma"
         workbook["Loans"]["K2"] = "yoma-sme"
-    with pytest.raises(APIError):
-        import_validated_snapshot(sessions, "tea-shop", "tester", edit_workbook(workbook_bytes, another_bank))
-    unchanged = summary()
-    assert len(unchanged) == 1
-    assert unchanged[0]["lender"] == "KBZ Bank"
+    import_validated_snapshot(sessions, "tea-shop", "tester", edit_workbook(workbook_bytes, another_bank))
+    combined = summary()
+    assert {loan["lender"] for loan in combined} == {"KBZ Bank", "Yoma Bank"}
     engine.dispose()
 
 
@@ -69,18 +66,12 @@ def test_partial_terms_and_fractional_months_rejected(workbook_bytes):
     assert any(error["field"] == "term_months" for error in parse_workbook(edit_workbook(workbook_bytes, fractional)).errors)
 
 
-def test_second_outstanding_bank_rejected_but_settled_history_allowed():
+def test_outstanding_loans_from_multiple_banks_are_allowed():
     content = (ROOT / "database/seed/grocery.xlsx").read_bytes()
     def second_bank(workbook):
         sheet = workbook["Loans"]
         sheet.append(["OTHER-LOAN", "grocery", sheet["C2"].value, "Other Bank", "reducing_balance", 100])
     parsed = parse_workbook(edit_workbook(content, second_bank))
-    assert any(error["field"] == "lender" for error in validate_workbook(parsed, "grocery"))
-    from app.integrations.excel.schemas import WorkbookRow
-    parsed.sheets["LoanPayments"].append(WorkbookRow(99, {
-        "payment_id": "SETTLED", "business_id": "grocery", "date": parsed.sheets["Loans"][-1].values["date"],
-        "loan_id": "OTHER-LOAN", "principal_mmk": "100", "interest_mmk": "0",
-    }))
     assert validate_workbook(parsed, "grocery") == []
 
 

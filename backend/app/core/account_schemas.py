@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from .profile_photos import MAX_PHOTO_DATA_URL
+
 
 class StrictInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -61,6 +63,17 @@ class Registration(EmailInput):
 
 class Onboarding(BusinessInput):
     full_name: str = Field(min_length=1, max_length=120)
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def clean_name(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
+class ProfileUpdate(StrictInput):
+    full_name: str = Field(min_length=1, max_length=120)
+    business: BusinessInput | None = None
+    avatar_data_url: str | None = Field(default=None, max_length=MAX_PHOTO_DATA_URL)
 
     @field_validator("full_name", mode="before")
     @classmethod

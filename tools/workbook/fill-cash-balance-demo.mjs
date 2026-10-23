@@ -1,0 +1,38 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const folder = path.join(root, "outputs/cash-balances-template-20261022");
+const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(path.join(root, "outputs/cash-planning-demo-20261022/Mi-Thar-Su-cash-planning-demo.xlsx")));
+const balanceSheet = workbook.worksheets.add("CashBalances");
+balanceSheet.showGridLines = false;
+balanceSheet.freezePanes.freezeRows(1);
+balanceSheet.getRange("A1:E1").values = [["balance_id", "business_id", "as_of_date", "cash_on_hand_mmk", "bank_balance_mmk"]];
+balanceSheet.getRange("A1:E1").format = {fill: "#244B45", font: {name: "Arial", size: 10, color: "#FFFFFF", bold: true}, rowHeight: 30};
+balanceSheet.getRange("A1:E3").format.columnWidth = 26;
+balanceSheet.getRange("B1:B3").format.columnWidth = 46;
+balanceSheet.getRange("A2:E3").format = {fill: "#FFF9E7", font: {name: "Arial", size: 10}, rowHeight: 25};
+balanceSheet.getRange("C2:C3").setNumberFormat("yyyy-mm-dd");
+balanceSheet.getRange("D2:E3").setNumberFormat("#,##0.00");
+const businessId = workbook.worksheets.getItem("Settings").getRange("A2").values[0][0];
+workbook.worksheets.getItem("CashBalances").getRange("A2:E2").values = [["CB-20261022", businessId, new Date("2026-10-22T00:00:00Z"), 1500000, 6442300]];
+const notes = workbook.worksheets.getItem("ReadMe");
+notes.getRange("A38").values = [["CashBalances"]];
+notes.getRange("A42").values = [["DEMO CASH BALANCE"]];
+notes.getRange("A38:A42").format.columnWidth = 28;
+notes.getRange("B38:B42").format.columnWidth = 110;
+notes.getRange("B38:B42").format.wrapText = true;
+notes.getRange("A38:B42").format.font = {name: "Arial", size: 10};
+notes.getRange("A38:B42").format.rowHeight = 45;
+notes.getRange("B38").values = [["User-authorized fictional cash/bank snapshot included for testing. Replace it with real balances before using real business reports."]];
+notes.getRange("B42").values = [["DEMO ONLY: 2026-10-22, cash on hand 1,500,000 MMK + bank balance 6,442,300 MMK = 7,942,300 MMK. Invented allocation, not counted cash or a verified bank balance. This snapshot does not add income."]];
+notes.getRange("A42:B42").format.fill = "#FFF0CC";
+notes.getRange("A42:B42").format.rowHeight = 60;
+workbook.recalculate();
+console.log((await workbook.inspect({kind: "table", range: "CashBalances!A1:E2", include: "values", tableMaxRows: 2, tableMaxCols: 5, maxChars: 800})).ndjson);
+for (const [sheetName, range, name] of [["CashBalances", "A1:E3", "filled-cash-balances"], ["ReadMe", "A42:B42", "demo-note"]]) {
+  const image = await workbook.render({sheetName, range, scale: 1.1, format: "png"});
+  await fs.writeFile(path.join(folder, `${name}.png`), new Uint8Array(await image.arrayBuffer()));
+}
+await (await SpreadsheetFile.exportXlsx(workbook)).save(path.join(folder, "Mi-Thar-Su-complete-demo-import.xlsx"));

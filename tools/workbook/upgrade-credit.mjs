@@ -40,11 +40,11 @@ for (const sample of [false, true]) {
   }
   const notes = wb.worksheets.getItem("ReadMe");
   const instructions = [
-    ["Credit Hub import", "Use one bank and its matching loan product. Fill all seven new Loans fields together."],
+    ["Credit Hub import", "For KBZ or Yoma, use the matching bank and loan product. Fill all seven new Loans fields together."],
     ["Annual interest", "Enter the signed agreement rate: 12 means 12% annually. Zero means interest-free. Blank means unknown."],
     ["Repayment dates", "Use a real Excel date. Monthly due dates follow the first payment day, clipped at month end."],
     ["Supported estimate", "Reducing balance, monthly, first payment one month after disbursement. Other schedules require lender details."],
-    ["Bank rule", "Outstanding loans may belong to one bank only. Fully repaid loans from other banks may remain as history."],
+    ["Other banks", "Multiple banks are allowed. Banks outside the KBZ and Yoma catalog use manually entered terms; treat results as estimates and check the signed agreement or bank statement."],
     ["Product mapping", "Copy bank_id, loan_product_id and the exact product name below. The importer checks that they match."],
     ["Agreement source", sample ? "SYNTHETIC DEMO ONLY. Sample bank/product and 12% rate illustrate import fields, not a lender offer." : "Use your own signed loan agreement. The bank guide does not set the rate of an existing loan."],
     ...catalog.flatMap(bank => bank.products.map(product => [product.id, `${bank.id} | ${bank.name} | ${product.name}`])),

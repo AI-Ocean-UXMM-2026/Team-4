@@ -84,10 +84,10 @@ export function WorkingCapitalInputChoices({
           <div className="grid gap-3 sm:grid-cols-2">
             <Link
               to="/data-source"
-              className="rounded-2xl border border-primary/25 bg-background p-5 transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary"
+              className="rounded-2xl border border-primary bg-primary p-5 text-primary-foreground transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <span className="block font-semibold text-primary">{t("Update via Excel File")}</span>
-              <span className="mt-2 block text-sm text-muted-foreground">
+              <span className="block font-semibold">{t("Update via Excel File")}</span>
+              <span className="mt-2 block text-sm">
                 {t("Upload or sync your updated Excel workbook via OneDrive.")}
               </span>
             </Link>
@@ -100,10 +100,10 @@ export function WorkingCapitalInputChoices({
                 setError("");
                 setOpen((current) => !current);
               }}
-              className="rounded-2xl border border-primary/25 bg-background p-5 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary"
+              className="rounded-2xl border border-primary bg-primary p-5 text-left text-primary-foreground transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              <span className="block font-semibold text-primary">{t("Input Data Manually")}</span>
-              <span className="mt-2 block text-sm text-muted-foreground">
+              <span className="block font-semibold">{t("Input Data Manually")}</span>
+              <span className="mt-2 block text-sm">
                 {t("Quickly fill in the missing variables directly in the app.")}
               </span>
             </button>
@@ -112,7 +112,7 @@ export function WorkingCapitalInputChoices({
       ) : (
         <button
           type="button"
-          className="text-sm font-semibold text-primary underline"
+          className="bf-button-link text-sm font-semibold"
           aria-expanded={open}
           aria-controls="working-capital-manual-form"
           onClick={() => {
@@ -309,11 +309,7 @@ export function WorkingCapitalInputChoices({
             <button type="submit" className="bf-button">
               {t("Save & Apply")}
             </button>
-            <button
-              type="button"
-              className="rounded-xl border px-4 py-2 text-sm"
-              onClick={() => setOpen(false)}
-            >
+            <button type="button" className="bf-button-secondary" onClick={() => setOpen(false)}>
               {t("Cancel")}
             </button>
           </div>

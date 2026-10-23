@@ -92,17 +92,14 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
       </div>
       {files.length > 0 && (
         <div className="mt-4 max-h-64 space-y-2 overflow-y-auto rounded-lg border p-3">
-          <button
-            className="block text-sm text-primary underline"
-            onClick={() => void run(() => browse())}
-          >
+          <button className="bf-button-link block text-sm" onClick={() => void run(() => browse())}>
             {t("OneDrive root")}
           </button>
           {files.map((file) => (
             <button
               key={file.id}
               disabled={busy}
-              className="block w-full rounded p-2 text-left text-sm hover:bg-muted"
+              className="bf-button-quiet block w-full p-2 text-left text-sm"
               onClick={() =>
                 void run(async () => {
                   if (file.is_folder) {
@@ -127,7 +124,7 @@ export function OneDriveConnect({ status }: { status: SyncStatus }) {
       {status.connected && (
         <button
           disabled={busy}
-          className="mt-5 block text-xs text-muted-foreground underline"
+          className="bf-button-link mt-5 block text-xs"
           onClick={() =>
             void run(async () => {
               await api(businessPath("link", business.id), { method: "DELETE" });

@@ -1,4 +1,5 @@
 export type Money = string;
+export type ApplicationDocument = { id: string; requirement_key: string; filename: string; size: number; created_at: string };
 export type ScheduleLine = {
   period: number;
   due_date: string;
@@ -50,6 +51,7 @@ export type ReadinessCategory = {
   note: string | null;
 };
 export type CreditSummary = {
+  recorded_balances?: {id: string; lender_kind: "bank" | "individual"; lender_name: string; bank_id?: string | null; loan_product_id?: string | null; outstanding_principal_mmk: string; as_of_date: string; loan_start_date?: string | null; loan_end_date?: string | null; next_payment_date?: string | null; next_payment_mmk?: string | null; payment_frequency?: string | null; annual_rate_pct?: string | null; repayment_terms?: {rate_period: "annual" | "monthly"; entered_rate_pct: string; interest_method: "reducing_balance" | "flat" | "interest_only" | "other"; regular_payment_mmk: string; next_payment_fees_mmk: string; balloon_payment_mmk: string; grace_months: number} | null; remaining_term_months?: number | null}[];
   business_id: string;
   as_of: string;
   lender_checklist_scope: "generic_not_lender_specific";
@@ -59,6 +61,10 @@ export type CreditSummary = {
   readiness_progress: { prepared_categories: number; total_categories: number; label: string };
   repayment_capacity: {
     status: "appears_covered_from_recorded_cash" | "potential_shortfall" | "insufficient_data";
+    recorded_cash_mmk: Money | null;
+    outstanding_supplier_balances_mmk: Money | null;
+    unpaid_expenses_mmk: Money | null;
+    next_loan_payment_mmk: Money | null;
     projected_cash_available_before_loan_mmk: Money | null;
     repayment_gap_mmk: Money | null;
     explanation: string;

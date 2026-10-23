@@ -20,6 +20,36 @@ from datetime import date
 URL = "/api/v1/financial/summary?business_id=tea-shop&start=2026-10-01&end=2026-10-31"
 
 
+def prepare_wholesale_sample(workbook, *, single_lender):
+    for sheet in workbook.worksheets:
+        headers = [cell.value for cell in sheet[1]]
+        if "business_id" in headers:
+            column = headers.index("business_id") + 1
+            for row in range(2, sheet.max_row + 1):
+                sheet.cell(row, column).value = "tea-shop"
+    if single_lender:
+        # Optionally normalize lenders without changing loan amounts, payments,
+        # or financial totals for tests that do not exercise multi-bank input.
+        loans = workbook["Loans"]
+        lender_column = [cell.value for cell in loans[1]].index("lender") + 1
+        for row in range(2, loans.max_row + 1):
+            loans.cell(row, lender_column).value = "KBZ Bank"
+
+
+def test_original_multilender_wholesale_sample_is_accepted(client):
+    path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
+    workbook = load_workbook(BytesIO(path.read_bytes()))
+    prepare_wholesale_sample(workbook, single_lender=False)
+    content = BytesIO()
+    workbook.save(content)
+    workbook.close()
+    imported = upload(client, content.getvalue())
+    assert imported.status_code == 200, imported.text
+    snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()
+    assert snapshot["source_version"] == 1
+    assert {loan["lender"] for loan in snapshot["tables"]["Loans"]} == {"KBZ Bank", "Yoma Bank"}
+
+
 def test_real_import_summary_and_idempotency(client, workbook_bytes):
     first = upload(client, workbook_bytes)
     assert first.status_code == 200
@@ -99,13 +129,7 @@ def test_only_exact_seed_workbook_is_marked_synthetic(tmp_path):
 def test_wholesale_october_workbook_import_and_financial_availability(client):
     path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
-    # Bind the synthetic sample to this test user's authorized business.
-    for sheet in workbook.worksheets:
-        headers = [cell.value for cell in sheet[1]]
-        if "business_id" in headers:
-            column = headers.index("business_id") + 1
-            for row in range(2, sheet.max_row + 1):
-                sheet.cell(row, column).value = "tea-shop"
+    prepare_wholesale_sample(workbook, single_lender=True)
     purchases = workbook["Purchases"]
     due_column = purchases.max_column + 1
     purchases.cell(1, due_column).value = "due_date"
@@ -170,12 +194,7 @@ def test_wholesale_october_workbook_import_and_financial_availability(client):
 def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client):
     path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
-    for sheet in workbook.worksheets:
-        headers = [cell.value for cell in sheet[1]]
-        if "business_id" in headers:
-            column = headers.index("business_id") + 1
-            for row in range(2, sheet.max_row + 1):
-                sheet.cell(row, column).value = "tea-shop"
+    prepare_wholesale_sample(workbook, single_lender=True)
     content = BytesIO()
     workbook.save(content)
     workbook.close()
@@ -209,12 +228,7 @@ def test_enhanced_wholesale_workbook_imports_costs_and_dated_expense_cash(client
 def test_same_hash_reimport_backfills_fields_added_after_legacy_import(client):
     path = Path(__file__).parent / "fixtures" / "BIZFLOW_Wholesale_Sample_October_2026_Enhanced.xlsx"
     workbook = load_workbook(BytesIO(path.read_bytes()))
-    for sheet in workbook.worksheets:
-        headers = [cell.value for cell in sheet[1]]
-        if "business_id" in headers:
-            column = headers.index("business_id") + 1
-            for row in range(2, sheet.max_row + 1):
-                sheet.cell(row, column).value = "tea-shop"
+    prepare_wholesale_sample(workbook, single_lender=True)
     content = BytesIO()
     workbook.save(content)
     workbook.close()
