@@ -7,7 +7,7 @@ import { DisplayPreferences } from "./DisplayPreferences";
 export function TopBar() {
   const { t } = useTranslation();
 
-  const { business, businesses, setBusinessId, signOut } = usePlatform();
+  const { business, signOut } = usePlatform();
   return (
     <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-8">
       <div className="mr-auto lg:hidden">
@@ -15,22 +15,16 @@ export function TopBar() {
       </div>
       <DisplayPreferences />
       <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:w-auto sm:gap-3">
-        <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border bg-background/70 px-3 py-2 text-sm">
+        <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border bg-background/70 px-3 py-2 text-sm">
           <Building2 size={16} className="shrink-0 text-primary" aria-hidden="true" />
           <span className="sr-only">{t("Active business")}</span>
-          <select
-            aria-label={t("Active business")}
-            value={business.id}
-            onChange={(e) => setBusinessId(e.target.value)}
-            className="w-full min-w-0 bg-transparent py-1 pr-2 text-sm font-semibold text-foreground sm:max-w-56"
+          <span
+            className="min-w-0 truncate py-1 text-sm font-semibold text-foreground sm:max-w-56"
+            title={business.name}
           >
-            {businesses.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </label>
+            {business.name}
+          </span>
+        </div>
         <Link
           to="/profile"
           aria-label={t("Your profile")}

@@ -9,11 +9,11 @@ import {
   UserRound,
 } from "lucide-react";
 export const navigation = [
+  { to: "/data-source", label: "Data Source", icon: Database },
+  { to: "/ai", label: "AI Analyzer", icon: Sparkles },
   { to: "/", label: "Financial Health", icon: ChartNoAxesCombined },
   { to: "/working-capital", label: "Working Capital", icon: CircleDollarSign },
   { to: "/credit", label: "Credit Hub", icon: ClipboardCheck },
-  { to: "/ai", label: "AI Analyzer", icon: Sparkles },
-  { to: "/data-source", label: "Data Source", icon: Database },
   { to: "/profile", label: "Profile", icon: UserRound },
 ] as const;
 export function Navigation({

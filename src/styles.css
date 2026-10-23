@@ -35,39 +35,40 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #faf9f7;
-  --foreground: #292d34;
+  --background: #faf6f0;
+  --foreground: #3b3028;
   --card: #ffffff;
-  --card-foreground: #292d34;
+  --card-foreground: #3b3028;
   --primary: #c4510c;
   --primary-foreground: #ffffff;
   --primary-hover: #a94208;
   --secondary: #fff1e6;
   --secondary-foreground: #a94208;
-  --muted: #f1f0ed;
-  --muted-foreground: #666b73;
+  --muted: #f1e9df;
+  --muted-foreground: #75665a;
   --accent: #ffead9;
   --accent-foreground: #a94208;
   --destructive: oklch(0.6 0.2 25);
   --success: oklch(0.6 0.15 155);
   --warning: oklch(0.75 0.15 70);
-  --border: #e5e3df;
-  --input: #c9c8c4;
+  --border: #e6dacd;
+  --input: #cbb9a8;
   --ring: #c4510c;
   --feature-background: #ff8a1f;
   --button-foreground: var(--primary-foreground);
   --feature-foreground: #2c1a0d;
   --feature-muted: #4f2c10;
-  --glass: #fffffff2;
-  --auth-glass: #fffffff5;
-  --auth-glass-border: #e5e3df;
+  /* Opaque surfaces keep the decorative page background outside the cards. */
+  --glass: var(--card);
+  --auth-glass: var(--card);
+  --auth-glass-border: var(--border);
   --auth-glass-shadow: 0 12px 40px #292d340a, 0 2px 8px #292d3404;
   --auth-input-glass: #ffffff;
-  --auth-input-border: #c9c8c4;
+  --auth-input-border: var(--input);
   --chart-revenue: #b83f00;
   --chart-expenses: #0891b2;
-  --liquid-opacity: 0.14;
-  --liquid-filter: hue-rotate(105deg) saturate(0.8) brightness(1.3);
+  --liquid-opacity: 0.08;
+  --liquid-filter: hue-rotate(105deg) saturate(0.8) brightness(1.1);
   --glass-border: var(--border);
   --surface-shadow: 0 2px 8px #292d3404;
   --surface-hover: 0 6px 18px #292d340a;
@@ -78,38 +79,39 @@
 }
 
 .dark {
-  --background: #181c22;
-  --foreground: #f3f4f6;
-  --card: #222730;
-  --card-foreground: #f3f4f6;
-  --primary: #ff9b4b;
+  --background: #342c25;
+  --foreground: #fff7ec;
+  --card: #443a32;
+  --card-foreground: #fff7ec;
+  --primary: #ffad55;
   --primary-foreground: #2c1a0d;
-  --primary-hover: #ffaf70;
-  --secondary: #382b22;
-  --secondary-foreground: #ffb880;
-  --muted: #2b3039;
-  --muted-foreground: #b1b6c0;
-  --accent: #493223;
-  --accent-foreground: #ffc99e;
+  --primary-hover: #ffbd77;
+  --secondary: #57402c;
+  --secondary-foreground: #ffc58a;
+  --muted: #4d4238;
+  --muted-foreground: #d0c0af;
+  --accent: #65452c;
+  --accent-foreground: #ffce9c;
   --destructive: #ff929e;
   --success: #75ddba;
   --warning: #f2cf84;
-  --border: #373d47;
-  --input: #555d6b;
-  --ring: #ff9b4b;
-  --glass: #222730f2;
-  --auth-glass: #222730f5;
+  --border: #625246;
+  --input: #88715e;
+  --ring: #ffad55;
+  --glass: var(--card);
+  --auth-glass: var(--card);
   --auth-glass-border: var(--border);
   --auth-glass-shadow: 0 12px 40px #00000024, 0 2px 8px #00000014;
-  --auth-input-glass: #1d222a;
-  --auth-input-border: #555d6b;
+  --auth-input-glass: #382f28;
+  --auth-input-border: var(--input);
   --chart-revenue: #ffac52;
   --chart-expenses: #67e8f9;
-  --liquid-opacity: 0.1;
+  --liquid-opacity: 0.24;
+  --liquid-filter: hue-rotate(105deg) saturate(0.85) brightness(0.75);
   --glass-border: var(--border);
   --surface-shadow: 0 2px 8px #00000012;
   --surface-hover: 0 6px 18px #00000024;
-  --ambient-opacity: 0.12;
+  --ambient-opacity: 0.18;
   --aurora:
     radial-gradient(ellipse at 90% 0%, #ff79000d, transparent 50%),
     radial-gradient(ellipse at 10% 95%, #ffad4d0a, transparent 48%);
@@ -393,7 +395,7 @@
     isolation: isolate;
     overflow: hidden;
     color: var(--foreground);
-    background: transparent;
+    background: var(--card);
     border: 1px solid var(--border);
     box-shadow: var(--surface-shadow);
     & > * {
@@ -572,25 +574,25 @@ html[lang="my"] .bf-auth-story h2 {
   line-height: 1.8;
 }
 .dark :is(.bg-emerald-50, .bg-green-50) {
-  background-color: #193c363b;
+  background-color: #344137;
 }
 .dark :is(.text-emerald-700, .text-emerald-800, .text-green-700) {
   color: #8ce1be;
 }
 .dark :is(.bg-amber-50, .bg-yellow-50) {
-  background-color: #5340204a;
+  background-color: #51422e;
 }
 .dark :is(.text-amber-700, .text-amber-800, .text-amber-900) {
   color: #f4d394;
 }
 .dark :is(.bg-red-50, .bg-rose-50) {
-  background-color: #642e3b38;
+  background-color: #513934;
 }
 .dark :is(.text-red-600, .text-red-700, .text-rose-600, .text-rose-700) {
   color: #ffa5b3;
 }
 .dark :is(.bg-blue-50, .bg-indigo-50, .bg-teal-50, .bg-cyan-50) {
-  background-color: #163f5345;
+  background-color: #344248;
 }
 .dark :is(.text-blue-700, .text-indigo-700, .text-teal-700, .text-cyan-700) {
   color: #b2dff0;
