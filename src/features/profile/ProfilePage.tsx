@@ -282,17 +282,26 @@ function ProfileEditor({ initial }: { initial: UserProfile }) {
                     value={business.phone}
                     onChange={(event) => changeBusiness("phone", event.target.value)}
                   />
-                  <label className="block text-sm font-semibold">
-                    {t("Preferred currency")}
-                    <select
+                  <div>
+                    <label htmlFor="profile-currency" className="block text-sm font-semibold">
+                      {t("Preferred currency")}
+                    </label>
+                    <div className="mt-2 flex items-center justify-between rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2.5 text-sm font-medium text-foreground">
+                      <span>{t("MMK — Myanmar kyat")}</span>
+                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                        MMK
+                      </span>
+                    </div>
+                    <input
+                      id="profile-currency"
+                      type="text"
                       name="currency"
-                      className="bf-input mt-2"
                       value={business.currency}
-                      onChange={() => {}}
-                    >
-                      <option value="MMK">{t("MMK — Myanmar kyat")}</option>
-                    </select>
-                  </label>
+                      readOnly
+                      tabIndex={-1}
+                      className="sr-only"
+                    />
+                  </div>
                 </div>
                 <Field
                   label="Business address (optional)"

@@ -1,6 +1,6 @@
 import { useTranslation } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
-import { Download, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
@@ -42,19 +42,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const predatingError = result?.errors.some(
     (issue) => issue.reason === "Transaction predates the opening date",
   );
-  const download = async () => {
-    try {
-      const blob = await api<Blob>(businessPath("template", business.id));
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${business.id}-template.xlsx`;
-      link.click();
-      URL.revokeObjectURL(url);
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Download failed");
-    }
-  };
+
   return (
     <section className="bf-card">
       <div className="mb-5 flex items-center justify-between gap-3">
@@ -168,13 +156,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
         >
           {busy ? t("Validating and importing…") : t("Import workbook")}
         </button>
-        <button
-          className="bf-button-secondary inline-flex items-center gap-2"
-          onClick={() => void download()}
-        >
-          <Download size={16} />
-          {t("Download template")}
-        </button>
+
       </div>
       {error && (
         <p role="alert" className="mt-4 text-sm text-destructive">
