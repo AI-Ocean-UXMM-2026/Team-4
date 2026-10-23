@@ -230,7 +230,7 @@ export function ApplicationSelector({ selection, onSelectionChange, onRemoveSave
         "ပြင်ဆင်လိုသော စာရွက်စာတမ်းများအတွက် ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ရွေးပါ။",
       ])}</p>
     </div>
-    <details className="group rounded-xl border bg-card" defaultOpen={savedSelections.length < 3}>
+    <details className="group rounded-xl border bg-card" open={savedSelections.length < 3 ? true : undefined}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 font-medium hover:bg-muted/50">
         <span>{copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])} <span className="text-muted-foreground">({savedSelections.length})</span></span>
         <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
@@ -318,7 +318,7 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
             "ဘဏ်ထုတ်ပြန်ထားသော လုပ်ငန်းချေးငွေအချက်အလက်များကို လေ့လာနိုင်ပါသည်။ ရှိပြီးသားချေးငွေများကို မပြောင်းလဲသကဲ့သို့ ခွင့်ပြုနိုင်မှုကိုလည်း မဆုံးဖြတ်ပါ။",
           ])}
         </p>
-        {preparationOnly && <details className="group rounded-xl border bg-card" defaultOpen={savedSelections.length < 3}>
+        {preparationOnly && <details className="group rounded-xl border bg-card" open={savedSelections.length < 3 ? true : undefined}>
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 font-medium hover:bg-muted/50">
             <span>{copy(["Saved applications", "သိမ်းထားသော လျှောက်လွှာများ"])} <span className="text-muted-foreground">({savedSelections.length})</span></span>
             <ChevronDown className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />

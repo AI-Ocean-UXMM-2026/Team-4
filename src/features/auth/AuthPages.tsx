@@ -113,7 +113,7 @@ const message = (error: unknown) =>
 const SIGN_IN_TIMEOUT_MS = 10_000;
 
 async function signInWithDeadline(email: string, password: string) {
-  let timer: ReturnType<typeof window.setTimeout> | undefined;
+  let timer: ReturnType<typeof setTimeout> | number | undefined;
   try {
     return await Promise.race([
       requireAuthClient().auth.signInWithPassword({ email, password }),
