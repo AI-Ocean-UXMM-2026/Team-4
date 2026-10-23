@@ -21,7 +21,7 @@ const client: FinancialClient = {
 export function ConnectedFinancialPage() {
   const { t } = useTranslation();
 
-  const { business, imported } = usePlatform();
+  const { business } = usePlatform();
   const snapshot = useSnapshot();
   if (snapshot.isPending) return <LoadingAnimation label="Loading current financial records…" />;
   if (snapshot.isError) return <p role="alert">{t(snapshot.error.message)}</p>;
@@ -39,13 +39,6 @@ export function ConnectedFinancialPage() {
       dataRefreshing={snapshot.isFetching}
       onRefresh={async () => {
         await snapshot.refetch();
-      }}
-      onSaveDueDate={async (purchaseId, dueDate, expectedDueDate) => {
-        await api(`/api/v1/data/purchases/${encodeURIComponent(purchaseId)}/due-date?business_id=${encodeURIComponent(business.id)}`, {
-          method: "PUT",
-          body: JSON.stringify({ due_date: dueDate, expected_due_date: expectedDueDate }),
-        });
-        await imported();
       }}
     />
   );

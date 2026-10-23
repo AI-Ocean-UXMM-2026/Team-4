@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { OutstandingBalances } from "../components/OutstandingBalances";
 import type { Obligation } from "../types";
 
@@ -129,7 +129,6 @@ describe("OutstandingBalances", () => {
     expect(within(summary).queryByText("Outstanding loan principal")).toBeNull();
     const typeFilter = screen.getByRole("combobox", { name: "Filter by type" });
     expect(within(typeFilter).getAllByRole("option").map((option) => option.textContent)).toEqual([
-      "All types",
       "Supplier",
     ]);
     let table = screen.getByRole("table", { name: /outstanding business obligations/i });
@@ -362,34 +361,11 @@ describe("OutstandingBalances", () => {
     ).toBeNull();
   });
 
-  it("edits the selected supplier date and updates due statuses after refreshed obligations arrive", async () => {
-    const save = vi.fn().mockResolvedValue(undefined);
-    const initial: Obligation = { kind: "supplier", reference_id: "PUR-1", due_date: null,
-      amount_mmk: "200", original_amount_mmk: "300", amount_paid_mmk: "100" };
-    const view = render(<OutstandingBalances obligations={[initial]} asAt="2026-10-22" onSaveDueDate={save} />);
-    expect(screen.getByRole("link", { name: "Update via Excel" })).toHaveAttribute("href", "/data-source");
-    fireEvent.click(screen.getByRole("button", { name: "Add due date" }));
-    const dialog = screen.getByRole("dialog", { name: "Edit supplier due date" });
-    expect(within(dialog).getByText(/PUR-1/)).toBeVisible();
-    expect(within(dialog).getByText(/200 MMK/)).toBeVisible();
-    fireEvent.change(within(dialog).getByLabelText("Due date"), { target: { value: "2026-10-25" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(save).toHaveBeenCalledExactlyOnceWith("PUR-1", "2026-10-25", null));
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    view.rerender(<OutstandingBalances obligations={[{ ...initial, due_date: "2026-10-25" }]} asAt="2026-10-22" onSaveDueDate={save} />);
-    expect(screen.getByRole("button", { name: "Edit due date" })).toBeVisible();
-    expect(screen.getByText("Due within 7 days", { selector: "span" })).toBeVisible();
-  });
-
-  it("keeps the dialog open with a visible error after a failed save", async () => {
-    const save = vi.fn().mockRejectedValue(new Error("The due date changed. Refresh and try again."));
-    render(<OutstandingBalances obligations={[{ kind: "supplier", reference_id: "PUR-2", due_date: "2026-10-30", amount_mmk: "400" }]}
-      asAt="2026-10-22" onSaveDueDate={save} />);
-    fireEvent.click(screen.getByRole("button", { name: "Edit due date" }));
-    const dialog = screen.getByRole("dialog");
-    fireEvent.change(within(dialog).getByLabelText("Due date"), { target: { value: "2026-11-01" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent("The due date changed. Refresh and try again.");
-    expect(save).toHaveBeenCalledExactlyOnceWith("PUR-2", "2026-11-01", "2026-10-30");
+  it("shows supplier dates without editing actions", () => {
+    render(<OutstandingBalances obligations={[{ kind: "supplier", reference_id: "PUR-2", due_date: "2026-10-30", amount_mmk: "400" }]} asAt="2026-10-22" />);
+    expect(screen.getByText("2026-10-30")).toBeVisible();
+    expect(screen.queryByRole("columnheader", { name: "Actions" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit due date" })).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

@@ -20,7 +20,6 @@ export interface FinancialPageProps {
   today?: string;
   sourceVersion?: number;
   onRefresh?: () => Promise<void>;
-  onSaveDueDate?: (purchaseId: string, dueDate: string, expectedDueDate: string | null) => Promise<void>;
   dataRefreshing?: boolean;
 }
 
@@ -79,7 +78,6 @@ export function FinancialPage({
   today = yangonToday(),
   sourceVersion,
   onRefresh,
-  onSaveDueDate,
   dataRefreshing = false,
 }: FinancialPageProps) {
   const { t } = useTranslation();
@@ -247,10 +245,6 @@ export function FinancialPage({
                 obligations={state.snapshot.upcoming_obligations}
                 asAt={period.end}
                 cashAvailable={state.snapshot.actual.cash_balance_mmk}
-                onSaveDueDate={onSaveDueDate ? async (purchaseId, dueDate, expectedDueDate) => {
-                  await onSaveDueDate(purchaseId, dueDate, expectedDueDate);
-                  setRefresh((value) => value + 1);
-                } : undefined}
               />
             </div>
           </div>

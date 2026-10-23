@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 import {
   CalendarClock,
@@ -89,30 +89,21 @@ export function OutstandingBalances({
   obligations,
   asAt,
   cashAvailable,
-  onSaveDueDate,
 }: {
   obligations: Obligation[];
   asAt: string;
   cashAvailable?: Money;
-  onSaveDueDate?: ((purchaseId: string, dueDate: string, expectedDueDate: string | null) => Promise<void>) | undefined;
 }) {
   const { t } = useTranslation();
-  const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dueDateFilter, setDueDateFilter] = useState("all");
   const [minimumAmount, setMinimumAmount] = useState("");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("due-date");
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState<Obligation | null>(null);
-  const [editedDate, setEditedDate] = useState("");
-  const [editError, setEditError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [editSuccess, setEditSuccess] = useState("");
-  const dateInput = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => setPage(1), [obligations, asAt]);
-  useEffect(() => { if (editing) dateInput.current?.focus(); }, [editing]);
 
   const classified = useMemo(
     () => obligations.filter((item) => item.kind === "supplier").map((item) => ({ item, status: statusFor(item, asAt) })),
@@ -149,7 +140,6 @@ export function OutstandingBalances({
         item.reference_id.toLocaleLowerCase().includes(query) ||
         item.name?.toLocaleLowerCase().includes(query),
     )
-    .filter(({ item, status }) => typeFilter === "all" || item.kind === typeFilter)
     .filter(({ status }) => statusFilter === "all" || status === statusFilter)
     .filter(
       ({ item }) =>
@@ -242,7 +232,6 @@ export function OutstandingBalances({
         {t("Recorded balances through")} {asAt}.{" "}
         {t("Due dates and statuses use this reporting end date.")}
       </p>
-      {editSuccess && <p role="status" className="mt-3 text-sm text-primary">{t(editSuccess)}</p>}
 
       <dl className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {summary.map((item) => (
@@ -302,13 +291,8 @@ export function OutstandingBalances({
               <select
                 aria-label={t("Filter by type")}
                 className="mt-1 block w-full rounded-lg border bg-background p-2 text-sm text-foreground"
-                value={typeFilter}
-                onChange={(event) => {
-                  setTypeFilter(event.target.value);
-                  setPage(1);
-                }}
+                defaultValue="supplier"
               >
-                <option value="all">{t("All types")}</option>
                 <option value="supplier">{t("Supplier")}</option>
               </select>
             </label>
@@ -409,7 +393,6 @@ export function OutstandingBalances({
                     "Remaining balance",
                     "Due date",
                     "Payment status",
-                    ...(onSaveDueDate ? ["Actions"] : []),
                   ].map((label, index) => (
                     <th
                       key={label}
@@ -464,24 +447,11 @@ export function OutstandingBalances({
                         {t(status)}
                       </span>
                     </td>
-                    {onSaveDueDate && (
-                      <td className="whitespace-nowrap px-3 py-3">
-                        <button type="button" className="font-semibold text-primary underline underline-offset-2"
-                          onClick={() => {
-                            setEditing(item);
-                            setEditedDate(item.due_date ?? "");
-                            setEditError("");
-                            setEditSuccess("");
-                          }}>
-                          {t(item.due_date ? "Edit due date" : "Add due date")}
-                        </button>
-                      </td>
-                    )}
                   </tr>
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={onSaveDueDate ? 8 : 7} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    <td colSpan={7} className="px-3 py-6 text-center text-sm text-muted-foreground">
                       {t("No payments match these filters.")}
                     </td>
                   </tr>
@@ -489,52 +459,6 @@ export function OutstandingBalances({
               </tbody>
             </table>
           </div>
-          {editing && onSaveDueDate && (
-            <div role="dialog" aria-modal="true" aria-label={t("Edit supplier due date")}
-              onKeyDown={(event) => {
-                if (event.key === "Escape" && !saving) setEditing(null);
-                if (event.key !== "Tab") return;
-                const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("input:not(:disabled), button:not(:disabled)"));
-                const first = controls[0];
-                const last = controls[controls.length - 1];
-                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-              }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-              <form className="bf-card w-full max-w-md space-y-4" onSubmit={async (event) => {
-                event.preventDefault();
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(editedDate) || Number.isNaN(Date.parse(`${editedDate}T00:00:00Z`))) {
-                  setEditError("Enter a valid due date.");
-                  return;
-                }
-                setSaving(true);
-                setEditError("");
-                try {
-                  await onSaveDueDate(editing.reference_id, editedDate, editing.due_date);
-                  setEditing(null);
-                  setEditSuccess("Supplier due date saved.");
-                } catch (error) {
-                  setEditError(error instanceof Error ? error.message : "Could not save the due date.");
-                } finally {
-                  setSaving(false);
-                }
-              }}>
-                <h3 className="text-lg font-semibold">{t("Edit supplier due date")}</h3>
-                <p className="text-sm text-muted-foreground">{t("Purchase reference")}: {editing.reference_id}</p>
-                <p className="text-sm text-muted-foreground">{t("Remaining balance")}: {formatMmk(editing.amount_mmk)}</p>
-                <p className="text-sm text-muted-foreground">{t("Current due date")}: {editing.due_date ?? t("Due date unavailable")}</p>
-                <label className="block text-sm font-medium">{t("Due date")}
-                  <input ref={dateInput} type="date" required value={editedDate} onChange={(event) => setEditedDate(event.target.value)}
-                    className="mt-1 block w-full rounded-lg border bg-background p-2 text-foreground" />
-                </label>
-                {editError && <p role="alert" className="text-sm text-destructive">{t(editError)}</p>}
-                <div className="flex flex-wrap justify-end gap-2">
-                  <button type="button" className="bf-button-secondary" disabled={saving} onClick={() => setEditing(null)}>{t("Cancel")}</button>
-                  <button type="submit" className="bf-button" disabled={saving}>{t(saving ? "Saving…" : "Save")}</button>
-                </div>
-              </form>
-            </div>
-          )}
           {rows.length > 0 && (
             <nav
               className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground"

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, expect, it, vi } from "vitest";
 import { NextPaymentForm } from "../components/NextPaymentForm";
+import { RecordedPaymentTable } from "../components/RecordedPaymentTable";
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/lib/apiClient", () => ({ api: mocks.api }));
 vi.mock("@/lib/i18n", () => ({ useTranslation: () => ({ language: "en" }) }));
@@ -16,6 +17,20 @@ const balance = {
   outstanding_principal_mmk: "1000000",
   as_of_date: "2026-10-01",
 };
+it("explains missing schedule inputs without offering an unavailable table", () => {
+  render(<RecordedPaymentTable balance={balance} />);
+  expect(screen.getByText("Payment table unavailable")).toBeVisible();
+  expect(screen.getByText("Add the agreed interest rate.")).toBeVisible();
+  expect(screen.getByText("Add the number of months remaining.")).toBeVisible();
+  expect(screen.queryByText("View remaining payment table")).toBeNull();
+  expect(screen.queryByRole("table")).toBeNull();
+});
+it("explains why a non-monthly payment cannot produce an estimated table", () => {
+  render(<RecordedPaymentTable balance={{...balance, next_payment_date: "2026-11-03", next_payment_mmk: "120000", annual_rate_pct: "12", remaining_term_months: 12, payment_frequency: "weekly"}} />);
+  expect(screen.getByText(/only monthly payments can be estimated here/)).toBeVisible();
+  expect(screen.queryByText("Add the agreed interest rate.")).toBeNull();
+  expect(screen.queryByText("View remaining payment table")).toBeNull();
+});
 it("saves an explicitly stated payment without inventing loan terms", async () => {
   mocks.api.mockResolvedValue({
     ...balance,

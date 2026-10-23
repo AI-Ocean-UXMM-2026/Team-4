@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ConnectedFinancialPage } from "../pages/ConnectedFinancialPage";
 import { formatMmk } from "../types";
@@ -141,22 +141,17 @@ it("refreshes values and availability when the authenticated business changes", 
   expect(screen.getByText("Cost of goods sold").closest("article")?.textContent).toContain("Unavailable");
 });
 
-it("saves supplier due dates for the selected business and invalidates its import cache", async () => {
+it("keeps supplier dates read-only when switching businesses", async () => {
   const view = render(<ConnectedFinancialPage />);
   await screen.findByText("150.75 MMK");
-  fireEvent.click(screen.getByRole("button", { name: "Add due date" }));
-  const dialog = screen.getByRole("dialog");
-  fireEvent.change(within(dialog).getByLabelText("Due date"), { target: { value: "2026-10-28" } });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
-  await waitFor(() => expect(mocks.imported).toHaveBeenCalledOnce());
-  const mutation = mocks.api.mock.calls.find(([path]) => String(path).includes("/purchases/P/due-date"));
-  expect(mutation?.[0]).toContain("business_id=A");
-  expect(JSON.parse(mutation?.[1]?.body)).toEqual({ due_date: "2026-10-28", expected_due_date: null });
+  expect(screen.queryByRole("button", { name: "Add due date" })).toBeNull();
+  expect(screen.queryByRole("columnheader", { name: "Actions" })).toBeNull();
   mocks.business = { id: "B", name: "Second Store" };
   mocks.state.data = { business_id: "B", source_version: 1 };
   view.rerender(<ConnectedFinancialPage />);
   await screen.findByText("90 MMK");
   expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Edit due date" })).toBeNull();
 });
 
 it("rejects old financial source versions after the shared import is updated", async () => {
