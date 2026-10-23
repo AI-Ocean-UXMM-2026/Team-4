@@ -7,7 +7,7 @@ The shared demo-password login and public demo reset have been removed. Registra
 ## Website and video
 
 - Live website: [Shay Sett](https://shaysett-team4.vercel.app/)
-- Video: [IMG_7032.MOV](IMG_7032.MOV) (original file stored with Git LFS).
+- Video: [Video](Video.MOV) (original file stored with Git LFS).
 
 ## Repository structure
 
