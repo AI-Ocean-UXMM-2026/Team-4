@@ -1,15 +1,15 @@
-# Shaysett example workbooks
+# Shay Sett example workbooks
 
 These files are examples for explicit testing and walkthroughs. They are not loaded automatically when an account is created.
 
 | Example | Purpose |
 | --- | --- |
-| [DuoMuse business workbook](duomuse/DuoMuse_Business_ID_Fixed.xlsx) | User-supplied example for the current Shaysett walkthrough. |
+| [DuoMuse business workbook](duomuse/DuoMuse_Business_ID_Fixed.xlsx) | User-supplied example for the current Shay Sett walkthrough. |
 | [Earlier Kyaw Myanmar showcases](demo-showcase/README.md) | Retained demonstration datasets for comparison and regression work. |
 
 ## Try the DuoMuse example
 
-1. Sign in to Shaysett and complete business setup in a separate test workspace.
+1. Sign in to Shay Sett and complete business setup in a separate test workspace.
 2. Open **Data Source** and choose **Upload Excel**.
 3. Select `duomuse/DuoMuse_Business_ID_Fixed.xlsx` from this directory.
 4. Review import results before exploring Financial Health, Working Capital, Credit Hub and AI Analyzer. Available results depend on the records and optional fields supplied.

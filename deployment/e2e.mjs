@@ -10,10 +10,10 @@ page.on("pageerror", (error) => errors.push(error.message));
 await fs.mkdir(".artifacts/auth", { recursive: true });
 try {
   await page.goto(base + "/");
-  await page.getByRole("heading", { name: "Sign in to BIZFLOW", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "Sign in to Shay Sett", exact: true }).waitFor();
   for (const path of ["/working-capital", "/credit", "/ai", "/data-source", "/onboarding"]) {
     await page.goto(base + path);
-    await page.getByRole("heading", { name: "Sign in to BIZFLOW", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Sign in to Shay Sett", exact: true }).waitFor();
   }
   if (await page.getByLabel("Demo password", { exact: true }).count())
     throw new Error("Demo sign-in still exists");
@@ -67,7 +67,7 @@ try {
   await page.getByRole("heading", { name: "Forgot your password?", exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(base + "/sign-in");
-  await page.getByRole("heading", { name: "Sign in to BIZFLOW", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "Sign in to Shay Sett", exact: true }).waitFor();
   await page.screenshot({ path: ".artifacts/auth/mobile.png", fullPage: true });
   if (errors.length) throw new Error(errors.join("\n"));
   console.log(

@@ -133,7 +133,7 @@ def snapshot(request: Request, business_id: str, _user_id: str = Depends(authori
 
 @router.get("/template")
 def template(request: Request, business_id: str, _user_id: str = Depends(authorize_business)):
-    path = ROOT / "shared/workbook-template/bizflow-template.xlsx"
+    path = ROOT / "shared/workbook-template/shay-sett-template.xlsx"
     if not path.exists():
         raise APIError(503, "TEMPLATE_UNAVAILABLE", "Workbook template has not been generated.")
     workbook = load_workbook(path)
@@ -146,6 +146,11 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
                 if cell.value == "business_id":
                     sheet.delete_cols(cell.column)
         if "ReadMe" in workbook.sheetnames:
+            notes = workbook["ReadMe"]
+            notes["A1"] = "Shay Sett workbook"
+            for row in reversed(list(notes.iter_rows())):
+                if str(row[0].value).strip().lower() == "onedrive":
+                    notes.delete_rows(row[0].row)
             for row in workbook["ReadMe"]:
                 for cell in row:
                     if isinstance(cell.value, str) and "business_id" in cell.value:
@@ -183,7 +188,7 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
     finally:
         workbook.close()
     return Response(buffer.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": 'attachment; filename="bizflow-template.xlsx"'})
+                    headers={"Content-Disposition": 'attachment; filename="shay-sett-template.xlsx"'})
 
 
 def cloud_client(request, business_id, user_id):

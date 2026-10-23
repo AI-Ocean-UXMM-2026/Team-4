@@ -1,6 +1,6 @@
-# Shaysett (ရှေ့ဆက်)
+# Shay Sett (ရှေ့ဆက်)
 
-Shaysett helps business owners review cashflow, financial health, working capital, credit and AI-assisted business findings from Excel records. It uses Supabase email/password authentication, owned workspaces, a React/TanStack Start frontend and a FastAPI backend.
+Shay Sett helps business owners review cashflow, financial health, working capital, credit and AI-assisted business findings from Excel records. It uses Supabase email/password authentication, owned workspaces, a React/TanStack Start frontend and a FastAPI backend.
 
 The shared demo-password login and public demo reset have been removed. Registration supports Supabase with email confirmation enabled or disabled. Users follow the confirmation link when required, or sign in immediately when the provider returns a session, then complete business setup before accessing records. Completing onboarding creates one empty workspace belonging to the authenticated user. Existing data is preserved and is never automatically assigned to new accounts.
 
@@ -26,7 +26,7 @@ Local environments, caches, private configuration and generated builds such as `
 
 ## Example workbook
 
-Use [DuoMuse_Business_ID_Fixed.xlsx](examples/duomuse/DuoMuse_Business_ID_Fixed.xlsx) to try the Excel workflow in a test workspace. DuoMuse is the example business; **Shaysett** is the system name. See [examples and upload instructions](examples/README.md). Importing a populated example changes the selected workspace's records, so use a separate test workspace.
+Use [DuoMuse_Business_ID_Fixed.xlsx](examples/duomuse/DuoMuse_Business_ID_Fixed.xlsx) to try the Excel workflow in a test workspace. DuoMuse is the example business; **Shay Sett** is the system name. See [examples and upload instructions](examples/README.md). Importing a populated example changes the selected workspace's records, so use a separate test workspace.
 
 ## Configure and run
 
@@ -102,4 +102,4 @@ The project is connected to [the existing Lovable editor](https://lovable.dev/pr
 
 ## Compatibility with earlier versions
 
-Shaysett is the current product name. Some internal filenames, database/container identifiers, browser-storage keys and opt-in test variables retain the earlier BIZFLOW prefix. They remain for compatibility with existing data and tooling; they do not identify a second application. Rename them only with the corresponding migration and reference updates. Historical test fixtures are retained for regression coverage.
+Shay Sett is the current product name. Some internal filenames, database/container identifiers, browser-storage keys and opt-in test variables retain the earlier BIZFLOW prefix. They remain for compatibility with existing data and tooling; they do not identify a second application. Rename them only with the corresponding migration and reference updates. Historical test fixtures are retained for regression coverage.

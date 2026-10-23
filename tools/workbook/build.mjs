@@ -117,8 +117,8 @@ for (const persona of [
   }
   const notes = workbook.worksheets.add("ReadMe");
   notes.showGridLines = false;
-  notes.getRange("A1:B9").values = [
-    ["BizFlow workbook", "Input instructions"],
+  const instructions = [
+    ["Shay Sett workbook", "Input instructions"],
     [
       "Data source",
       persona.template
@@ -148,6 +148,10 @@ for (const persona of [
       "Keep one Settings row. Add transaction rows below the headers. Amber cells are inputs.",
     ],
   ];
+  const templateInstructions = persona.template
+    ? instructions.filter(([label]) => label !== "OneDrive")
+    : instructions;
+  notes.getRange(`A1:B${templateInstructions.length}`).values = templateInstructions;
   notes.getRange("A1:B9").format.font = { name: "Arial", size: 10 };
   notes.getRange("A1:B1").format.font = { bold: true, color: "#244B45" };
   notes.getRange("A1:A9").format.columnWidth = 22;
@@ -184,7 +188,7 @@ for (const persona of [
     path.join(
       root,
       persona.template
-        ? "shared/workbook-template/bizflow-template.xlsx"
+        ? "shared/workbook-template/shay-sett-template.xlsx"
         : `database/seed/${persona.id}.xlsx`,
     ),
   );

@@ -307,7 +307,7 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
       {showSelector && <div className="bf-card space-y-4">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
           <Landmark size={21} className="text-primary" />
-          {copy(preparationOnly ? ["Prepare this application", "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်"] : ["Bank loan guide", "ဘဏ်ချေးငွေလမ်းညွှန်"])}
+          {copy(preparationOnly ? ["Prepare the application", "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်"] : ["Bank loan guide", "ဘဏ်ချေးငွေလမ်းညွှန်"])}
         </h2>
         <p className="text-sm text-muted-foreground">
           {copy(preparationOnly ? [
@@ -471,7 +471,7 @@ export function BankLoanGuide({ onViewRecords, businessId = "preview", selection
           ])}
         </p>
         {!preparationOnly && <button type="button" className="bf-button-secondary" onClick={onViewRecords}>
-          {copy(["Prepare this application", "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်"])}
+          {copy(["Prepare the application", "ဤချေးငွေလျှောက်လွှာအတွက် ပြင်ဆင်ရန်"])}
         </button>}
       </div>
     </section>

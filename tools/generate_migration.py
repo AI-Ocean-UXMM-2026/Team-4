@@ -9,7 +9,7 @@ root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root / "backend"))
 from app.db.models import Base
 
-lines = ["-- BizFlow platform v1. Generated from SQLAlchemy metadata; apply once.\n"]
+lines = ["-- Shay Sett platform v1. Generated from SQLAlchemy metadata; apply once.\n"]
 for table in Base.metadata.sorted_tables:
     lines.append(str(CreateTable(table).compile(dialect=postgresql.dialect())).strip() + ";")
     lines.extend(str(CreateIndex(index).compile(dialect=postgresql.dialect())) + ";" for index in sorted(table.indexes, key=lambda i: i.name))

@@ -490,8 +490,8 @@ export const my: Record<string, string> = {
   "Required cash inputs are missing from workbook v1.":
     "Excel ဖိုင် ဗားရှင်း ၁ တွင် လိုအပ်သော ငွေသားအချက်အလက်များ မပါရှိပါ။",
   "Reserve target": "အရန်ငွေ ရည်မှန်းချက်",
-  "Review evidence-backed findings from your financial, working capital, and credit snapshots.":
-    "သင့်ငွေကြေး၊ လည်ပတ်ငွေရင်းနှင့် ချေးငွေမှတ်တမ်းများအပေါ် အခြေခံသော တွေ့ရှိချက်များကို လေ့လာပါ။",
+  "Analyze your imported business data with AI, then explore the details in Financial Health, Working Capital, and Credit Hub.":
+    "တင်သွင်းထားသော လုပ်ငန်းဒေတာကို AI ဖြင့် ဦးစွာသုံးသပ်ပြီး Financial Health၊ Working Capital နှင့် Credit Hub တွင် အသေးစိတ် ဆက်လက်လေ့လာပါ။",
   "Review stock and recent sales before planning a purchase.":
     "ဝယ်ယူရန် မစီစဉ်မီ ကုန်လက်ကျန်နှင့် လတ်တလောအရောင်းကို စစ်ဆေးပါ။",
   Risk: "အန္တရာယ်အခြေအနေ",

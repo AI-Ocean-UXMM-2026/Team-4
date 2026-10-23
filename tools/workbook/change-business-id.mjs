@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const input = "C:/Users/Thiri/Downloads/Telegram Desktop/BIZFLOW_Wholesale_Sample_October_2026(2).xlsx";
+const input = "C:/Users/Thiri/Downloads/Telegram Desktop/SHAY_SETT_Wholesale_Sample_October_2026(2).xlsx";
 const out = path.join(root, "outputs/business-id-20261022");
 await fs.mkdir(out, {recursive: true});
 const hash = value => createHash("sha256").update(value).digest("hex");

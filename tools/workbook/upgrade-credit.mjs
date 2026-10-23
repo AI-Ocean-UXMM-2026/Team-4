@@ -12,7 +12,7 @@ const catalog = JSON.parse(await fs.readFile(path.join(root, "shared/contracts/l
 const newFields = Object.entries(schema.payload_fields);
 
 for (const sample of [false, true]) {
-  const source = path.join(root, sample ? "database/seed/grocery.xlsx" : "shared/workbook-template/bizflow-template.xlsx");
+  const source = path.join(root, sample ? "database/seed/grocery.xlsx" : "shared/workbook-template/shay-sett-template.xlsx");
   const wb = await SpreadsheetFile.importXlsx(await FileBlob.load(source));
   console.log((await wb.inspect({kind: "table", range: "Loans!A1:F3", include: "values", tableMaxRows: 3, tableMaxCols: 6, maxChars: 1200})).ndjson);
   if (!sample) {

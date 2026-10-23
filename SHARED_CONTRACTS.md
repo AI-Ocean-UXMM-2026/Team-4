@@ -1,4 +1,4 @@
-# Shaysett shared contracts v2
+# Shay Sett shared contracts v1
 
 P5's workbook and authentication platform now integrates the P1–P4 feature branches. Feature owners should review financial interpretation before a release. The frontend stays at `src/` (do not create a second `frontend/` app).
 
@@ -8,20 +8,20 @@ The machine-readable source of workbook fields is [workbook-schema.json](shared/
 
 `.xlsx`, maximum 5 MiB compressed, 40 MiB expanded, 10,000 rows per sheet and 30,000 input rows overall. Header row is Excel row 1, data begins on row 2. Required headers must exist; optional fields may be omitted or left blank. Keep empty required sheets with their headers. CashAdjustments is optional; ReadMe is ignored. Other sheets are ignored with a warning. Formula inputs, external workbook links, macros, duplicate headers and duplicate stable IDs are rejected.
 
-Workbook schema v2 marks `business_id` as a server field, retained in internal typed projections but omitted from Excel inputs. The server assigns every row to the authenticated, authorized active business. Legacy workbook `business_id` columns are ignored, so copying or correcting business IDs is unnecessary. Record IDs are text, case-sensitive, up to 80 characters, with letters, numbers, underscores or hyphens. New records receive new IDs; edits keep the existing ID. Required text cannot be blank (use a short description). Dates are Excel dates without times or ISO `YYYY-MM-DD`. Money is non-negative MMK with at most 2 decimals; quantities have at most 3 decimals. Positive fields cannot be zero. Quantity times unit price must yield exact hundredths of MMK. The parser uses Decimal, never floats, for validation.
+Every input row has one `business_id`, identical to Settings and the authorized business in the request. IDs are text, case-sensitive, up to 80 characters, with letters, numbers, underscores or hyphens. New records receive new IDs; edits keep the existing ID. Required text cannot be blank (use a short description). Dates are Excel dates without times or ISO `YYYY-MM-DD`. Money is non-negative MMK with at most 2 decimals; quantities have at most 3 decimals. Positive fields cannot be zero. Quantity times unit price must yield exact hundredths of MMK. The parser uses Decimal, never floats, for validation.
 
 | Sheet | Stable ID | Fields after ID (in template order) |
 | --- | --- | --- |
-| Settings | Assigned by server | business_name, currency (`MMK`), opening_date, opening_cash_mmk |
-| Products | product_id | name, opening_stock, unit_cost_mmk |
-| Sales | sale_id | date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk, unit_cost_at_sale_mmk (optional), cogs_mmk (optional) |
-| CustomerReceipts | receipt_id | date, sale_id, amount_mmk |
-| Purchases | purchase_id | date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk; optional due_date |
-| SupplierPayments | payment_id | date, purchase_id, amount_mmk |
-| Expenses | expense_id | date, category (free-text label), amount_mmk, description, payment_status (optional), paid_date (optional), amount_paid_mmk (optional) |
-| Loans | loan_id | date, lender, loan_type (source label), principal_mmk |
-| LoanPayments | payment_id | date, loan_id, principal_mmk, interest_mmk |
-| CashAdjustments | adjustment_id | date, direction, amount_mmk, reason |
+| Settings | business_id | business_name, currency (`MMK`), opening_date, opening_cash_mmk |
+| Products | product_id | business_id, name, opening_stock, unit_cost_mmk |
+| Sales | sale_id | business_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk, unit_cost_at_sale_mmk (optional), cogs_mmk (optional) |
+| CustomerReceipts | receipt_id | business_id, date, sale_id, amount_mmk |
+| Purchases | purchase_id | business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk; optional due_date |
+| SupplierPayments | payment_id | business_id, date, purchase_id, amount_mmk |
+| Expenses | expense_id | business_id, date, category (free-text label), amount_mmk, description, payment_status (optional), paid_date (optional), amount_paid_mmk (optional) |
+| Loans | loan_id | business_id, date, lender, loan_type (source label), principal_mmk |
+| LoanPayments | payment_id | business_id, date, loan_id, principal_mmk, interest_mmk |
+| CashAdjustments | adjustment_id | business_id, date, direction, amount_mmk, reason |
 
 ## Business interpretation for review
 

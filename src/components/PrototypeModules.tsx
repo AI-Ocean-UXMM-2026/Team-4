@@ -690,7 +690,7 @@ const checklist = [
       "6–12 months bank statements",
       "Income statement (profit & loss)",
       "Balance sheet",
-      "Cash in / cash out records (export from BizFlow)",
+      "Cash in / cash out records (export from Shay Sett)",
     ],
   },
   {

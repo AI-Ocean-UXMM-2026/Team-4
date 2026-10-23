@@ -66,7 +66,7 @@ it("shows a compact summary without a rules-based badge and keeps provider detai
   fireEvent.click(within(summary).getByRole("button", { name: "View analysis details" }));
   expect(within(summary).getByText("Source as of:")).toBeVisible();
   expect(within(summary).getByText("Batch ID:")).toBeVisible();
-  expect(within(summary).getByText("Provider configuration status:")).toBeVisible();
+  expect(within(summary).queryByText("Provider configuration status:")).toBeNull();
 });
 
 it("consolidates incomplete-data warnings without hiding the limitation", () => {
@@ -89,7 +89,8 @@ it("offers one clearly disclosed AI action", () => {
   const aiButton = screen.getByRole("button", { name: "Analyze with AI" });
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(screen.queryByRole("button", { name: "Use rules only" })).toBeNull();
-  expect(screen.getByText(/By selecting Analyze with AI, you agree/)).toBeTruthy();
+  expect(screen.queryByText(/By selecting Analyze with AI, you agree/)).toBeNull();
+  expect(screen.getByText("Analyze your imported business data with AI, then explore the details in Financial Health, Working Capital, and Credit Hub.")).toBeVisible();
   fireEvent.click(aiButton);
   expect(run).toHaveBeenCalledWith(true);
   expect(run).toHaveBeenCalledTimes(1);

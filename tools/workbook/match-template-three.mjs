@@ -5,7 +5,7 @@ import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const out = path.join(root, "outputs/template-three-20261022");
 await fs.mkdir(out, {recursive: true});
-const source = await SpreadsheetFile.importXlsx(await FileBlob.load("C:/Users/Thiri/Downloads/Telegram Desktop/BIZFLOW_Wholesale_Sample_October_2026(2).xlsx"));
+const source = await SpreadsheetFile.importXlsx(await FileBlob.load("C:/Users/Thiri/Downloads/Telegram Desktop/SHAY_SETT_Wholesale_Sample_October_2026(2).xlsx"));
 const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load("C:/Users/Thiri/Downloads/0c009beb-8c8b-4445-a898-da7ab6661980-template(3).xlsx"));
 const profile = workbook.worksheets.getItem("Settings").getRange("A2:B2").values[0];
 const names = ["Settings", "Products", "Sales", "CustomerReceipts", "Purchases", "SupplierPayments", "Expenses", "CashAdjustments"];
@@ -30,7 +30,7 @@ for (const name of names) {
 }
 const notes = workbook.worksheets.getItem("ReadMe");
 notes.getRange("A12:B14").values = [
-  ["Source", "Data copied from BIZFLOW_Wholesale_Sample_October_2026(2).xlsx into the template(3) layout. Original files unchanged."],
+  ["Source", "Data copied from SHAY_SETT_Wholesale_Sample_October_2026(2).xlsx into the template(3) layout. Original files unchanged."],
   ["Business", "Uses the destination business ID and name: Mi Thar Su. All original transaction IDs, amounts and dates retained. Loan sheets/data excluded as requested."],
   ["Unavailable inputs", "Historical unit costs/COGS, supplier due dates and expense settlement details are not in the source and remain blank. They are unknown, not zero."],
 ];
