@@ -964,4 +964,13 @@ export const my: Record<string, string> = {
   "Click to view details": "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ",
   "Rejected file": "လက်မခံသော ဖိုင်",
   "Active Dataset:": "လက်ရှိ အချက်အလက်ဖိုင် -",
+  "This workbook is a complete replacement":
+    "ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်",
+  "Records missing from this file will be removed from current reports. Their import history is retained.":
+    "ဤဖိုင်တွင် မပါရှိသော ယခင်မှတ်တမ်းများကို လက်ရှိအစီရင်ခံစာများမှ ဖယ်ရှားမည်ဖြစ်ပြီး တင်သွင်းမှုမှတ်တမ်းတွင် ဆက်လက်ထိန်းသိမ်းထားပါမည်။",
+  "Transactions predate the opening date":
+    "လုပ်ငန်းစတင်ရက်ထက် စောနေသော ငွေစာရင်းမှတ်တမ်းများ ရှိနေပါသည်",
+  "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.":
+    "စနစ်အတွင်းရှိ ယခင်မှတ်တမ်းများသည် ဤဖိုင်၏ လုပ်ငန်းစတင်ရက်ထက် စောနေပါသည်။ ဤကာလအတွက် အသစ်အစားထိုးတင်သွင်းလိုပါက အထက်ပါ 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်၍ ထပ်မံကြိုးစားပါ။",
+  "Enable complete replacement": "အသစ်အစားထိုးခြင်းကို ဖွင့်မည်",
 };
