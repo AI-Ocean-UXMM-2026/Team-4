@@ -7,7 +7,7 @@ export function useBusinessAnalysis() {
   const { business } = usePlatform();
   const queries = useQueryClient();
   const path = `?business_id=${encodeURIComponent(business.id)}`;
-  const key = ["ai-analysis", business.id] as const;
+  const key = ["ai-analysis", business.id, business.source_version] as const;
   const latest = useQuery({
     queryKey: key,
     queryFn: () => api<AIAnalysis | null>(`/api/v1/ai/insights/latest${path}`),
@@ -23,11 +23,24 @@ export function useBusinessAnalysis() {
       }),
     onSuccess: (result) => queries.setQueryData(key, result),
   });
-  const report = analyze.data ?? latest.data ?? null;
+  const candidates = [analyze.data, latest.data];
+  const report =
+    candidates.find(
+      (item) =>
+        item?.business_id === business.id &&
+        item.source_version === business.source_version &&
+        !item.outdated,
+    ) ?? null;
   return {
     business,
     report,
-    isOutdated: !!report && (report.outdated || report.source_version !== business.source_version),
+    isOutdated:
+      !report &&
+      candidates.some(
+        (item) =>
+          item?.business_id === business.id &&
+          (item.outdated || item.source_version !== business.source_version),
+      ),
     isLoading: latest.isPending,
     error: analyze.error ?? latest.error,
     isAnalyzing: analyze.isPending,
