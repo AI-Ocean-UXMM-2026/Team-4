@@ -13,7 +13,7 @@ export type PaymentReminder = {
 };
 
 const dayNumber = (value: string) => {
-  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  const [year = 0, month = 1, day = 1] = value.slice(0, 10).split("-").map(Number) as [number, number, number];
   return Date.UTC(year, month - 1, day);
 };
 

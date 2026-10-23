@@ -79,8 +79,6 @@ export const my: Record<string, string> = {
   "Application files could not be loaded. Refresh before printing.": "ဖိုင်စာရင်း မဖတ်နိုင်ပါ။ ပုံမနှိပ်မီ ပြန်ဖတ်ပါ။",
   "Preparing latest report…": "နောက်ဆုံးအစီရင်ခံစာကို ပြင်ဆင်နေပါသည်…",
   "Could not load the latest application files. Try again before printing.": "နောက်ဆုံးဖိုင်စာရင်း မဖတ်နိုင်ပါ။ ပုံမနှိပ်မီ ထပ်စမ်းပါ။",
-  "Import a supported bank and loan product in the Loans sheet to see the matching application requirements.": "သက်ဆိုင်ရာ လျှောက်လွှာလိုအပ်ချက်များကို ကြည့်ရန် Loans စာရွက်တွင် ပံ့ပိုးထားသော ဘဏ်နှင့် ချေးငွေအမျိုးအစားကို ဖြည့်ပြီး တင်သွင်းပါ။",
-  "Imported records and uploaded supporting files remain unverified by lenders.": "တင်သွင်းထားသောစာရင်းနှင့် အထောက်အထားဖိုင်များကို ဘဏ်က စစ်ဆေးအတည်ပြုထားခြင်း မရှိသေးပါ။",
   "As of": "စာရင်းရက်စွဲ",
   "Next scheduled payment": "နောက်အရစ်ကျ ပေးရမည့်ပမာဏ",
   "{0} days remaining": "{0} ရက် ကျန်ပါသည်",
@@ -946,7 +944,6 @@ export const my: Record<string, string> = {
   "No recorded loan payments are due in this period.":
     "ဤကာလအတွင်း ပေးရမည့် ချေးငွေအရစ်ကျ မှတ်တမ်းမရှိပါ။",
   "Next": "လာမည့်",
-  "days": "ရက်",
   "Due in": "ပေးရန်လိုသေးသည်",
   "days overdue": "ရက် ကျော်လွန်နေသည်",
   "Estimated": "ခန့်မှန်းချက်",

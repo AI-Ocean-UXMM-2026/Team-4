@@ -9,12 +9,12 @@ type WindowDays = 7 | 30 | 90;
 type Payment = { id: string; lender: string; dueDate: string; amount: string | number; estimated: boolean };
 
 const dayNumber = (value: string) => {
-  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  const [year = 0, month = 1, day = 1] = value.slice(0, 10).split("-").map(Number) as [number, number, number];
   return Date.UTC(year, month - 1, day);
 };
 
 const displayDate = (value: string) => {
-  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  const [year = 0, month = 1, day = 1] = value.slice(0, 10).split("-").map(Number) as [number, number, number];
   return new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
     .format(new Date(Date.UTC(year, month - 1, day)));
 };

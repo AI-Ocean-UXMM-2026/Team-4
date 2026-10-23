@@ -7,7 +7,7 @@ export function RecordedPaymentTable({balance}: {balance: RecordedBalance}) {
   const rows = recordedSchedule(balance);
   const money = (n:number) => n.toLocaleString("en-US", {maximumFractionDigits:2});
   const date = (d:string) => `${d.slice(5,7)}/${d.slice(8,10)}/${d.slice(0,4)}`;
-  return <details className="border-t pt-4">
+  return <details className="border-t pt-4" open>
     <summary className="bf-button inline-flex cursor-pointer list-none [&::-webkit-details-marker]:hidden">{c("View remaining payment table", "ကျန်အရစ်ကျဇယား ကြည့်ရန်")}</summary>
     <div className="mt-4 space-y-3">
       {rows ? <>
