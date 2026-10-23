@@ -55,3 +55,4 @@ outputs/
 
 # Backend storage for uploaded workbooks
 backend/storage/workbooks/
+.env*
