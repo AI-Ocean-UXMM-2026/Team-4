@@ -36,8 +36,13 @@ class Settings:
 
 @lru_cache
 def get_settings() -> Settings:
+    default_db = "sqlite:////tmp/bizflow.db" if os.getenv("VERCEL") else "sqlite:///./bizflow.db"
+    db_url = os.getenv("DATABASE_URL", default_db)
+    if os.getenv("VERCEL") and (db_url == "sqlite:///./bizflow.db" or "./bizflow.db" in db_url):
+        db_url = "sqlite:////tmp/bizflow.db"
+
     settings = Settings(
-        database_url=os.getenv("DATABASE_URL", "sqlite:///./bizflow.db"),
+        database_url=db_url,
         supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
         supabase_publishable_key=os.getenv("SUPABASE_PUBLISHABLE_KEY", ""),
         password_min_length=int(os.getenv("AUTH_PASSWORD_MIN_LENGTH", "8")),

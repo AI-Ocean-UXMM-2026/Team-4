@@ -20,3 +20,59 @@ jobs:
       - run: npm run build
         env:
           NITRO_PRESET: node-server
+
+  deploy-backend:
+    name: Deploy FastAPI backend
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    concurrency:
+      group: vercel-backend-production
+      cancel-in-progress: false
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check deployment secrets
+        shell: bash
+        run: |
+          for name in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing deployment secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Install deployment tools
+        run: |
+          npm install --global vercel@65.2.0
+          python -m pip install uv
+
+      - name: Pull backend production settings
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build backend
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy backend and check health
+        shell: bash
+        run: |
+          deployment_url="$(vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN")"
+          printf '### Backend deployment\n\n%s\n' "$deployment_url" >> "$GITHUB_STEP_SUMMARY"
+          curl --fail --silent --show-error --retry 3 --retry-delay 5 --max-time 60 "${deployment_url}/health"

@@ -114,7 +114,7 @@ export function MainLayout({ children, path }: { children: ReactNode; path: stri
         data-expanded={expanded}
         className="min-w-0 transition-[padding-left] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:pl-[72px] lg:data-[expanded=true]:pl-64"
       >
-        <header className="bf-app-header sticky top-0 z-20 border-b">
+        <header className="bf-app-header sticky top-0 z-40 border-b">
           <TopBar />
           <details className="group px-4 pb-3 lg:hidden">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold text-primary">

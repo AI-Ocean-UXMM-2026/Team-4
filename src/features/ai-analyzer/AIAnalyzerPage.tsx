@@ -344,7 +344,7 @@ function AnalysisSummaryCard({ report }: { report: AIAnalysis }) {
 
   return (
     <section aria-label={t("Analysis Summary")} className="bf-card space-y-3">
-      {/* Header with Title and Method Status Badge */}
+      {/* Header with title and applicable status */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-foreground">{t("Analysis Summary")}</h2>
         <div>
@@ -352,12 +352,6 @@ function AnalysisSummaryCard({ report }: { report: AIAnalysis }) {
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
               <Sparkles size={12} className="shrink-0" />
               {t("AI-assisted analysis")}
-            </span>
-          )}
-          {isRulesOnly && (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground border border-border">
-              <CheckCircle2 size={12} className="shrink-0 text-emerald-500" />
-              {t("Verified rules-based analysis")}
             </span>
           )}
           {isInsufficient && (
@@ -498,6 +492,11 @@ export function AIAnalyzerPage() {
           <Sparkles size={15} />
           {isAnalyzing ? t("Analyzing…") : t("Analyze with AI")}
         </button>
+        <p className="max-w-2xl text-xs text-muted-foreground">
+          {t(
+            "By selecting Analyze with AI, you agree to send summary financial amounts and findings from this import to the configured external AI provider. The workbook, names, and individual transaction rows are not sent.",
+          )}
+        </p>
       </header>
       {(isLoading || isAnalyzing) && (
         <LoadingAnimation label={isAnalyzing ? "Analyzing…" : "Loading your latest analysis…"} />

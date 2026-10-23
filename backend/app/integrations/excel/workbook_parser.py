@@ -55,6 +55,7 @@ def _value(value, kind):
 
 def parse_workbook(uploaded_bytes: bytes, *, business_id: str | None = None) -> ParsedWorkbook:
     parsed = ParsedWorkbook()
+    server_fields = {"business_id"} if business_id is not None else set()
     try:
         with ZipFile(BytesIO(uploaded_bytes)) as archive:
             files = archive.infolist()
@@ -90,8 +91,8 @@ def parse_workbook(uploaded_bytes: bytes, *, business_id: str | None = None) -> 
                 for number, cells in enumerate(rows, start=2):
                     if number > MAX_ROWS + 1:
                         raise ValueError(f"{name} exceeds the row limit")
-                    if not any(c.value is not None and header[index] not in server_fields
-                               for index, c in enumerate(cells)):
+                    if not any(c.value is not None and header[i] not in server_fields
+                               for i, c in enumerate(cells)):
                         continue
                     total += 1
                     if total > MAX_TOTAL_ROWS:
@@ -99,8 +100,7 @@ def parse_workbook(uploaded_bytes: bytes, *, business_id: str | None = None) -> 
                     values = {}
                     for key, kind in spec["fields"].items():
                         if key in server_fields:
-                            # The authorized request selects the destination, never
-                            # a copied/blank business_id column in the workbook.
+                            # Only the authorized request selects the destination workspace.
                             values[key] = business_id
                             continue
                         if key not in header:

@@ -145,7 +145,7 @@ export function SignInPage() {
   const navigate = useNavigate();
   const availability = useAvailability(false, true);
   const { session, ready } = useAuth();
-  if (ready && session) return <Navigate to="/" replace />;
+  if (ready && session) return <Navigate to="/data-source" replace />;
   return (
     <AuthShell>
       <h1 className="text-3xl font-bold">{t("Sign in to Shay Sett")}</h1>
@@ -191,7 +191,7 @@ export function SignInPage() {
               return;
             }
             setPassword("");
-            await navigate({ to: "/" });
+            await navigate({ to: "/data-source" });
           } catch (failure) {
             setError(message(failure));
           } finally {
@@ -325,8 +325,10 @@ export function RegisterPage() {
               setVerification(result);
               return;
             }
-            const { error: sessionError } = await requireAuthClient().auth.setSession(
-              result.session,
+            // Establish the browser session through the same provider login used
+            // by SignInPage instead of importing server-returned session tokens.
+            const { error: sessionError } = await signInWithDeadline(
+              account.email.trim(), account.password,
             );
             if (sessionError)
               throw new Error(
@@ -565,7 +567,7 @@ export function EmailCallbackPage() {
       .then(async (result) => {
         if (!active) return;
         setRecoveryReady(result.recovery);
-        await navigate({ to: result.recovery ? "/reset-password" : "/", replace: true });
+        await navigate({ to: result.recovery ? "/reset-password" : "/data-source", replace: true });
       })
       .catch((failure) => {
         if (active) setError(message(failure));
@@ -697,6 +699,7 @@ export function ResetPasswordPage() {
 export function OnboardingPage() {
   const account = useAccount();
   if (account.isPending || !account.data) return <Loading />;
+  if (account.data.onboarding_complete) return <Navigate to="/data-source" replace />;
   return (
     <BusinessSetup
       key={account.data.user.id}
@@ -705,6 +708,7 @@ export function OnboardingPage() {
     />
   );
 }
+
 function BusinessSetup({
   initial,
   initialName,
@@ -753,7 +757,7 @@ function BusinessSetup({
             sessionStorage.setItem("bizflow-business", result.business_id);
             await queries.invalidateQueries({ queryKey: ["account"] });
             await queries.invalidateQueries({ queryKey: ["businesses"] });
-            await navigate({ to: "/", replace: true });
+            await navigate({ to: "/data-source", replace: true });
           } catch (failure) {
             setError(message(failure));
           } finally {
