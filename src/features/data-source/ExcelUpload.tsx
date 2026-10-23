@@ -5,7 +5,6 @@ import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
-import { WorkbookBusinessHelp } from "./WorkbookBusinessHelp";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
@@ -36,9 +35,6 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
     }
     setFile(next);
   };
-  const businessMismatch = result?.errors.some(
-    (issue) => issue.field === "business_id" && issue.reason === "Row belongs to another business",
-  );
   const predatingError = result?.errors.some(
     (issue) => issue.reason === "Transaction predates the opening date",
   );
@@ -163,7 +159,6 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           {t(error)}
         </p>
       )}
-      {businessMismatch && <WorkbookBusinessHelp business={business} />}
       {predatingError && !replaceOmitted && (
         <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs">
           <p className="font-semibold text-amber-700 dark:text-amber-400">

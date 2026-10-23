@@ -136,6 +136,19 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
         for sheet_name in ("Loans", "LoanPayments"):
             if sheet_name in workbook.sheetnames:
                 workbook.remove(workbook[sheet_name])
+        for sheet in workbook:
+            for cell in reversed(list(sheet[1])):
+                if cell.value == "business_id":
+                    sheet.delete_cols(cell.column)
+        if "ReadMe" in workbook.sheetnames:
+            for row in workbook["ReadMe"]:
+                for cell in row:
+                    if isinstance(cell.value, str) and "business_id" in cell.value:
+                        cell.value = (
+                            "Enter business_name, currency (MMK), opening_date and opening_cash_mmk."
+                            if "opening_cash_mmk" in cell.value else
+                            "Uploads are assigned to your selected workspace automatically."
+                        )
         for sheet_name, spec in SCHEMA.items():
             if sheet_name not in workbook.sheetnames:
                 continue
@@ -153,8 +166,10 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
                 )
         with request.app.state.sessions() as session:
             business = session.get(Business, business_id)
-            workbook["Settings"]["A2"], workbook["Settings"]["B2"] = business_id, business.name
-            workbook["Settings"]["C2"] = business.currency or "MMK"
+            settings = workbook["Settings"]
+            columns = {cell.value: cell.column for cell in settings[1]}
+            settings.cell(2, columns["business_name"], business.name)
+            settings.cell(2, columns["currency"], business.currency or "MMK")
         buffer = BytesIO()
         workbook.save(buffer)
     finally:

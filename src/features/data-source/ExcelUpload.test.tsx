@@ -123,67 +123,21 @@ afterEach(() => {
   else Reflect.deleteProperty(navigator, "clipboard");
 });
 
-describe("Excel workbook ownership guidance", () => {
-  it("copies the current business ID without resubmitting or rewriting the workbook", async () => {
+describe("Excel workbook validation", () => {
+  it("does not ask users to supply a business ID", async () => {
     rejectWorkbook();
     render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
-    const file = await submitWorkbook();
-
-    expect(screen.getByText(mismatchHeading)).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveValue("my-shop-123");
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveAttribute("readonly");
-    const [path, options] = mocks.api.mock.calls[0]!;
-    expect(path).toBe("/api/v1/data/upload?business_id=my-shop-123");
-    expect(options.body.get("file")).toBe(file);
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy business ID" }));
-    await screen.findByText("Business ID copied");
-    expect(mocks.writeText).toHaveBeenCalledExactlyOnceWith("my-shop-123");
-    expect(mocks.api).toHaveBeenCalledOnce();
-
-    selectWorkbook("corrected.xlsx");
-    expect(screen.queryByText(mismatchHeading)).not.toBeInTheDocument();
-    expect(screen.queryByText("Business ID copied")).not.toBeInTheDocument();
-    expect(mocks.api).toHaveBeenCalledOnce();
-  });
-
-  it("keeps the business ID available for manual copying when clipboard access fails", async () => {
-    rejectWorkbook();
-    mocks.writeText.mockRejectedValue(new Error("Clipboard permission denied"));
-    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
     await submitWorkbook();
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy business ID" }));
-    expect(
-      await screen.findByText("Select the business ID above and copy it manually."),
-    ).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveValue("my-shop-123");
-    expect(mocks.api).toHaveBeenCalledOnce();
-  });
-
-  it("shows the actual validation error without ownership guidance for other invalid fields", async () => {
-    rejectWorkbook({ sheet: "Sales", row: 3, field: "sale_id", reason: "Duplicate stable row ID" });
-    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
-    await submitWorkbook();
-
-    expect(screen.getByText("Duplicate stable row ID")).toBeVisible();
     expect(screen.queryByText(mismatchHeading)).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Your business ID" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy business ID" })).not.toBeInTheDocument();
     expect(mocks.api).toHaveBeenCalledOnce();
   });
 
-  it("translates the backend ownership reason and guide for Myanmar readers", async () => {
-    setPreferences({ language: "my" });
-    rejectWorkbook();
+  it("shows validation errors for invalid fields", async () => {
+    rejectWorkbook({ sheet: "Sales", row: 3, field: "sale_id", reason: "Duplicate stable row ID" });
     render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
     await submitWorkbook();
-
-    const translatedReason = translate(ownershipIssue.reason);
-    expect(translatedReason).not.toBe(ownershipIssue.reason);
-    expect(screen.getByText(translatedReason)).toBeVisible();
-    expect(screen.getByText(translate(mismatchHeading))).toBeVisible();
-    expect(screen.getByRole("textbox", { name: translate("Your business ID") })).toHaveValue(
-      "my-shop-123",
-    );
+    expect(screen.getByText("Duplicate stable row ID")).toBeVisible();
   });
 });

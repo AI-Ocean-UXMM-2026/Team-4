@@ -23,7 +23,7 @@ export function WorkbookGuideCard() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${business.id}-template.xlsx`;
+      link.download = "bizflow-template.xlsx";
       link.click();
       URL.revokeObjectURL(url);
     } finally {

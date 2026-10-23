@@ -146,9 +146,17 @@ def test_template_is_personalized_and_public_reset_removed(client, workbook_byte
     from io import BytesIO
     workbook = load_workbook(BytesIO(template.content), read_only=True)
     assert "due_date" in [cell.value for cell in workbook["Purchases"][1]]
+    for sheet in workbook:
+        assert "business_id" not in [cell.value for cell in sheet[1]]
+        assert not any("business_id" in str(cell.value) for row in sheet for cell in row)
+    settings = dict(zip(next(workbook["Settings"].values), list(workbook["Settings"].values)[1]))
+    assert settings["business_name"] == "Tea Shop"
+    assert settings["currency"] == "MMK"
     workbook.close()
     from app.integrations.excel.workbook_parser import parse_workbook
-    assert parse_workbook(template.content).sheets["Settings"][0].values["business_id"] == "tea-shop"
+    parsed = parse_workbook(template.content, business_id="tea-shop")
+    assert parsed.sheets["Settings"][0].values["business_id"] == "tea-shop"
+    assert not any(error["field"] == "business_id" for error in parsed.errors)
     changed = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["E2"], "value", 80000))
     upload(client, changed)
     result = client.post("/api/v1/demo/reset?business_id=tea-shop")
