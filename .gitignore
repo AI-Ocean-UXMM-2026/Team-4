@@ -51,3 +51,6 @@ dist-ssr
 .vitest-temp/
 .test-temp/
 outputs/
+
+# Backend storage for uploaded workbooks
+backend/storage/workbooks/

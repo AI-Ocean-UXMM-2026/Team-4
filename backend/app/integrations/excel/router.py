@@ -20,6 +20,7 @@ from .import_service import import_validated_snapshot, lock_business
 from .onedrive_auth import access_token, require_graph
 from .sync_service import sync_now
 from .schemas import SCHEMA
+from .workbook_storage import get_batch_workbook
 
 router = APIRouter(prefix="/api/v1/data", tags=["data sources"])
 ROOT = Path(__file__).resolve().parents[4]
@@ -32,7 +33,45 @@ def upload(request: Request, business_id: str, file: UploadFile = File(...), rep
     content = file.file.read(request.app.state.settings.max_upload_bytes + 1)
     if len(content) > request.app.state.settings.max_upload_bytes:
         raise APIError(400, "FILE_TOO_LARGE", "Workbook exceeds the upload size limit.")
-    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=replace_omitted)
+    return import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=replace_omitted, filename=file.filename)
+
+
+@router.post("/activate-history")
+def activate_history(request: Request, business_id: str, batch_id: str = Query(...), user_id: str = Depends(authorize_business)):
+    with request.app.state.sessions() as session:
+        batch = session.get(ImportBatch, batch_id)
+        if not batch or batch.business_id != business_id:
+            raise APIError(404, "BATCH_NOT_FOUND", "Import batch not found.")
+        if batch.status not in ("success", "up_to_date"):
+            raise APIError(400, "BATCH_NOT_RESTORABLE", "Only successful uploads can be activated.")
+        filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"snapshot-{batch.id[:8]}.xlsx"
+        content = get_batch_workbook(business_id, batch.id)
+        if not content:
+            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            if demo_path.exists():
+                content = demo_path.read_bytes()
+            else:
+                raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is no longer on disk.")
+    result = import_validated_snapshot(request.app.state.sessions, business_id, user_id, content, replace_omitted=True, filename=filename)
+    return {"status": "activated", "batch_id": batch.id, "filename": filename, "result": result}
+
+
+@router.get("/history/{batch_id}/download")
+def download_history(request: Request, business_id: str, batch_id: str, _user_id: str = Depends(authorize_business)):
+    with request.app.state.sessions() as session:
+        batch = session.get(ImportBatch, batch_id)
+        if not batch or batch.business_id != business_id:
+            raise APIError(404, "BATCH_NOT_FOUND", "Import batch not found.")
+        content = get_batch_workbook(business_id, batch.id)
+        if not content:
+            demo_path = ROOT / "examples" / "demo-showcase" / "bizflow-showcase-kyaw-myanmar.xlsx"
+            if demo_path.exists():
+                content = demo_path.read_bytes()
+            else:
+                raise APIError(404, "WORKBOOK_FILE_NOT_FOUND", "Historical workbook file is not available.")
+        filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or f"workbook-{batch.id[:8]}.xlsx"
+        return Response(content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @router.post("/sync-now")
@@ -47,7 +86,7 @@ def status(request: Request, business_id: str, user_id: str = Depends(authorize_
         business = session.get(Business, business_id)
         source = session.scalar(select(WorkbookSource).where(WorkbookSource.business_id == business_id))
         batches = session.scalars(select(ImportBatch).where(ImportBatch.business_id == business_id)
-                                  .order_by(ImportBatch.created_at.desc()).limit(10)).all()
+                                  .order_by(ImportBatch.created_at.desc()).limit(30)).all()
         return {"source_id": source.id if source else None, "kind": source.kind if source else "manual",
                 "source_version": business.version, "graph_enabled": request.app.state.settings.graph_enabled,
                 "connected": bool(source and source.token_ciphertext and source.linked_user_id == user_id),

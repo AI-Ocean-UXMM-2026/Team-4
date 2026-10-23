@@ -8,7 +8,9 @@ def iso_timestamp(value):
 
 
 def batch_response(batch, version):
+    filename = (batch.row_counts.get("filename") if isinstance(batch.row_counts, dict) else None) or getattr(batch, "filename", None)
     return {"import_batch_id": batch.id, "status": batch.status, "source_version": version,
+            "filename": filename,
             "row_counts": batch.row_counts, "errors": batch.errors, "warnings": batch.warnings,
             "created_at": iso_timestamp(batch.created_at)}
 
