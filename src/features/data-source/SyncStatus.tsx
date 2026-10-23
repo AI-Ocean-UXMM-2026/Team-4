@@ -121,7 +121,7 @@ export function SyncStatus({ status }: { status: Status }) {
         <div>
           <dt className="text-muted-foreground">{t("Source")}</dt>
           <dd className="mt-1 font-semibold text-foreground">
-            {status.linked ? t("OneDrive workbook") : t("Manual Excel upload")}
+            {t("Excel workbook (.xlsx)")}
           </dd>
         </div>
         <div>
@@ -133,11 +133,9 @@ export function SyncStatus({ status }: { status: Status }) {
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">{t("Cloud last checked")}</dt>
+          <dt className="text-muted-foreground">{t("Available datasets")}</dt>
           <dd className="mt-1 font-semibold text-foreground">
-            {status.last_checked_at && status.linked
-              ? new Date(status.last_checked_at).toLocaleString()
-              : t("Not checked")}
+            {successfulImports.length} {t("saved versions")}
           </dd>
         </div>
       </dl>

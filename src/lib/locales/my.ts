@@ -978,23 +978,6 @@ export const my: Record<string, string> = {
   "Click to view details": "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ",
   "Rejected file": "လက်မခံသော ဖိုင်",
   "Active Dataset:": "လက်ရှိ အချက်အလက်ဖိုင် -",
-  "Past uploaded workbooks": "ယခင် တင်သွင်းထားသော ဖိုင်များ",
-  "Switch to any past file to view its data across all reports":
-    "ယခင်ဖိုင်တစ်ခုခုကို ရွေးချယ်၍ လုပ်ငန်းအစီရင်ခံစာများ အားလုံးတွင် အချက်အလက်များကို ကြည့်ရှုနိုင်ပါသည်။",
-  "Active snapshot": "လက်ရှိ အသုံးပြုနေသည်",
-  "Currently active across all features": "လက်ရှိ ကဏ္ဍအားလုံးတွင် အသုံးပြုနေသော ဖိုင်",
-  "Load this file": "ဤဖိုင်ကို အသုံးပြုမည်",
-  "Activating…": "ပြောင်းလဲနေသည်…",
-  "Active workbook switched successfully. All feature reports updated.":
-    "ရွေးချယ်ထားသော ဖိုင်သို့ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။ အစီရင်ခံစာများ အားလုံးကို အသစ်ပြင်ဆင်ပြီးပါပြီ။",
-  "Failed to activate past workbook": "ယခင်ဖိုင်ကို ပြောင်းလဲအသုံးပြုရာတွင် မအောင်မြင်ပါ။",
-  "Download": "ဒေါင်းလုဒ်",
-  "Workbook import": "ဖိုင်တင်သွင်းမှု",
-  "No successful workbook imports yet.": "အောင်မြင်သော ဖိုင်တင်သွင်းမှု မှတ်တမ်း မရှိသေးပါ။",
-  "Failed upload attempts ({0})": "မအောင်မြင်ခဲ့သော တင်သွင်းမှုမှတ်တမ်းများ ({0})",
-  "Click to view details": "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ",
-  "Rejected file": "လက်မခံသော ဖိုင်",
-  "Active Dataset:": "လက်ရှိ အချက်အလက်ဖိုင် -",
   "This workbook is a complete replacement":
     "ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်",
   "Records missing from this file will be removed from current reports. Their import history is retained.":
@@ -1004,4 +987,21 @@ export const my: Record<string, string> = {
   "Previous records in the system belong to an earlier period before this workbook's opening date. To import this workbook as a fresh replacement for this period, enable 'This workbook is a complete replacement' above and try again.":
     "စနစ်အတွင်းရှိ ယခင်မှတ်တမ်းများသည် ဤဖိုင်၏ လုပ်ငန်းစတင်ရက်ထက် စောနေပါသည်။ ဤကာလအတွက် အသစ်အစားထိုးတင်သွင်းလိုပါက အထက်ပါ 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်၍ ထပ်မံကြိုးစားပါ။",
   "Enable complete replacement": "အသစ်အစားထိုးခြင်းကို ဖွင့်မည်",
+  "Workbook Guidelines": "Excel ဖိုင် ပြင်ဆင်ရန် လမ်းညွှန်",
+  "Structure your Excel file for accurate analysis":
+    "တိကျသော စီးပွားရေးဆန်းစစ်ချက်များ ရရှိရန် Excel ဖိုင်ကို သတ်မှတ်ပုံစံအတိုင်း ပြင်ဆင်ပါ",
+  "Your Business ID": "သင့်လုပ်ငန်း ID",
+  "Copy ID": "ID ကူးယူရန်",
+  "Copied": "ကူးယူပြီးပါပြီ",
+  "Must match the business_id in your Settings sheet and input rows.":
+    "Settings စာရွက်နှင့် မှတ်တမ်းအသီးသီးရှိ business_id နှင့် တူညီရပါမည်။",
+  "Core Sheets (Required)": "အဓိက စာရွက်များ (မဖြစ်မနေ လိုအပ်သည်)",
+  "Advanced & Credit Hub (Optional)":
+    "ချေးငွေနှင့် အဆင့်မြင့်ကဏ္ဍများ (ရွေးချယ်ထည့်သွင်းနိုင်သည်)",
+  "Pro Tip": "အကြံပြုချက်",
+  "Keep stable row IDs when updating existing records. When uploading a new accounting period, check 'This workbook is a complete replacement' to retire older records cleanly.":
+    "ယခင်မှတ်တမ်းများကို ပြင်ဆင်လိုပါက row ID များကို မပြောင်းလဲဘဲ ထားပါ။ စာရင်းကာလအသစ် တင်သွင်းပါက ယခင်မှတ်တမ်းဟောင်းများကို အသစ်လဲလှယ်ရန် 'ဤဖိုင်ဖြင့် အချက်အလက်အားလုံးကို အသစ်အစားထိုးမည်' ကို အမှန်ခြစ်ပါ။",
+  "Excel workbook (.xlsx)": "Excel ဖိုင် (.xlsx)",
+  "Available datasets": "ရရှိနိုင်သော ဒေတာအတွဲများ",
+  "saved versions": "သိမ်းဆည်းထားသော ဗားရှင်းများ",
 };
