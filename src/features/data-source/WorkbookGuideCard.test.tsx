@@ -16,12 +16,12 @@ afterEach(() => {
 });
 
 describe("Workbook guidelines", () => {
-  it.each(["en", "my"] as const)("explains automatic business association in %s without an ID-copy step", (language) => {
+  it.each(["en", "my"] as const)("shows the template download without business association guidance in %s", (language) => {
     setPreferences({ language });
     render(<WorkbookGuideCard />);
 
     const guidance = "Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.";
-    expect(screen.getByText(translate(guidance))).toBeVisible();
+    expect(screen.queryByText(translate(guidance))).not.toBeInTheDocument();
     expect(screen.queryByText("my-shop-123")).not.toBeInTheDocument();
     expect(screen.queryByText(translate("Your Business ID"))).not.toBeInTheDocument();
     expect(screen.getAllByRole("button")).toHaveLength(1);

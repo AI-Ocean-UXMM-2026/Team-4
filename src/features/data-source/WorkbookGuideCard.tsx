@@ -43,21 +43,17 @@ export function WorkbookGuideCard() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            disabled={downloading}
-            onClick={() => void downloadTemplate()}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
-            title={t("Download template")}
-          >
-            <Download size={13} />
-            <span>{t("Download template")}</span>
-          </button>
         </div>
-
-        <p className="text-sm text-muted-foreground">
-          {t("Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.")}
-        </p>
+        <button
+          type="button"
+          disabled={downloading}
+          onClick={() => void downloadTemplate()}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+          title={t("Download template")}
+        >
+          <Download size={13} />
+          <span>{t("Download template")}</span>
+        </button>
 
         {/* Sheet Coverage Breakdown */}
         <div className="mt-4 space-y-3">
