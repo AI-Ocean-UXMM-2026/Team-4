@@ -21,16 +21,8 @@ export function Issues({ result }: { result: ImportResult }) {
   const rawIssues = [...result.errors, ...result.warnings];
   if (!rawIssues.length) return null;
 
-  // Separate ownership issues (business_id mismatch across rows/sheets)
-  const ownershipIssues = rawIssues.filter(
-    (i) => i.field === "business_id" && i.reason === "Row belongs to another business",
-  );
-  const otherIssues = rawIssues.filter(
-    (i) => !(i.field === "business_id" && i.reason === "Row belongs to another business"),
-  );
-
-  // Group non-ownership issues by sheet + field + reason
-  const otherGroupedMap = new Map<
+  // Keep historical and current validation issues grouped by sheet, field and reason.
+  const groupedMap = new Map<
     string,
     {
       sheet: string;
@@ -40,13 +32,13 @@ export function Issues({ result }: { result: ImportResult }) {
     }
   >();
 
-  for (const issue of otherIssues) {
+  for (const issue of rawIssues) {
     const key = `${issue.sheet}::${issue.field}::${issue.reason}`;
-    const existing = otherGroupedMap.get(key);
+    const existing = groupedMap.get(key);
     if (existing) {
       existing.rows.push(issue.row);
     } else {
-      otherGroupedMap.set(key, {
+      groupedMap.set(key, {
         sheet: issue.sheet,
         field: issue.field,
         reason: issue.reason,
@@ -62,16 +54,14 @@ export function Issues({ result }: { result: ImportResult }) {
     field: string;
     reason: string;
     count: number;
-    isOwnership?: boolean;
   };
 
   const groupedIssues: GroupedIssueItem[] = [];
 
-  // 1. Add non-ownership issues first so real validation errors aren't hidden
-  for (const [key, group] of otherGroupedMap.entries()) {
+  for (const [key, group] of groupedMap.entries()) {
     let rowDisplay = "";
     if (group.rows.length === 1) {
-      rowDisplay = String(group.rows[0] ?? t("Previous import"));
+      rowDisplay = String(group.rows[0] || t("Previous import"));
     } else {
       rowDisplay = t("Row {0} (+{1} more)", {
         "0": group.rows[0] ?? 0,
@@ -86,39 +76,6 @@ export function Issues({ result }: { result: ImportResult }) {
       reason: group.reason,
       count: group.rows.length,
     });
-  }
-
-  // 2. Add consolidated ownership issue if present
-  if (ownershipIssues.length > 0) {
-    if (ownershipIssues.length === 1) {
-      const single = ownershipIssues[0]!;
-      groupedIssues.push({
-        key: "ownership-single",
-        sheet: single.sheet,
-        rowDisplay: String(single.row || t("Previous import")),
-        field: single.field,
-        reason: single.reason,
-        count: 1,
-        isOwnership: true,
-      });
-    } else {
-      const uniqueSheets = Array.from(new Set(ownershipIssues.map((i) => i.sheet)));
-      const firstSheet = uniqueSheets[0] ?? "";
-      const sheetDisplay =
-        uniqueSheets.length === 1
-          ? firstSheet
-          : `${firstSheet} (+${uniqueSheets.length - 1} ${t("other sheets")})`;
-
-      groupedIssues.push({
-        key: "ownership-consolidated",
-        sheet: sheetDisplay,
-        rowDisplay: t("Multiple rows ({0})", { "0": ownershipIssues.length }),
-        field: "business_id",
-        reason: "Row belongs to another business",
-        count: ownershipIssues.length,
-        isOwnership: true,
-      });
-    }
   }
 
   const MAX_VISIBLE = 5;
@@ -311,13 +268,12 @@ export function SyncStatus({ status }: { status: Status }) {
       ) : (
         <div className="space-y-3">
           {successfulImports.map((batch, index) => {
-            const isCurrentlyActive =
-              batch.source_version === status.source_version || index === 0;
+            // History is newest first; source_version on each batch describes
+            // the current business state, not that workbook's original version.
+            const isCurrentlyActive = index === 0;
             const isActivating = activatingId === batch.import_batch_id;
             const isDownloading = downloadingId === batch.import_batch_id;
-            const displayName =
-              batch.filename ||
-              `${t("Workbook import")} (v${batch.source_version})`;
+            const displayName = batch.filename || t("Workbook import");
 
             return (
               <div
@@ -329,7 +285,7 @@ export function SyncStatus({ status }: { status: Status }) {
                 }`}
               >
                 {/* File info */}
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
                   <div
                     className={`mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl ${
                       isCurrentlyActive
@@ -339,23 +295,19 @@ export function SyncStatus({ status }: { status: Status }) {
                   >
                     <FileSpreadsheet size={20} />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-foreground">
+                      <span className="min-w-0 [overflow-wrap:anywhere] font-semibold text-foreground">
                         {displayName}
                       </span>
-                      {isCurrentlyActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      {isCurrentlyActive && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                           <CheckCircle2 size={12} />
                           {t("Active snapshot")}
                         </span>
-                      ) : (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          v{batch.source_version}
-                        </span>
                       )}
                     </div>
-                    <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <Clock size={12} />
                         {batch.created_at
@@ -372,7 +324,7 @@ export function SyncStatus({ status }: { status: Status }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 self-end sm:self-center">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 self-end sm:self-center">
                   {batch.import_batch_id && (
                     <button
                       type="button"
@@ -384,10 +336,10 @@ export function SyncStatus({ status }: { status: Status }) {
                         )
                       }
                       title={t("Download")}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-border/80 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       <Download size={14} />
-                      <span className="hidden sm:inline">{t("Download")}</span>
+                      <span>{t("Download")}</span>
                     </button>
                   )}
 
@@ -401,7 +353,7 @@ export function SyncStatus({ status }: { status: Status }) {
                           batch.filename,
                         )
                       }
-                      className="bf-button inline-flex items-center gap-1.5 text-xs py-1.5 px-3.5 shadow-sm"
+                      className="bf-button inline-flex min-h-9 items-center gap-1.5 text-xs py-1.5 px-3.5 shadow-sm"
                     >
                       <RotateCcw
                         size={13}
@@ -413,11 +365,6 @@ export function SyncStatus({ status }: { status: Status }) {
                     </button>
                   )}
 
-                  {isCurrentlyActive && (
-                    <span className="text-xs font-semibold text-primary">
-                      {t("Currently active across all features")}
-                    </span>
-                  )}
                 </div>
               </div>
             );
@@ -454,6 +401,9 @@ export function SyncStatus({ status }: { status: Status }) {
                       new Date(batch.created_at).toLocaleString()}
                   </span>
                 </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("Historical attempt: these issues were recorded at the time of this upload. Re-upload the workbook to check it against the current validation rules.")}
+                </p>
                 <Issues result={batch} />
               </div>
             ))}

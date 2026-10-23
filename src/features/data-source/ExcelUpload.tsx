@@ -5,7 +5,6 @@ import { usePlatform } from "@/app/providers";
 import { api, ApiError, businessPath } from "@/lib/apiClient";
 import type { ImportResult } from "@/lib/contracts";
 import { Issues } from "./SyncStatus";
-import { WorkbookBusinessHelp } from "./WorkbookBusinessHelp";
 export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
   const { t } = useTranslation();
 
@@ -36,9 +35,6 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
     }
     setFile(next);
   };
-  const businessMismatch = result?.errors.some(
-    (issue) => issue.field === "business_id" && issue.reason === "Row belongs to another business",
-  );
   const predatingError = result?.errors.some(
     (issue) => issue.reason === "Transaction predates the opening date",
   );
@@ -55,7 +51,7 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
         )}
       </p>
       <p className="mb-5 text-sm text-muted-foreground">
-        {t("Before importing, complete one Settings row: business_id, business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
+        {t("Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. Imports are automatically linked to your current business. The blank template contains no financial data. Loans and LoanPayments sheets are optional.")}
       </p>
       <div role="group" aria-label={t("Paste Excel file here")} tabIndex={0}
         className="block rounded-xl border-2 border-dashed bg-secondary/30 p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -163,7 +159,6 @@ export function ExcelUpload({ maxBytes }: { maxBytes: number }) {
           {t(error)}
         </p>
       )}
-      {businessMismatch && <WorkbookBusinessHelp business={business} />}
       {predatingError && !replaceOmitted && (
         <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs">
           <p className="font-semibold text-amber-700 dark:text-amber-400">

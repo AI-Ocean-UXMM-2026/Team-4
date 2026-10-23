@@ -30,12 +30,12 @@ Enable Supabase email/password sign-up and apply the migrations. The app support
 .\.venv\Scripts\python.exe tools/migrate.py
 # Supabase PostgreSQL: apply all platform and RLS migrations in order instead.
 # .\.venv\Scripts\python.exe tools/migrate.py --supabase
-.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log
+.\.venv\Scripts\python.exe -m uvicorn app.main:create_app --factory --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log --reload --reload-dir backend
 ```
 
 In a second terminal, run `npm.cmd run dev -- --host 127.0.0.1 --port 3000`, then open `http://localhost:3000/sign-in`. Vite proxies `/api` to FastAPI. API docs are at `http://localhost:8000/docs`. Without provider configuration, public account screens remain viewable, but registration/sign-in and all protected API access remain unavailable. There is no fake-auth fallback.
 
-On macOS/Linux use `.venv/bin/python` and `npm` instead of their Windows forms. Restart the frontend when changing `VITE_*` settings; those values are build-time configuration in production.
+On macOS/Linux use `.venv/bin/python` and `npm` instead of their Windows forms. The development command reloads backend Python changes automatically. Restart the backend after changing `.env` or `shared/contracts/workbook-schema.json`. Restart the frontend when changing `VITE_*` settings; those values are build-time configuration in production.
 
 ## Account lifecycle
 

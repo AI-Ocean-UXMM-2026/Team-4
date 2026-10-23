@@ -33,6 +33,18 @@ def edit_workbook(content, change):
     return target.getvalue()
 
 
+def remove_business_id_columns(workbook):
+    for sheet in workbook:
+        for cell in reversed(list(sheet[1])):
+            if cell.value == "business_id":
+                sheet.delete_cols(cell.column)
+
+
+@pytest.fixture
+def unscoped_workbook_bytes(workbook_bytes):
+    return edit_workbook(workbook_bytes, remove_business_id_columns)
+
+
 @pytest.fixture
 def client(tmp_path):
     engine = make_engine(f"sqlite:///{tmp_path / 'test.db'}")

@@ -11,7 +11,7 @@ from app.core.errors import APIError
 from app.db.models import Business, WorkbookSource
 from app.integrations.excel.graph_client import GraphClient
 from app.integrations.excel.sync_service import sync_now
-from conftest import edit_workbook, upload
+from conftest import edit_workbook, remove_business_id_columns, upload
 
 
 def graph_settings():
@@ -67,7 +67,10 @@ def test_expired_token_preserves_facts(client, workbook_bytes):
 def test_changed_etag_uses_same_importer(client, workbook_bytes):
     settings = graph_settings()
     configure(client, workbook_bytes, settings)
-    data = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["E2"], "value", 80000))
+    def update_without_business_ids(workbook):
+        workbook["Expenses"]["E2"] = 80000
+        remove_business_id_columns(workbook)
+    data = edit_workbook(workbook_bytes, update_without_business_ids)
     class Changed:
         def __init__(self, *_): pass
         def metadata(self, *_): return {"eTag": "v2", "name": "book.xlsx", "file": {}}
@@ -77,6 +80,9 @@ def test_changed_etag_uses_same_importer(client, workbook_bytes):
     assert result["row_counts"]["updated"] == 1
     with client.app.state.sessions() as session:
         assert session.scalar(select(WorkbookSource)).last_etag == "v2"
+    snapshot = client.get("/api/v1/data/snapshot?business_id=tea-shop").json()
+    assert snapshot["tables"]["Expenses"][0]["amount_mmk"] == "80000.00"
+    assert all(row["business_id"] == "tea-shop" for rows in snapshot["tables"].values() for row in rows)
 
 
 def test_disabled_graph_keeps_manual_upload(client, workbook_bytes):

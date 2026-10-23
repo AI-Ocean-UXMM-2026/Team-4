@@ -4,30 +4,14 @@ import { usePlatform } from "@/app/providers";
 import { api, businessPath } from "@/lib/apiClient";
 import {
   BookOpen,
-  Check,
-  Copy,
   Download,
-  FileSpreadsheet,
-  HelpCircle,
-  Layers,
   Sparkles,
 } from "lucide-react";
 
 export function WorkbookGuideCard() {
   const { t } = useTranslation();
   const { business } = usePlatform();
-  const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
-
-  const copyBusinessId = async () => {
-    try {
-      await navigator.clipboard.writeText(business.id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-    }
-  };
 
   const downloadTemplate = async () => {
     setDownloading(true);
@@ -36,7 +20,7 @@ export function WorkbookGuideCard() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${business.id}-template.xlsx`;
+      link.download = "shay-sett-template.xlsx";
       link.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -72,41 +56,9 @@ export function WorkbookGuideCard() {
           </button>
         </div>
 
-        {/* Business ID Copy Box */}
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold text-foreground">
-              {t("Your Business ID")}
-            </span>
-            <button
-              type="button"
-              onClick={() => void copyBusinessId()}
-              className="inline-flex items-center gap-1 rounded-lg bg-background px-2 py-0.5 text-xs font-semibold text-primary shadow-xs hover:bg-muted transition"
-            >
-              {copied ? (
-                <>
-                  <Check size={12} className="text-emerald-500" />
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    {t("Copied")}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Copy size={12} />
-                  <span>{t("Copy ID")}</span>
-                </>
-              )}
-            </button>
-          </div>
-          <p className="mt-1 font-mono text-xs text-muted-foreground select-all break-all">
-            {business.id}
-          </p>
-          <p className="mt-1.5 text-[11px] text-muted-foreground">
-            {t(
-              "Must match the business_id in your Settings sheet and input rows.",
-            )}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {t("Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.")}
+        </p>
 
         {/* Sheet Coverage Breakdown */}
         <div className="mt-4 space-y-3">

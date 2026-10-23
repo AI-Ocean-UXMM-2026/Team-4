@@ -58,8 +58,7 @@ def test_invalid_financial_state_rejected(client, workbook_bytes, sheet, cell, v
 
 def test_no_cross_business_access(client, workbook_bytes):
     assert client.get("/api/v1/data/snapshot?business_id=private").status_code == 403
-    data = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["B2"], "value", "private"))
-    assert upload(client, data).status_code == 400
+    assert client.post("/api/v1/data/upload?business_id=private", files={"file": ("book.xlsx", workbook_bytes)}).status_code == 403
     assert snapshot(client)["source_version"] == 0
 
 
@@ -141,9 +140,18 @@ def test_template_is_personalized_and_public_reset_removed(client, workbook_byte
     from io import BytesIO
     workbook = load_workbook(BytesIO(template.content), read_only=True)
     assert "due_date" in [cell.value for cell in workbook["Purchases"][1]]
+    assert all("business_id" not in [cell.value for cell in sheet[1]] for sheet in workbook)
     workbook.close()
     from app.integrations.excel.workbook_parser import parse_workbook
-    assert parse_workbook(template.content).sheets["Settings"][0].values["business_id"] == "tea-shop"
+    assert parse_workbook(template.content).sheets["Settings"][0].values["business_name"] == "Tea Shop"
+    def complete_opening_values(workbook):
+        sheet = workbook["Settings"]
+        columns = {cell.value: cell.column for cell in sheet[1]}
+        sheet.cell(2, columns["opening_date"], "2026-10-01")
+        sheet.cell(2, columns["opening_cash_mmk"], 1000000)
+    blank_result = upload(client, edit_workbook(template.content, complete_opening_values))
+    assert blank_result.status_code == 200, blank_result.text
+    assert snapshot(client)["tables"]["Settings"][0]["business_id"] == "tea-shop"
     changed = edit_workbook(workbook_bytes, lambda w: setattr(w["Expenses"]["E2"], "value", 80000))
     upload(client, changed)
     result = client.post("/api/v1/demo/reset?business_id=tea-shop")

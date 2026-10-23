@@ -140,7 +140,7 @@ Registration is resumable: a validated business draft can be retained in provide
 ### Workflow C — First workbook preparation
 
 1. Open Data Source and download the personalized template for the current business.
-2. Complete Settings, including the correct business ID, business name, MMK currency, opening date, and opening cash.
+2. Complete Settings, including business name, MMK currency, opening date, and opening cash. No business ID is needed in any sheet; the app assigns uploaded records to the active business automatically.
 3. Enter products and the supported financial rows in their appropriate sheets.
 4. Use stable text IDs. Each new record gets a new ID; corrections keep the existing ID.
 5. Keep required sheets and headers even if a sheet has no transaction rows.
@@ -155,7 +155,7 @@ The current downloaded blank template omits Loans and LoanPayments; these are op
 1. The frontend checks the file extension and size before sending it.
 2. The backend verifies the authenticated user's business access and bounds the file size.
 3. The workbook parser checks the container, sheets, headers, IDs, dates, field types, references and financial relationships.
-4. The workbook business ID must match the authorized business.
+4. The server assigns all imported rows to the authorized active business. Workbook business_id columns are not required; legacy values are ignored.
 5. The importer validates both the incoming content and any history that will remain active under the selected import mode.
 6. If validation fails, the complete import is rejected. The owner sees issues by sheet, row, field and reason. Existing accepted records remain available.
 7. If the file is unchanged and already matches the active data, the result is up to date rather than another set of duplicate transactions.
@@ -175,7 +175,7 @@ The file picker does not control whether saved data exists. Clearing a selection
 
 **Opening-date conflict:** Transactions cannot predate the workbook's opening date. If retained older records cause a conflict because the owner intentionally switched to a new opening period, the UI explains the complete-replacement option. That option is not permission to bypass invalid dates within the incoming workbook.
 
-**Business mismatch:** A workbook from another business cannot simply be imported into the current workspace. Use the correct personalized template and consistent IDs; do not bypass isolation checks.
+**Business assignment:** Upload records belonging to the active business. The server derives the destination from the authenticated request and checks membership; business_id values in older files do not select a workspace. Keep stable record IDs when updating the same records.
 
 ### Workflow F — Previous workbook review and activation
 
@@ -336,17 +336,17 @@ The canonical machine-readable contract is `shared/contracts/workbook-schema.jso
 
 | Sheet | Purpose | Main fields |
 | --- | --- | --- |
-| Settings | Business and opening balances | business_id, business_name, currency, opening_date, opening_cash_mmk |
-| Products | Product identity and opening stock | product_id, business_id, name, opening_stock, unit_cost_mmk |
-| Sales | Recorded sales and initial settlement | sale_id, business_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk |
-| CustomerReceipts | Later collections against sales | receipt_id, business_id, date, sale_id, amount_mmk |
-| Purchases | Stock purchases and initial settlement | purchase_id, business_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk |
-| SupplierPayments | Later payments against purchases | payment_id, business_id, date, purchase_id, amount_mmk |
-| Expenses | Recognized operating expenses | expense_id, business_id, date, category, amount_mmk, description |
-| Loans, optional | Loan disbursements | loan_id, business_id, date, lender, loan_type, principal_mmk |
-| LoanPayments, optional | Actual principal/interest payments | payment_id, business_id, date, loan_id, principal_mmk, interest_mmk |
-| CashBalances, optional | Observed cash/bank balances | balance_id, business_id, as_of_date, cash_on_hand_mmk, bank_balance_mmk |
-| CashAdjustments, optional | Other recorded cash movements | adjustment_id, business_id, date, direction, amount_mmk, reason |
+| Settings | Business and opening balances | business_name, currency, opening_date, opening_cash_mmk |
+| Products | Product identity and opening stock | product_id, name, opening_stock, unit_cost_mmk |
+| Sales | Recorded sales and initial settlement | sale_id, date, product_id, quantity, unit_price_mmk, payment_type, cash_received_mmk |
+| CustomerReceipts | Later collections against sales | receipt_id, date, sale_id, amount_mmk |
+| Purchases | Stock purchases and initial settlement | purchase_id, date, product_id, quantity, unit_cost_mmk, payment_type, cash_paid_mmk |
+| SupplierPayments | Later payments against purchases | payment_id, date, purchase_id, amount_mmk |
+| Expenses | Recognized operating expenses | expense_id, date, category, amount_mmk, description |
+| Loans, optional | Loan disbursements | loan_id, date, lender, loan_type, principal_mmk |
+| LoanPayments, optional | Actual principal/interest payments | payment_id, date, loan_id, principal_mmk, interest_mmk |
+| CashBalances, optional | Observed cash/bank balances | balance_id, as_of_date, cash_on_hand_mmk, bank_balance_mmk |
+| CashAdjustments, optional | Other recorded cash movements | adjustment_id, date, direction, amount_mmk, reason |
 
 **Optional extensions:** Sales can include historical `unit_cost_at_sale_mmk` and/or `cogs_mmk`; Expenses can include `payment_status`, `paid_date` and `amount_paid_mmk`; Purchases can include `due_date`. Compatible Loans rows can carry the complete supported agreement-term group: `bank_id`, `loan_product_id`, `loan_product`, `annual_rate_pct`, `term_months`, `first_payment_date`, `payment_frequency`. A partial loan-term group may be rejected; follow the current template/validator instructions.
 
@@ -355,7 +355,7 @@ The canonical machine-readable contract is `shared/contracts/workbook-schema.jso
 - Default compressed workbook upload limit: 5 MiB. The default archive expansion bound is 40 MiB, with 10,000 rows per sheet and 30,000 input rows overall.
 - Header row is row 1. Required headers and required sheets must exist, including empty sheets with headers. Optional sheets can be absent.
 - IDs are stable, case-sensitive text, scoped to the business and sheet. Duplicate IDs or headers are rejected.
-- Every row's business ID must match Settings and the authorized business.
+- No business_id column or value is required. The server assigns all rows to the authorized active business, ignoring legacy workbook business_id values.
 - Dates use supported Excel dates or ISO `YYYY-MM-DD`, without time-of-day transaction semantics.
 - Currency is MMK. Monetary inputs are non-negative with at most two decimal places; quantity inputs allow up to three decimals. Fields defined as positive cannot be zero.
 - Transactions cannot predate the opening date. Referenced products, sales, purchases and loans must exist as required.
@@ -539,7 +539,7 @@ The user previously gave conflicting presentation durations. The last draft used
 
 ### Suggested demo sequence
 
-- Use an approved test account and a synthetic workbook matching that account's business ID. Precheck authentication and provider availability.
+- Use an approved test account and upload the synthetic workbook to its intended demo workspace; no workbook business ID edits are needed. Precheck authentication and provider availability.
 - Data Source: demonstrate the template, accepted upload, row counts and history. Do not spend a short pitch waiting for file editing or external email.
 - Financial Health: show a reporting period, one useful financial figure and outstanding balances; explain unavailable metrics honestly.
 - Working Capital: change one clearly labeled scenario input and show how the result changes without altering records.

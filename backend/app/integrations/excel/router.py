@@ -140,6 +140,9 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
             if sheet_name not in workbook.sheetnames:
                 continue
             sheet = workbook[sheet_name]
+            for column in range(sheet.max_column, 0, -1):
+                if sheet.cell(1, column).value in spec.get("server_fields", []):
+                    sheet.delete_cols(column)
             headers = {cell.value for cell in sheet[1] if cell.value is not None}
             for field in spec.get("optional_fields", []):
                 if field in headers:
@@ -153,8 +156,10 @@ def template(request: Request, business_id: str, _user_id: str = Depends(authori
                 )
         with request.app.state.sessions() as session:
             business = session.get(Business, business_id)
-            workbook["Settings"]["A2"], workbook["Settings"]["B2"] = business_id, business.name
-            workbook["Settings"]["C2"] = business.currency or "MMK"
+            settings_sheet = workbook["Settings"]
+            settings_columns = {cell.value: cell.column for cell in settings_sheet[1]}
+            settings_sheet.cell(2, settings_columns["business_name"], business.name)
+            settings_sheet.cell(2, settings_columns["currency"], business.currency or "MMK")
         buffer = BytesIO()
         workbook.save(buffer)
     finally:

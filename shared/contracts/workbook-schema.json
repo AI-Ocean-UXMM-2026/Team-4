@@ -1,8 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "sheets": {
     "Settings": {
       "id": "business_id",
+      "server_fields": ["business_id"],
       "fields": {
         "business_id": "id",
         "business_name": "text",
@@ -13,6 +14,7 @@
     },
     "Products": {
       "id": "product_id",
+      "server_fields": ["business_id"],
       "fields": {
         "product_id": "id",
         "business_id": "id",
@@ -23,6 +25,7 @@
     },
     "Sales": {
       "id": "sale_id",
+      "server_fields": ["business_id"],
       "optional_fields": ["unit_cost_at_sale_mmk", "cogs_mmk"],
       "fields": {
         "sale_id": "id",
@@ -39,6 +42,7 @@
     },
     "CustomerReceipts": {
       "id": "receipt_id",
+      "server_fields": ["business_id"],
       "fields": {
         "receipt_id": "id",
         "business_id": "id",
@@ -49,6 +53,7 @@
     },
     "Purchases": {
       "id": "purchase_id",
+      "server_fields": ["business_id"],
       "optional_fields": ["due_date"],
       "fields": {
         "purchase_id": "id",
@@ -64,6 +69,7 @@
     },
     "SupplierPayments": {
       "id": "payment_id",
+      "server_fields": ["business_id"],
       "fields": {
         "payment_id": "id",
         "business_id": "id",
@@ -74,6 +80,7 @@
     },
     "Expenses": {
       "id": "expense_id",
+      "server_fields": ["business_id"],
       "optional_fields": ["payment_status", "paid_date", "amount_paid_mmk"],
       "fields": {
         "expense_id": "id",
@@ -90,6 +97,7 @@
     "Loans": {
       "optional": true,
       "id": "loan_id",
+      "server_fields": ["business_id"],
       "payload_fields": {
         "bank_id": "enum:kbz,yoma",
         "loan_product_id": "id",
@@ -111,6 +119,7 @@
     "LoanPayments": {
       "optional": true,
       "id": "payment_id",
+      "server_fields": ["business_id"],
       "fields": {
         "payment_id": "id",
         "business_id": "id",
@@ -123,6 +132,7 @@
     "CashBalances": {
       "optional": true,
       "id": "balance_id",
+      "server_fields": ["business_id"],
       "fields": {
         "balance_id": "id",
         "business_id": "id",
@@ -134,6 +144,7 @@
     "CashAdjustments": {
       "optional": true,
       "id": "adjustment_id",
+      "server_fields": ["business_id"],
       "fields": {
         "adjustment_id": "id",
         "business_id": "id",

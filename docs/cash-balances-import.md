@@ -1,8 +1,9 @@
 # Cash balance snapshots
 
 CashBalances is an optional sheet. Older workbooks remain valid.
-Columns: balance_id, business_id, as_of_date, cash_on_hand_mmk, bank_balance_mmk.
-Use a stable balance_id such as CB-20261022 and the business_id from Settings.
+Columns: balance_id, as_of_date, cash_on_hand_mmk, bank_balance_mmk.
+Use a stable balance_id such as CB-20261022. Imports are automatically assigned
+to the authorized active business; no business_id column is needed.
 Record cash counted and the total across bank accounts at the same date, in MMK.
 Use zero for a confirmed zero; leave the sheet empty if balances are unknown.
 Each amount must be non-negative, with at most two decimals. Use one row per date,

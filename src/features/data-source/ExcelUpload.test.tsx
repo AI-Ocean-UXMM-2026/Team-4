@@ -9,7 +9,6 @@ import { ExcelUpload } from "./ExcelUpload";
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   imported: vi.fn(),
-  writeText: vi.fn(),
 }));
 
 vi.mock("@/lib/apiClient", async (importOriginal) => ({
@@ -23,7 +22,6 @@ vi.mock("@/app/providers", () => ({
   }),
 }));
 
-const mismatchHeading = "This workbook uses a different business ID.";
 it("shows the last successful workbook after reopening without enabling another import", async () => {
   mocks.api.mockResolvedValue({ status: "success", source_version: 3, row_counts: {}, errors: [], warnings: [] });
   const view = render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
@@ -64,15 +62,14 @@ it("rejects pasted files that are not Excel workbooks", () => {
   expect(screen.getByRole("alert")).toBeTruthy();
   expect(screen.getByRole("button", {name: translate("Import workbook")})).toBeDisabled();
 });
-const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
-const ownershipIssue: RowIssue = {
-  sheet: "Settings",
-  row: 2,
-  field: "business_id",
-  reason: "Row belongs to another business",
+const duplicateIssue: RowIssue = {
+  sheet: "Sales",
+  row: 3,
+  field: "sale_id",
+  reason: "Duplicate stable row ID",
 };
 
-function rejectWorkbook(issue = ownershipIssue) {
+function rejectWorkbook(issue = duplicateIssue) {
   const result: ImportResult = {
     status: "failed",
     source_version: 2,
@@ -108,82 +105,50 @@ beforeEach(() => {
   vi.clearAllMocks();
   setPreferences({ language: "en", theme: "light" });
   mocks.imported.mockResolvedValue(undefined);
-  mocks.writeText.mockResolvedValue(undefined);
-  Object.defineProperty(navigator, "clipboard", {
-    configurable: true,
-    value: { writeText: mocks.writeText },
-  });
 });
 
 afterEach(() => {
   cleanup();
   setPreferences({ language: "en", theme: "light" });
   localStorage.clear();
-  if (clipboardDescriptor) Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
-  else Reflect.deleteProperty(navigator, "clipboard");
 });
 
-describe("Excel workbook ownership guidance", () => {
-  it("copies the current business ID without resubmitting or rewriting the workbook", async () => {
-    rejectWorkbook();
+describe("Excel workbook import guidance", () => {
+  const setupGuidance = "Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. Imports are automatically linked to your current business. The blank template contains no financial data. Loans and LoanPayments sheets are optional.";
+
+  it.each(["en", "my"] as const)("explains automatic business association in %s without requiring an ID", (language) => {
+    setPreferences({ language });
+    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
+
+    const guidance = screen.getByText(translate(setupGuidance));
+    expect(guidance).toBeVisible();
+    expect(guidance).not.toHaveTextContent("business_id");
+    expect(screen.queryByText("my-shop-123")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /copy.*id/i })).not.toBeInTheDocument();
+    if (language === "my") expect(translate(setupGuidance)).not.toBe(setupGuidance);
+  });
+
+  it("sends the selected file to the current business without asking the owner for an ID", async () => {
+    mocks.api.mockResolvedValue({ status: "success", source_version: 3, row_counts: {}, errors: [], warnings: [] });
     render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
     const file = await submitWorkbook();
 
-    expect(screen.getByText(mismatchHeading)).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveValue("my-shop-123");
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveAttribute("readonly");
     const [path, options] = mocks.api.mock.calls[0]!;
     expect(path).toBe("/api/v1/data/upload?business_id=my-shop-123");
     expect(options.body.get("file")).toBe(file);
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy business ID" }));
-    await screen.findByText("Business ID copied");
-    expect(mocks.writeText).toHaveBeenCalledExactlyOnceWith("my-shop-123");
-    expect(mocks.api).toHaveBeenCalledOnce();
-
-    selectWorkbook("corrected.xlsx");
-    expect(screen.queryByText(mismatchHeading)).not.toBeInTheDocument();
-    expect(screen.queryByText("Business ID copied")).not.toBeInTheDocument();
     expect(mocks.api).toHaveBeenCalledOnce();
   });
 
-  it("keeps the business ID available for manual copying when clipboard access fails", async () => {
+  it("shows validation errors and clears them when a corrected workbook is selected", async () => {
     rejectWorkbook();
-    mocks.writeText.mockRejectedValue(new Error("Clipboard permission denied"));
-    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
-    await submitWorkbook();
-
-    fireEvent.click(screen.getByRole("button", { name: "Copy business ID" }));
-    expect(
-      await screen.findByText("Select the business ID above and copy it manually."),
-    ).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Your business ID" })).toHaveValue("my-shop-123");
-    expect(mocks.api).toHaveBeenCalledOnce();
-  });
-
-  it("shows the actual validation error without ownership guidance for other invalid fields", async () => {
-    rejectWorkbook({ sheet: "Sales", row: 3, field: "sale_id", reason: "Duplicate stable row ID" });
     render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
     await submitWorkbook();
 
     expect(screen.getByText("Duplicate stable row ID")).toBeVisible();
-    expect(screen.queryByText(mismatchHeading)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Copy business ID" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /copy.*id/i })).not.toBeInTheDocument();
+
+    selectWorkbook("corrected.xlsx");
+    expect(screen.queryByText("Duplicate stable row ID")).not.toBeInTheDocument();
     expect(mocks.api).toHaveBeenCalledOnce();
-  });
-
-  it("translates the backend ownership reason and guide for Myanmar readers", async () => {
-    setPreferences({ language: "my" });
-    rejectWorkbook();
-    render(<ExcelUpload maxBytes={5 * 1024 * 1024} />);
-    await submitWorkbook();
-
-    const translatedReason = translate(ownershipIssue.reason);
-    expect(translatedReason).not.toBe(ownershipIssue.reason);
-    expect(screen.getByText(translatedReason)).toBeVisible();
-    expect(screen.getByText(translate(mismatchHeading))).toBeVisible();
-    expect(screen.getByRole("textbox", { name: translate("Your business ID") })).toHaveValue(
-      "my-shop-123",
-    );
   });
 });

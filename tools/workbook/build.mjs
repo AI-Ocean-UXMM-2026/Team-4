@@ -77,7 +77,10 @@ for (const persona of [
     const sheet = workbook.worksheets.add(name);
     sheet.showGridLines = false;
     sheet.freezePanes.freezeRows(1);
-    const fields = { ...spec.fields, ...spec.payload_fields };
+    const sourceFields = { ...spec.fields, ...spec.payload_fields };
+    const fields = Object.fromEntries(Object.entries(sourceFields).filter(
+      ([field]) => !persona.template || !(spec.server_fields ?? []).includes(field),
+    ));
     const headers = Object.keys(fields);
     const rows = (persona.template ? [] : data[name]).map(row => headers.map((_, index) => row[index] ?? null));
     const body = [headers, ...rows];
@@ -122,7 +125,7 @@ for (const persona of [
         ? "Blank input template. No sample business data or transactions. Enter your own Settings and records. Currency: MMK."
         : "Synthetic examples for the October 2026 demo. Currency: MMK.",
     ],
-    ["Business", "Use one authorized business_id in Settings and every transaction row."],
+    ["Business", "Uploads are linked to your active business automatically. No business ID is needed in this workbook."],
     [
       "Stable IDs",
       "Keep IDs when editing. Give new rows unique IDs. Never use formulas for inputs.",

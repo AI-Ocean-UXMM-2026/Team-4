@@ -50,7 +50,8 @@ export const my: Record<string, string> = {
   "User-recorded balance. Repayment terms and payment history have not been supplied.": "မိမိဖြည့်သွင်းထားသော လက်ကျန်အရင်း ဖြစ်ပါသည်။ ပြန်ဆပ်စည်းကမ်းချက်နှင့် ပေးချေမှုမှတ်တမ်းများ မဖြည့်ရသေးပါ။",
   "Last imported workbook:": "နောက်ဆုံးတင်သွင်းထားသော Excel ဖိုင်:",
   "Select the workbook again to import changes. Your previously imported data is saved.": "ပြင်ဆင်ထားသောအချက်အလက်များ တင်သွင်းရန် ဖိုင်ကို ပြန်ရွေးပါ။ ယခင်တင်သွင်းထားသော အချက်အလက်များကို သိမ်းထားပါသည်။",
-  "Before importing, complete one Settings row: business_id, business_name, currency (MMK), opening_date and opening_cash_mmk. The blank template contains no financial data. Loans and LoanPayments sheets are optional.": "Import မလုပ်မီ Settings တွင် business_id၊ business_name၊ currency (MMK)၊ opening_date နှင့် opening_cash_mmk ပါသော အတန်းတစ်ကြောင်းကို ဖြည့်ပါ။ Blank template တွင် ငွေကြေးဒေတာ မပါပါ။ Loans နှင့် LoanPayments sheet များ မလိုအပ်ပါ။",
+  "Before importing, complete one Settings row: business_name, currency (MMK), opening_date and opening_cash_mmk. Imports are automatically linked to your current business. The blank template contains no financial data. Loans and LoanPayments sheets are optional.": "Import မလုပ်မီ Settings တွင် business_name၊ currency (MMK)၊ opening_date နှင့် opening_cash_mmk ပါသော အတန်းတစ်ကြောင်းကို ဖြည့်ပါ။ တင်သွင်းသောမှတ်တမ်းများကို လက်ရှိလုပ်ငန်းနှင့် အလိုအလျောက် ချိတ်ဆက်ပေးပါသည်။ Blank template တွင် ငွေကြေးဒေတာ မပါပါ။ Loans နှင့် LoanPayments sheet များကို လိုအပ်မှသာ ထည့်သွင်းနိုင်ပါသည်။",
+  "Imports are automatically linked to your current business. You do not need to add a business ID to your workbook.": "တင်သွင်းသောမှတ်တမ်းများကို လက်ရှိလုပ်ငန်းနှင့် အလိုအလျောက် ချိတ်ဆက်ပေးပါသည်။ Excel ဖိုင်တွင် လုပ်ငန်း ID ထည့်ရန် မလိုအပ်ပါ။",
   "No workbook imported yet": "Excel ဖိုင် မတင်သွင်းရသေးပါ",
   "Import an Excel workbook for this business to see financial data, loan records and analysis. Selecting a file alone does not import it.": "ဤလုပ်ငန်း၏ ငွေကြေးစာရင်း၊ ချေးငွေမှတ်တမ်းနှင့် သုံးသပ်ချက်များကို ကြည့်ရန် Excel ဖိုင်တင်သွင်းပါ။ ဖိုင်ရွေးထားရုံဖြင့် တင်သွင်းပြီးခြင်း မဟုတ်ပါ။",
   "Import Excel workbook": "Excel ဖိုင်တင်သွင်းရန်",
@@ -109,18 +110,6 @@ export const my: Record<string, string> = {
   "Workbook rejected. No business records were changed.":
     "Excel ဖိုင်ကို လက်မခံနိုင်ပါ။ လုပ်ငန်းမှတ်တမ်းများ ပြောင်းလဲသွားခြင်း မရှိပါ။",
   "Row belongs to another business": "ဤအတန်းရှိ business_id သည် လက်ရှိလုပ်ငန်း ID နှင့် မတူပါ။",
-  "This workbook uses a different business ID.":
-    "ဤ Excel ဖိုင်တွင် လုပ်ငန်း ID အခြားတစ်ခုကို သုံးထားပါသည်။",
-  "You are importing into {0}.": "{0} လုပ်ငန်းသို့ အချက်အလက်ထည့်သွင်းနေပါသည်။",
-  "If this is your workbook, replace business_id in Settings and every populated sheet with the ID below. Save the file, then upload it again. Keep the other row IDs unchanged.":
-    "ဤဖိုင်သည် သင့်လုပ်ငန်းဖိုင်ဖြစ်ပါက Settings နှင့် အချက်အလက်ရှိသော စာရွက်တိုင်းတွင် business_id ကို အောက်ပါ ID ဖြင့် အစားထိုးပါ။ ဖိုင်ကို သိမ်းပြီး ပြန်တင်ပါ။ အခြားအတန်း ID များကို မပြောင်းပါနှင့်။",
-  "Your business ID": "သင့်လုပ်ငန်း ID",
-  "Copy business ID": "လုပ်ငန်း ID ကူးယူရန်",
-  "Business ID copied": "လုပ်ငန်း ID ကူးယူပြီးပါပြီ",
-  "Select the business ID above and copy it manually.":
-    "အပေါ်ရှိ လုပ်ငန်း ID ကို ရွေးချယ်ပြီး ကိုယ်တိုင် ကူးယူပါ။",
-  "Starting a new workbook? Download the template above. It already contains your business ID in Settings.":
-    "ဖိုင်အသစ် စတင်လိုပါက အပေါ်ရှိ ပုံစံဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပါ။ Settings တွင် သင့်လုပ်ငန်း ID ထည့်ထားပြီးဖြစ်ပါသည်။",
   "Issues found ({0})": "တွေ့ရှိသော ပြဿနာများ ({0})",
   "other sheets": "အခြားစာရွက်များ",
   "Multiple rows ({0})": "အတန်းပေါင်းစုံ ({0})",
@@ -988,6 +977,7 @@ export const my: Record<string, string> = {
   "No successful workbook imports yet.": "အောင်မြင်သော ဖိုင်တင်သွင်းမှု မှတ်တမ်း မရှိသေးပါ။",
   "Failed upload attempts ({0})": "မအောင်မြင်ခဲ့သော တင်သွင်းမှုမှတ်တမ်းများ ({0})",
   "Click to view details": "အသေးစိတ်ကြည့်ရန် နှိပ်ပါ",
+  "Historical attempt: these issues were recorded at the time of this upload. Re-upload the workbook to check it against the current validation rules.": "ယခင်တင်သွင်းမှုမှတ်တမ်း — ဤပြဿနာများသည် ဖိုင်တင်သွင်းခဲ့စဉ်က တွေ့ရှိထားသော ပြဿနာများဖြစ်သည်။ လက်ရှိစစ်ဆေးမှုစည်းမျဉ်းများနှင့် ပြန်လည်စစ်ဆေးရန် workbook ကို ထပ်မံတင်သွင်းပါ။",
   "Rejected file": "လက်မခံသော ဖိုင်",
   "Active Dataset:": "လက်ရှိ အချက်အလက်ဖိုင် -",
   "This workbook is a complete replacement":
@@ -1002,11 +992,7 @@ export const my: Record<string, string> = {
   "Workbook Guidelines": "Excel ဖိုင် ပြင်ဆင်ရန် လမ်းညွှန်",
   "Structure your Excel file for accurate analysis":
     "တိကျသော စီးပွားရေးဆန်းစစ်ချက်များ ရရှိရန် Excel ဖိုင်ကို သတ်မှတ်ပုံစံအတိုင်း ပြင်ဆင်ပါ",
-  "Your Business ID": "သင့်လုပ်ငန်း ID",
-  "Copy ID": "ID ကူးယူရန်",
   "Copied": "ကူးယူပြီးပါပြီ",
-  "Must match the business_id in your Settings sheet and input rows.":
-    "Settings စာရွက်နှင့် မှတ်တမ်းအသီးသီးရှိ business_id နှင့် တူညီရပါမည်။",
   "Core Sheets (Required)": "အဓိက စာရွက်များ (မဖြစ်မနေ လိုအပ်သည်)",
   "Advanced & Credit Hub (Optional)":
     "ချေးငွေနှင့် အဆင့်မြင့်ကဏ္ဍများ (ရွေးချယ်ထည့်သွင်းနိုင်သည်)",

@@ -15,13 +15,13 @@ def validate_workbook(parsed: ParsedWorkbook, business_id: str) -> list[dict]:
         for row in rows:
             values = row.values
             row_id = values.get(SCHEMA[name]["id"])
-            if values.get("business_id") != business_id:
+            if values.get("business_id") not in (None, business_id):
                 errors.append(issue(name, row.excel_row, "business_id", "Row belongs to another business"))
             if row_id in index[name]:
                 errors.append(issue(name, row.excel_row, SCHEMA[name]["id"], "Duplicate stable row ID"))
             index[name][row_id] = row
     if len(parsed.sheets.get("Settings", [])) != 1:
-        errors.append(issue("Settings", 2, "business_id", "Exactly one Settings row is required"))
+        errors.append(issue("Settings", 2, "row", "Exactly one Settings row is required"))
     if errors:
         return errors
     opening = parsed.sheets["Settings"][0].values["opening_date"]

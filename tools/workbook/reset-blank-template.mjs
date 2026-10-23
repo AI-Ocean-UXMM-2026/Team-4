@@ -6,10 +6,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const folder = path.join(root, "outputs/original-template");
 const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(path.join(folder, "Mi-Thar-Su-original-template.xlsx")));
 for (const name of ["Loans", "LoanPayments"]) workbook.worksheets.getItem(name).delete();
-workbook.worksheets.getItem("Settings").getRange("A2:E2").clear({applyTo: "contents"});
+workbook.worksheets.getItem("Settings").getUsedRange().getRow(1).clear({applyTo: "contents"});
 const notes = workbook.worksheets.getItem("ReadMe");
 notes.getRange("B2").values = [["Blank input template. No sample business data or transactions. Enter your own values. Currency: MMK."]];
-notes.getRange("A10:B10").values = [["Settings", "Enter business_id, business_name, currency (MMK), opening_date and opening_cash_mmk before importing. A blank amount is unknown, not zero."]];
+notes.getRange("B3").values = [["Uploads are linked to your active business automatically. No business ID is needed in this workbook."]];
+notes.getRange("A10:B10").values = [["Settings", "Enter business_name, currency (MMK), opening_date and opening_cash_mmk before importing. A blank amount is unknown, not zero."]];
 notes.getRange("A10:B10").format = {font: {name: "Arial", size: 10}, rowHeight: 44};
 notes.getRange("B10").format.wrapText = true;
 workbook.recalculate();
